@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import type { PortalTab } from './types';
@@ -11,7 +11,6 @@ import { ProfileView } from './features/profile/ProfileView';
 import { SundaramAIAssistant } from './features/assistant/SundaramAIAssistant';
 import { AuthModal } from './features/auth/AuthModal';
 import { PWAInstallModal } from './components/common/PWAInstallModal';
-import { PDFUploadFAB } from './components/pdf/PDFUploadFAB';
 import { PDFUploadModal } from './components/pdf/PDFUploadModal';
 import { api } from './api/client';
 import type { User, ExamType, Question, PracticeMode } from './types';
@@ -88,6 +87,56 @@ export function AppContent() {
     setIsAIOpen(true);
   };
 
+  const isPoppingRef = useRef(false);
+
+  // Handle Back Navigation (for phone hardware back button & UI button)
+  const handleGoBack = () => {
+    if (isPDFUploadOpen) {
+      setIsPDFUploadOpen(false);
+      return;
+    }
+    if (isAIOpen) {
+      setIsAIOpen(false);
+      return;
+    }
+    if (isAuthOpen) {
+      setIsAuthOpen(false);
+      return;
+    }
+    if (activePracticeMode) {
+      setActivePracticeMode(null);
+      setActivePDFDoc(null);
+      return;
+    }
+    if (activeTab !== 'home') {
+      setActiveTab('home');
+      return;
+    }
+  };
+
+  // Sync browser history state so mobile phone back button returns gracefully
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      isPoppingRef.current = true;
+      handleGoBack();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isPDFUploadOpen, isAIOpen, isAuthOpen, activePracticeMode, activeTab]);
+
+  // Push history state on sub-mode navigation so hardware phone back button pops state
+  useEffect(() => {
+    if (isPoppingRef.current) {
+      isPoppingRef.current = false;
+      return;
+    }
+    if (activeTab !== 'home' || activePracticeMode || isPDFUploadOpen || isAIOpen || isAuthOpen) {
+      window.history.pushState({ tab: activeTab, mode: activePracticeMode }, '');
+    }
+  }, [activeTab, activePracticeMode, isPDFUploadOpen, isAIOpen, isAuthOpen]);
+
   const handleTabSelect = (tab: PortalTab) => {
     if (tab === 'ai') {
       setAiQuestionContext(null);
@@ -108,6 +157,7 @@ export function AppContent() {
   };
 
   const isFocusTest = activePracticeMode === 'FOCUS_TEST';
+  const canGoBack = activeTab !== 'home' || Boolean(activePracticeMode) || isPDFUploadOpen || isAIOpen;
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900 dark:text-dark-text flex flex-col antialiased transition-colors">
@@ -117,6 +167,8 @@ export function AppContent() {
           user={user}
           currentExam={currentExam}
           onExamChange={handleExamChange}
+          canGoBack={canGoBack}
+          onGoBack={handleGoBack}
           onOpenAI={() => {
             setAiQuestionContext(null);
             setAiInitialPrompt(null);
@@ -228,11 +280,6 @@ export function AppContent() {
           />
         )}
       </main>
-
-      {/* Floating Action Button for PDF Upload (Prominent, always visible) */}
-      {!isFocusTest && (
-        <PDFUploadFAB onClick={() => setIsPDFUploadOpen(true)} />
-      )}
 
       {/* PDF Upload Modal with Animated Percentage Progress Bar */}
       <PDFUploadModal

@@ -53,6 +53,15 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
   // AI Generation mode state
   const [generatingAI, setGeneratingAI] = useState<boolean>(false);
 
+  // Upload metrics & interactive MCQ answers
+  const [uploadMetrics, setUploadMetrics] = useState<{
+    fileName: string;
+    uploadedAt: string;
+    durationSec: number;
+    questionCount: number;
+  } | null>(null);
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+
   const fetchDocs = async () => {
     try {
       const res = await api.listPDFDocuments(1, 20);
@@ -92,15 +101,25 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
     setUploading(true);
     setSuccessMsg(null);
     setErrorMsg(null);
+    const startTime = performance.now();
     try {
       const formData = new FormData();
       formData.append('file', file);
       const res = await api.uploadPDF(formData);
+      const durationSeconds = Math.max(0.4, Number(((performance.now() - startTime) / 1000).toFixed(1)));
+      const count = res.document?.extracted_questions_count || 0;
+
+      setUploadMetrics({
+        fileName: file.name,
+        uploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        durationSec: durationSeconds,
+        questionCount: count,
+      });
 
       if (res.cached) {
         setSuccessMsg(`Cached Document: ${res.message}`);
       } else {
-        setSuccessMsg(`Successfully ingested ${file.name}! ${res.document?.extracted_questions_count || 0} questions detected.`);
+        setSuccessMsg(`Successfully processed ${file.name}: ${count} questions extracted in ${durationSeconds}s.`);
       }
 
       await fetchDocs();
@@ -241,36 +260,75 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      {/* 1. Header Banner & Ingestion Box */}
-      <div className="bg-white dark:bg-dark-card border border-cool-200 dark:border-dark-border rounded-3xl p-6 shadow-subtle flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
-        <div className="max-w-xl">
-          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-royal-700 dark:text-royal-300 text-[11px] font-bold tracking-wide uppercase mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>PDF Intelligence & Multi-Format Ingestion</span>
+      {/* 1. Thin PDF Upload Bar (No Floating Button) */}
+      <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3 transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-saffron-600 dark:text-saffron-400 bg-saffron-50 dark:bg-saffron-950/60 px-2 py-0.5 rounded border border-saffron-200 dark:border-saffron-800">
+                PDF MCQ Extractor
+              </span>
+              <span className="text-xs font-bold text-slate-400 dark:text-dark-muted">•</span>
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
+                Bilingual & Auto-Evaluated
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white tracking-tight">
+              Exam PDF Practice Studio
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-dark-muted mt-0.5">
+              Upload test papers, select options to instantly get answers, or practice all in exam mode.
+            </p>
           </div>
-          <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white">
-            PDF Intelligence Studio
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">
-            Upload exam papers, test series, and notes in English, Hindi, or bilingual.
-            Extracts diagrams, resolves missing answer keys via reasoning AI, detects duplicates, and structures explanations.
-          </p>
+
+          {/* Thin Upload Action */}
+          <div className="flex items-center gap-2 shrink-0">
+            <label className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-extrabold text-xs shadow-xs transition-all cursor-pointer">
+              <UploadCloud className="w-4 h-4" />
+              <span>{uploading ? 'Processing PDF...' : 'Upload Exam PDF'}</span>
+              <input
+                type="file"
+                accept=".pdf,.txt"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+            {selectedDoc && onStartPractice && (
+              <button
+                onClick={() => onStartPractice(selectedDoc.id, selectedDoc.file_name)}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer"
+              >
+                <Play className="w-4 h-4" />
+                <span>Practice in Arena</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Upload Action */}
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 bg-royal-600 hover:bg-royal-700 text-white px-5 py-3 rounded-2xl font-bold text-xs shadow-sm transition-all cursor-pointer active:scale-98">
-            <UploadCloud className="w-4 h-4" />
-            <span>{uploading ? 'Processing AI Pipeline...' : 'Upload Exam PDF'}</span>
-            <input
-              type="file"
-              accept=".pdf,.txt"
-              onChange={handleFileUpload}
-              disabled={uploading}
-              className="hidden"
-            />
-          </label>
-        </div>
+        {/* Upload Timing & Throughput Graph */}
+        {uploadMetrics && (
+          <div className="pt-3 border-t border-slate-100 dark:border-dark-border grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+              <span className="text-[10px] text-slate-400 font-bold block">Uploaded At</span>
+              <span className="font-extrabold text-slate-900 dark:text-white">{uploadMetrics.uploadedAt}</span>
+            </div>
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+              <span className="text-[10px] text-slate-400 font-bold block">Processing Time</span>
+              <span className="font-black text-brand-600 dark:text-brand-400">{uploadMetrics.durationSec}s</span>
+            </div>
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+              <span className="text-[10px] text-slate-400 font-bold block">Questions Extracted</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400">{uploadMetrics.questionCount} MCQs</span>
+            </div>
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+              <span className="text-[10px] text-slate-400 font-bold block">Speed Rate</span>
+              <span className="font-black text-saffron-600 dark:text-saffron-400">
+                {uploadMetrics.questionCount > 0 ? (uploadMetrics.questionCount / uploadMetrics.durationSec).toFixed(1) : 0} Qs/sec
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Feedback Alerts */}
@@ -466,128 +524,144 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
               {filteredDrafts.map((draft, idx) => (
                 <div
                   key={draft.id}
-                  className={`bg-white dark:bg-dark-card border rounded-2xl p-5 shadow-subtle transition-all ${
-                    draft.is_duplicate
-                      ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/20 dark:bg-rose-950/20'
-                      : draft.answer_status === 'NEEDS_REVIEW'
-                      ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50/20 dark:bg-amber-950/20'
-                      : draft.is_imported
-                      ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/10 dark:bg-emerald-950/20'
-                      : 'border-cool-200 dark:border-dark-border'
-                  }`}
+                  className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-5 shadow-sm transition-all"
                 >
                   {/* Top metadata badge row */}
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-400 dark:text-dark-muted">Q.{idx + 1}</span>
+                      <span className="text-xs font-black text-slate-500 dark:text-dark-muted">Q.{idx + 1}</span>
                       
                       {/* Verification Status Badge */}
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide border ${
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wide border ${
                           draft.answer_status === 'PDF_VERIFIED'
                             ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/50'
                             : draft.answer_status === 'AI_VERIFIED'
-                            ? 'bg-indigo-50 dark:bg-indigo-950/40 text-royal-700 dark:text-royal-300 border-indigo-200 dark:border-indigo-900/50'
+                            ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-brand-900/50'
                             : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/50'
                         }`}
                       >
                         {draft.answer_status}
                       </span>
 
-                      {/* Confidence Score Pill */}
-                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 bg-cool-100 dark:bg-dark-surface px-2 py-0.5 rounded">
+                      {/* Confidence Score */}
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-dark-surface px-2 py-0.5 rounded">
                         Confidence: {Math.round(draft.confidence_score * 100)}%
                       </span>
 
                       {/* Duplicate Warning */}
                       {draft.is_duplicate && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50">
-                          Duplicate Question Detected
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                          Duplicate
                         </span>
                       )}
 
                       {/* Imported Marker */}
                       {draft.is_imported && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50 flex items-center gap-1">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                           <Check className="w-3 h-3" />
                           <span>Imported</span>
                         </span>
                       )}
                     </div>
 
-                    {/* Source reference citation */}
-                    <span className="text-[11px] text-slate-400 dark:text-dark-muted font-medium">
-                      {draft.source_reference || 'Extracted Question'}
+                    <span className="text-[11px] text-slate-400 dark:text-dark-muted font-semibold">
+                      {draft.source_reference || 'Extracted MCQ'}
                     </span>
                   </div>
 
                   {/* Visual Diagram/Map Image if present */}
                   {draft.question_image_url && (
-                    <div className="mb-4 p-3 bg-slate-50 dark:bg-dark-surface rounded-xl border border-cool-200 dark:border-dark-border flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-950/50 text-royal-600 dark:text-royal-400 flex items-center justify-center shrink-0">
+                    <div className="mb-4 p-3 bg-slate-50 dark:bg-dark-surface rounded-xl border border-slate-200 dark:border-dark-border flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
                         <ImageIcon className="w-5 h-5" />
                       </div>
                       <div className="text-xs">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">Visual Asset Attached: </span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">Diagram Attached: </span>
                         <span className="text-slate-500 dark:text-dark-muted">{draft.question_image_url}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Question Stem */}
-                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed mb-4">
+                  {/* Question Stem (Pure White Box, Dark Black Text) */}
+                  <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-relaxed mb-4">
                     {draft.question_text}
                   </h4>
 
-                  {/* Options Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-                    {draft.options.map((opt) => {
-                      const isCandidate = opt.id === draft.candidate_answer;
-                      return (
-                        <div
-                          key={opt.id}
-                          className={`p-2.5 rounded-xl text-xs font-medium border flex items-start gap-2.5 ${
-                            isCandidate
-                              ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-200 font-bold'
-                              : 'border-cool-200 dark:border-dark-border bg-cool-50 dark:bg-dark-surface text-slate-700 dark:text-slate-300'
-                          }`}
-                        >
-                          <span
-                            className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                              isCandidate
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-cool-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                  {/* Interactive Options Grid (Click to Submit & Reveal) */}
+                  {(() => {
+                    const selectedAns = userAnswers[draft.id];
+                    const hasAnswered = Boolean(selectedAns);
+                    const isCorrect = selectedAns === draft.candidate_answer;
+
+                    return (
+                      <div className="space-y-3 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {draft.options.map((opt) => {
+                            const isUserPick = selectedAns === opt.id;
+                            const isCandidate = opt.id === draft.candidate_answer;
+
+                            let btnStyle = 'border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-surface text-slate-800 dark:text-slate-200 hover:border-brand-500 hover:bg-slate-100';
+                            if (hasAnswered) {
+                              if (isCandidate) {
+                                btnStyle = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-bold ring-2 ring-emerald-500/20';
+                              } else if (isUserPick) {
+                                btnStyle = 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-bold';
+                              } else {
+                                btnStyle = 'border-slate-200 opacity-60 bg-slate-50 dark:bg-dark-surface text-slate-500';
+                              }
+                            }
+
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => setUserAnswers((prev) => ({ ...prev, [draft.id]: opt.id }))}
+                                className={`p-3 rounded-xl text-xs sm:text-sm font-semibold border flex items-start gap-2.5 text-left transition-all cursor-pointer ${btnStyle}`}
+                              >
+                                <span
+                                  className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
+                                    hasAnswered && isCandidate
+                                      ? 'bg-emerald-600 text-white'
+                                      : hasAnswered && isUserPick
+                                      ? 'bg-rose-600 text-white'
+                                      : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                                  }`}
+                                >
+                                  {opt.id}
+                                </span>
+                                <span className="leading-snug pt-0.5 font-bold text-slate-900 dark:text-white">{opt.text}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Direct Answer & Key Solution (No Walls of Text - Clean Heading & Essential Takeaway Only) */}
+                        {hasAnswered && (
+                          <div
+                            className={`p-3.5 rounded-xl border text-xs sm:text-sm space-y-1 animate-in fade-in ${
+                              isCorrect
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
+                                : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
                             }`}
                           >
-                            {opt.id}
-                          </span>
-                          <span className="leading-snug">{opt.text}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Section 6: Structured Explanation Block */}
-                  {draft.explanation && (
-                    <div className="p-3.5 bg-cool-50 dark:bg-dark-surface rounded-xl border border-cool-200 dark:border-dark-border text-xs space-y-1.5 mb-4">
-                      <div>
-                        <span className="font-bold text-slate-900 dark:text-white">Why: </span>
-                        <span className="text-slate-700 dark:text-slate-300">{draft.explanation.why}</span>
+                            <div className="flex items-center justify-between font-black">
+                              <span>{isCorrect ? '✅ Correct Answer!' : '❌ Incorrect Selection'}</span>
+                              <span className="text-xs px-2.5 py-0.5 rounded-lg bg-white dark:bg-dark-card border font-black text-slate-900 dark:text-white shadow-2xs">
+                                Verified Option: {draft.candidate_answer}
+                              </span>
+                            </div>
+                            {draft.explanation?.why && (
+                              <p className="text-xs text-slate-800 dark:text-slate-200 pt-1 leading-relaxed">
+                                <strong className="text-slate-900 dark:text-white font-extrabold">Key Concept: </strong>
+                                {draft.explanation.why}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {draft.explanation.quick_fact && (
-                        <div>
-                          <span className="font-bold text-royal-700 dark:text-royal-400">Quick Fact: </span>
-                          <span className="text-slate-700 dark:text-slate-300">{draft.explanation.quick_fact}</span>
-                        </div>
-                      )}
-                      {draft.explanation.memory_trick && (
-                        <div>
-                          <span className="font-bold text-violet-700 dark:text-violet-400">Memory Trick: </span>
-                          <span className="text-slate-700 dark:text-slate-300">{draft.explanation.memory_trick}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Action Buttons */}
                   <div className="flex items-center justify-between pt-2 border-t border-cool-100 dark:border-dark-border">

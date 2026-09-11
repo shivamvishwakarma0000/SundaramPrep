@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Sparkles, User as UserIcon, Sun, Moon, Laptop } from 'lucide-react';
+import { Flame, Sparkles, User as UserIcon, Sun, Moon, Laptop, ArrowLeft } from 'lucide-react';
 import type { ExamType, User } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
@@ -9,6 +9,8 @@ interface HeaderProps {
   onExamChange: (exam: ExamType) => void;
   onOpenAI: () => void;
   onOpenAuth: () => void;
+  canGoBack?: boolean;
+  onGoBack?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,6 +19,8 @@ export const Header: React.FC<HeaderProps> = ({
   onExamChange,
   onOpenAI,
   onOpenAuth,
+  canGoBack = false,
+  onGoBack,
 }) => {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -32,8 +36,19 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-dark-surface/95 backdrop-blur border-b border-slate-200/80 dark:border-dark-border px-2 sm:px-6 py-2 sm:py-3 shadow-subtle dark:shadow-dark-card transition-colors">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-1 sm:gap-4">
-        {/* Brand */}
+        {/* Brand & Phone Back Button */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {canGoBack && onGoBack && (
+            <button
+              onClick={onGoBack}
+              aria-label="Back"
+              className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 dark:bg-dark-card hover:bg-slate-200 text-brand-700 dark:text-dark-text border border-slate-300 dark:border-dark-border transition-colors cursor-pointer flex items-center gap-1 shrink-0 font-extrabold text-xs"
+              title="Go Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden xs:inline">Back</span>
+            </button>
+          )}
           <img
             src="/favicon.png"
             alt="Sundaram Prep Logo"
