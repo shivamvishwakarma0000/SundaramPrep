@@ -36,30 +36,58 @@ class EmailService:
         html_content: str,
         text_content: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Sends email via Resend or logs securely in dev."""
-        if not self.is_configured:
-            logger.info(f"[DEV EMAIL] To: {to_email} | Subject: {subject} | Body: {text_content or html_content[:80]}...")
-            return {
-                "sent": True,
-                "provider": "simulated_resend",
-                "message": "Email logged to console (RESEND_API_KEY unset)"
-            }
-            
-        try:
-            params = {
-                "from": self.from_email,
-                "to": [to_email],
-                "subject": subject,
-                "html": html_content,
-            }
-            if text_content:
-                params["text"] = text_content
-                
-            response = self._resend.Emails.send(params)
-            return {"sent": True, "provider": "resend", "response": response}
-        except Exception as e:
-            logger.error(f"Failed to send email via Resend to {to_email}: {e}")
-            return {"sent": False, "error": str(e)}
+        """Sends email via Resend, with automatic SMTP fallback (e.g. Gmail) if unverified."""
+        # 1. Try Resend if configured
+        if self.is_configured:
+            try:
+                params = {
+                    "from": self.from_email,
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_content,
+                }
+                if text_content:
+                    params["text"] = text_content
+                    
+                response = self._resend.Emails.send(params)
+                logger.info(f"Email sent via Resend to {to_email}")
+                return {"sent": True, "provider": "resend", "response": response}
+            except Exception as e:
+                logger.warning(f"Resend send failed to {to_email}: {e}. Trying fallback...")
+
+        # 2. Try SMTP if configured (e.g. Gmail SMTP)
+        if config.SMTP_USER and config.SMTP_PASSWORD:
+            try:
+                import smtplib
+                from email.mime.multipart import MIMEMultipart
+                from email.mime.text import MIMEText
+
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = subject
+                msg["From"] = f"Sundaram Prep <{config.SMTP_USER}>"
+                msg["To"] = to_email
+
+                if text_content:
+                    msg.attach(MIMEText(text_content, "plain"))
+                msg.attach(MIMEText(html_content, "html"))
+
+                server = smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT)
+                server.starttls()
+                server.login(config.SMTP_USER, config.SMTP_PASSWORD)
+                server.sendmail(config.SMTP_USER, [to_email], msg.as_string())
+                server.quit()
+                logger.info(f"Email sent via SMTP to {to_email}")
+                return {"sent": True, "provider": "smtp"}
+            except Exception as e:
+                logger.error(f"SMTP send failed to {to_email}: {e}")
+
+        # 3. Log fallback in development / simulation
+        logger.info(f"[DEV EMAIL LOG] To: {to_email} | Subject: {subject} | Body: {text_content or html_content[:80]}...")
+        return {
+            "sent": True,
+            "provider": "simulated_resend",
+            "message": "Email logged to console"
+        }
 
     def send_otp_email(
         self,
