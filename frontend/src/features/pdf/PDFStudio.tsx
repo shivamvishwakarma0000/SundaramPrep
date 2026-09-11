@@ -734,8 +734,8 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
 
       {/* Edit Question Modal */}
       {editingDraft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white dark:bg-dark-card rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-cool-200 dark:border-dark-border">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-dark-card rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-cool-200 dark:border-dark-border max-h-[90dvh] overflow-y-auto pb-safe">
             <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3 font-display">
               Edit Detected Question
             </h3>
@@ -746,7 +746,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                   rows={4}
                   value={editStem}
                   onChange={(e) => setEditStem(e.target.value)}
-                  className="w-full p-3 text-xs rounded-xl border border-cool-200 dark:border-dark-border bg-white dark:bg-dark-surface text-slate-900 dark:text-white focus:ring-2 focus:ring-royal-500 outline-none"
+                  className="w-full p-3 text-xs rounded-xl border border-cool-200 dark:border-dark-border bg-white dark:bg-dark-surface text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
                 />
               </div>
               <div>
@@ -754,7 +754,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                 <select
                   value={editAns}
                   onChange={(e) => setEditAns(e.target.value)}
-                  className="w-full p-2.5 text-xs rounded-xl border border-cool-200 dark:border-dark-border focus:ring-2 focus:ring-royal-500 outline-none bg-white dark:bg-dark-surface font-bold text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] p-2.5 text-xs rounded-xl border border-cool-200 dark:border-dark-border focus:ring-2 focus:ring-brand-500 outline-none bg-white dark:bg-dark-surface font-bold text-slate-900 dark:text-white"
                 >
                   <option value="A">Option A</option>
                   <option value="B">Option B</option>
@@ -766,13 +766,13 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
             <div className="flex items-center justify-end gap-2 mt-5">
               <button
                 onClick={() => setEditingDraft(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-cool-100 dark:hover:bg-dark-surface"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-cool-100 dark:hover:bg-dark-surface min-h-[44px] flex items-center cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="px-5 py-2 bg-royal-600 hover:bg-royal-700 text-white rounded-xl text-xs font-bold"
+                className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold min-h-[44px] flex items-center cursor-pointer shadow-xs"
               >
                 Save Changes
               </button>
@@ -783,8 +783,8 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
 
       {/* Report Question Modal (Section 13) */}
       {reportingDraft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white dark:bg-dark-card rounded-3xl max-w-md w-full p-6 shadow-2xl border border-cool-200 dark:border-dark-border">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-dark-card rounded-t-3xl sm:rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-cool-200 dark:border-dark-border max-h-[90dvh] overflow-y-auto pb-safe">
             <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1 font-display">
               Report Question Issue
             </h3>
@@ -797,7 +797,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                 <select
                   value={reportIssue}
                   onChange={(e) => setReportIssue(e.target.value)}
-                  className="w-full p-2.5 text-xs rounded-xl border border-cool-200 dark:border-dark-border focus:ring-2 focus:ring-royal-500 outline-none bg-white dark:bg-dark-surface text-slate-900 dark:text-white font-semibold"
+                  className="w-full min-h-[44px] p-2.5 text-xs rounded-xl border border-cool-200 dark:border-dark-border focus:ring-2 focus:ring-brand-500 outline-none bg-white dark:bg-dark-surface text-slate-900 dark:text-white font-semibold"
                 >
                   <option value="WRONG_ANSWER">Wrong Answer Key</option>
                   <option value="WRONG_EXPLANATION">Wrong or Flawed Explanation</option>
@@ -814,20 +814,20 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                   value={reportNotes}
                   onChange={(e) => setReportNotes(e.target.value)}
                   placeholder="Explain why this answer or question is inaccurate..."
-                  className="w-full p-3 text-xs rounded-xl border border-cool-200 dark:border-dark-border bg-white dark:bg-dark-surface text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-royal-500 outline-none"
+                  className="w-full p-3 text-xs rounded-xl border border-cool-200 dark:border-dark-border bg-white dark:bg-dark-surface text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 outline-none"
                 />
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 mt-5">
               <button
                 onClick={() => setReportingDraft(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-cool-100 dark:hover:bg-dark-surface"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-cool-100 dark:hover:bg-dark-surface min-h-[44px] flex items-center cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmitReport}
-                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold"
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold min-h-[44px] flex items-center cursor-pointer shadow-xs"
               >
                 Submit Report
               </button>

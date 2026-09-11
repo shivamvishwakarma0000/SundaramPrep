@@ -177,20 +177,20 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
                 </div>
 
                 {/* AI Actions */}
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-cool-100 dark:border-dark-border">
                   <span className="text-[11px] text-slate-400 dark:text-dark-muted italic">
                     {m.question.source_reference || 'UPSC / SSC Reference'}
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => onOpenAIWithQuestion(m.question, 'WHY_WRONG')}
-                      className="text-xs font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/70 px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/40 transition-colors cursor-pointer"
+                      className="text-xs font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/70 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 transition-colors cursor-pointer"
                     >
                       Why is this trap?
                     </button>
                     <button
                       onClick={() => onOpenAIWithQuestion(m.question, 'MEMORY_TRICK')}
-                      className="text-xs font-bold text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-950/70 px-3 py-1.5 rounded-lg border border-violet-200 dark:border-violet-900/40 transition-colors cursor-pointer"
+                      className="text-xs font-bold text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-950/70 px-3 py-1.5 rounded-xl border border-violet-200 dark:border-violet-900/40 transition-colors cursor-pointer"
                     >
                       Memory Trick
                     </button>

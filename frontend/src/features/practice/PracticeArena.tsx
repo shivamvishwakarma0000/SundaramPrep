@@ -483,8 +483,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
             </span>
           </div>
 
-          {/* Question Stem */}
-          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-dark-text leading-relaxed font-display">
+          {/* Question Stem - Responsive Fluid Typography clamp() */}
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-dark-text leading-relaxed font-display text-fluid-q">
             {currentQ.question_text}
           </h3>
 
@@ -494,13 +494,13 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               <img 
                 src={currentQ.image_url} 
                 alt="Question Diagram" 
-                className="max-h-64 object-contain rounded-lg shadow-2xs" 
+                className="max-h-56 sm:max-h-72 object-contain rounded-lg shadow-2xs w-auto max-w-full" 
               />
               <span className="text-[10px] text-slate-400 dark:text-dark-muted mt-1 font-medium">Exhibit / Map Reference</span>
             </div>
           )}
 
-          {/* Options List */}
+          {/* Options List - Touch targets min 48px */}
           <div className="space-y-3 pt-2">
             {currentQ.options.map((opt) => {
               const isSelected = selectedOption === opt.id;
@@ -523,14 +523,14 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                   key={opt.id}
                   onClick={() => handleSelectOption(opt.id)}
                   disabled={Boolean(currentSubmission && mode !== 'LEARN')}
-                  className={`w-full p-4 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-start gap-3.5 cursor-pointer ${optStyle}`}
+                  className={`w-full min-h-[48px] p-3.5 sm:p-4 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-start gap-3.5 cursor-pointer ${optStyle}`}
                 >
-                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
                     isSelected ? 'bg-brand-600 text-white' : 'bg-cool-200 dark:bg-slate-700 text-slate-700 dark:text-dark-muted'
                   }`}>
                     {opt.id}
                   </span>
-                  <span className="flex-1 mt-0.5 leading-relaxed">{opt.text}</span>
+                  <span className="flex-1 leading-relaxed">{opt.text}</span>
 
                   {mode === 'LEARN' && currentSubmission && opt.id === currentSubmission.correct_answer && (
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />

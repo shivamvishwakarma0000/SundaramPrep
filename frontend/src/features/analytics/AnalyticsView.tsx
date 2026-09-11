@@ -111,7 +111,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
             <TrendingUp className="w-3.5 h-3.5" />
             <span>Core Learning Loop: Step 6 & 7 (Analytics & Mastery)</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-dark-text tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-dark-text tracking-tight text-fluid-h2">
             Cognitive Analytics & Readiness
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-dark-muted mt-0.5">
@@ -119,14 +119,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
           </p>
         </div>
 
-        {/* Configurable Threshold Controls */}
-        <div className="bg-slate-50 dark:bg-dark-card border border-cool-200 dark:border-dark-border p-3 rounded-xl flex items-center gap-4 text-xs">
+        {/* Configurable Threshold Controls - Wraps gracefully on mobile */}
+        <div className="bg-slate-50 dark:bg-dark-card border border-cool-200 dark:border-dark-border p-3 rounded-xl flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4 text-xs w-full md:w-auto">
           <div className="flex items-center gap-1.5 text-slate-700 dark:text-dark-text font-bold">
             <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500 dark:text-dark-muted" />
             <span>Thresholds:</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-rose-700 dark:text-rose-400 font-bold">Weak &lt; {weakThreshold}%</span>
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-between sm:justify-start">
+            <span className="text-[11px] text-rose-700 dark:text-rose-400 font-bold whitespace-nowrap">Weak &lt; {weakThreshold}%</span>
             <input
               type="range"
               min="30"
@@ -136,8 +136,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
               className="w-16 h-1.5 bg-rose-200 dark:bg-rose-900/60 rounded-lg accent-rose-600 cursor-pointer"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">Strong &gt; {strongThreshold}%</span>
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-between sm:justify-start">
+            <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold whitespace-nowrap">Strong &gt; {strongThreshold}%</span>
             <input
               type="range"
               min="65"

@@ -556,4 +556,52 @@ Documented in `.env.example`:
 - **XSS & CSRF:** Content-type restrictions, sanitized PDF uploads, secure HTTP-only cookies, and restricted CORS origins.
 - **Error Sanitization:** Raw database exceptions and tracebacks are logged internally; frontend receives clean, non-revealing error payloads.
 
+---
+
+## 12. RESPONSIVE MULTI-DEVICE ARCHITECTURE & TESTING MATRIX
+
+Sundaram Prep is engineered with a mobile-first and tablet-first philosophy, with special prioritization for **11–12 inch UPSC tablets (768px–1024px+ in both portrait and landscape)**, smartphones, and widescreen desktop displays.
+
+### 12.1 Device-Specific UX Specifications
+
+| Device Class | Viewport Width | Navigation Mode | Layout Adaptation | Touch Targets |
+| :--- | :--- | :--- | :--- | :--- |
+| **Small Phones** | 320px – 375px | Fixed BottomNav (6 tabs) | Single-column, compact exam dropdown, bottom sheet modals | Min 44px–48px |
+| **Modern Phones** | 390px – 480px | Fixed BottomNav (`pb-safe`) | Single-column, full touch pills, thumb-zone ergonomics | Min 44px–48px |
+| **Small Tablets** | 600px – 720px | BottomNav or Top Subnav | 2-column card layouts where content allows | Min 44px |
+| **UPSC Tablets (Portrait)** | 768px – 1024px | Desktop Subnav bar | 2-column cards, wide reading column, side-by-side metadata | Min 44px |
+| **UPSC Tablets (Landscape)** | 1024px – 1280px | Desktop Subnav bar | Compact desktop layout, split PDF studio & question areas | Min 44px |
+| **Laptops & Desktops** | 1366px – 1536px | Top Header + Subnav | Centered max-width container (`max-w-7xl`, `max-w-4xl` for questions) | Desktop standard |
+| **Large Displays (4K)** | 1920px – 2560px+ | Top Header + Subnav | Max-width bounded container to prevent eye strain and overstretched lines | Desktop standard |
+
+### 12.2 Fluid Typography & Spacing Tokens
+- **Headings (`text-fluid-h1`):** `clamp(1.35rem, 2.5vw, 2.25rem)`
+- **Subheadings (`text-fluid-h2`):** `clamp(1.15rem, 2vw, 1.75rem)`
+- **Body (`text-fluid-body`):** `clamp(0.875rem, 1vw, 1.05rem)`
+- **Question Stem (`text-fluid-q`):** `clamp(1rem, 1.35vw, 1.25rem)` with `line-height: 1.65` for effortless reading across long MCQ problem statements.
+
+### 12.3 Focus Mode Isolation Architecture
+- During active Focus Mode (`activePracticeMode === 'FOCUS_TEST'`), all ambient UI is strictly suppressed:
+  - Top Header: **Hidden**
+  - Desktop Secondary Subnav: **Hidden**
+  - Mobile BottomNav: **Hidden**
+  - Sundaram AI Assistant Drawer: **Suppressed**
+  - Main container margins automatically adjust to full viewport height.
+- Only the proctored question, countdown timer, focus score, 3-strike violation tracker, and essential controls are displayed.
+
+### 12.4 Safe Area Insets & Anti-Overflow Rules
+- Uses CSS environment variables for notches and home indicators:
+  - `pb-safe`: `max(env(safe-area-inset-bottom, 0px), 0.75rem)`
+  - `pt-safe`: `max(env(safe-area-inset-top, 0px), 0.5rem)`
+- Root anti-overflow guarantee:
+  - `html, body { overflow-x: hidden; max-width: 100vw; }`
+  - Zero accidental horizontal scroll (`document.body.scrollWidth === window.innerWidth`).
+- Browser zoom enabled (`viewport-fit=cover`, without restrictive `user-scalable=no`).
+
+### 12.5 Verification Matrix
+- **Mobile Devices:** 320x667, 360x800, 375x812, 390x844, 414x896, 430x932
+- **Tablets (Portrait & Landscape):** 768x1024, 800x1280, 820x1180, 834x1194, 1024x1366, 1180x820, 1280x800
+- **Laptops & Desktops:** 1366x768, 1440x900, 1536x864, 1920x1080
+
+
 

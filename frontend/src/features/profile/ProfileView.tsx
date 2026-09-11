@@ -174,7 +174,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <select
               value={currentExam}
               onChange={(e) => onExamChange(e.target.value as ExamType)}
-              className="bg-white dark:bg-dark-card border border-cool-300 dark:border-dark-border text-slate-900 dark:text-white font-semibold text-xs py-1.5 px-3 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+              className="bg-white dark:bg-dark-card border border-cool-300 dark:border-dark-border text-slate-900 dark:text-white font-semibold text-xs py-2 px-3 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none min-h-[44px] cursor-pointer"
             >
               <option value="UPSC_CSE">UPSC Civil Services (CSE)</option>
               <option value="SSC_CGL">SSC Combined Graduate Level</option>
@@ -199,11 +199,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 max="150"
                 value={editingGoal}
                 onChange={(e) => setEditingGoal(parseInt(e.target.value) || 30)}
-                className="w-20 bg-white dark:bg-dark-card border border-cool-300 dark:border-dark-border text-slate-900 dark:text-white font-bold text-center py-1.5 px-2 rounded-lg"
+                className="w-20 bg-white dark:bg-dark-card border border-cool-300 dark:border-dark-border text-slate-900 dark:text-white font-bold text-center py-2 px-2 rounded-xl min-h-[44px]"
               />
               <button
                 onClick={handleSaveGoal}
-                className="flex items-center gap-1 bg-brand-950 dark:bg-royal-600 hover:bg-brand-900 dark:hover:bg-royal-700 text-white font-semibold py-1.5 px-3 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 bg-brand-950 dark:bg-brand-600 hover:bg-brand-900 dark:hover:bg-brand-700 text-white font-semibold py-2 px-3.5 rounded-xl transition-colors min-h-[44px] cursor-pointer shadow-xs"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Save</span>

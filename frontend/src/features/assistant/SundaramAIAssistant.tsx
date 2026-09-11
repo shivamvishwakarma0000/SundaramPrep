@@ -257,8 +257,8 @@ export const SundaramAIAssistant: React.FC<SundaramAIAssistantProps> = ({
           ))}
         </div>
 
-        {/* Input Bar */}
-        <div className="p-3 border-t border-cool-200 dark:border-dark-border bg-white dark:bg-dark-card">
+        {/* Input Bar with safe area padding */}
+        <div className="p-3 pb-safe border-t border-cool-200 dark:border-dark-border bg-white dark:bg-dark-card">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -271,12 +271,12 @@ export const SundaramAIAssistant: React.FC<SundaramAIAssistantProps> = ({
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               placeholder="Ask Sundaram AI (e.g. 'Give memory trick for DPSP')..."
-              className="flex-1 bg-cool-100 dark:bg-dark-surface text-xs sm:text-sm py-2 px-3.5 rounded-xl border border-cool-200 dark:border-dark-border focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              className="flex-1 bg-cool-100 dark:bg-dark-surface text-xs sm:text-sm py-2.5 px-3.5 rounded-xl border border-cool-200 dark:border-dark-border focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-h-[44px]"
             />
             <button
               type="submit"
               disabled={!inputQuery.trim() || loading}
-              className="bg-brand-950 dark:bg-royal-600 hover:bg-brand-900 dark:hover:bg-royal-700 disabled:opacity-40 text-white p-2 rounded-xl transition-all shadow-xs"
+              className="bg-brand-950 dark:bg-brand-600 hover:bg-brand-900 dark:hover:bg-brand-700 disabled:opacity-40 text-white p-2.5 rounded-xl transition-all shadow-xs min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>

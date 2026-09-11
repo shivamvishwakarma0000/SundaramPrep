@@ -97,7 +97,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 Exam Readiness OS
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-dark-text tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-dark-text tracking-tight text-fluid-h2">
               {summary.greeting}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-dark-muted mt-0.5">
@@ -106,10 +106,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap sm:flex-nowrap items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
           {/* Streak Indicator */}
-          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-300 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs">
-            <Flame className="w-5 h-5 text-amber-500 fill-amber-500" />
+          <div className="flex-1 sm:flex-initial flex items-center justify-center sm:justify-start gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-300 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs">
+            <Flame className="w-5 h-5 text-amber-500 fill-amber-500 shrink-0" />
             <div>
               <div className="text-base leading-none font-extrabold">{summary.streak}</div>
               <div className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold mt-0.5">Days Active</div>
@@ -117,7 +117,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
 
           {/* Daily Goal Gauge & Selector */}
-          <div className="bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/50 text-brand-950 dark:text-brand-200 p-3 rounded-xl text-xs shadow-xs min-w-[140px] space-y-2">
+          <div className="flex-1 sm:flex-initial bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/50 text-brand-950 dark:text-brand-200 p-3 rounded-xl text-xs shadow-xs min-w-[140px] sm:min-w-[160px] space-y-2">
             <div className="flex items-center justify-between font-bold text-[11px] text-brand-900 dark:text-brand-300">
               <span>Daily Goal</span>
               <span>{summary.daily_goal.solved_today}/{summary.daily_goal.target_questions} Qs</span>

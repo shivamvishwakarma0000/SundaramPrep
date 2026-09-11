@@ -94,61 +94,67 @@ export function AppContent() {
     setActiveTab(tab);
   };
 
+  const isFocusTest = activePracticeMode === 'FOCUS_TEST';
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-dark-bg text-slate-900 dark:text-dark-text flex flex-col antialiased transition-colors">
-      {/* Top Header */}
-      <Header
-        user={user}
-        currentExam={currentExam}
-        onExamChange={handleExamChange}
-        onOpenAI={() => {
-          setAiQuestionContext(null);
-          setAiInitialPrompt(null);
-          setIsAIOpen(true);
-        }}
-        onOpenAuth={() => {
-          if (user) {
-            handleTabSelect('profile');
-          } else {
-            setIsAuthOpen(true);
-          }
-        }}
-      />
+      {/* Top Header - Hidden in Focus Mode for absolute distraction-free proctoring */}
+      {!isFocusTest && (
+        <Header
+          user={user}
+          currentExam={currentExam}
+          onExamChange={handleExamChange}
+          onOpenAI={() => {
+            setAiQuestionContext(null);
+            setAiInitialPrompt(null);
+            setIsAIOpen(true);
+          }}
+          onOpenAuth={() => {
+            if (user) {
+              handleTabSelect('profile');
+            } else {
+              setIsAuthOpen(true);
+            }
+          }}
+        />
+      )}
 
       {/* Desktop Secondary Navigation Bar: Exactly 6 Student Portal Tabs */}
-      <div className="hidden md:block bg-white dark:bg-dark-surface border-b border-cool-200 dark:border-dark-border py-2 px-4 shadow-2xs transition-colors">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            {[
-              { id: 'home', label: 'HOME' },
-              { id: 'practice', label: 'PRACTICE' },
-              { id: 'upload', label: 'UPLOAD' },
-              { id: 'progress', label: 'PROGRESS' },
-              { id: 'ai', label: 'AI ASSISTANT' },
-              { id: 'profile', label: 'PROFILE' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleTabSelect(item.id as PortalTab)}
-                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  activeTab === item.id
-                    ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-dark-muted hover:text-slate-900 dark:hover:text-dark-text hover:bg-cool-100 dark:hover:bg-dark-card'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+      {!isFocusTest && (
+        <div className="hidden md:block bg-white dark:bg-dark-surface border-b border-cool-200 dark:border-dark-border py-2 px-4 shadow-2xs transition-colors">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              {[
+                { id: 'home', label: 'HOME' },
+                { id: 'practice', label: 'PRACTICE' },
+                { id: 'upload', label: 'UPLOAD' },
+                { id: 'progress', label: 'PROGRESS' },
+                { id: 'ai', label: 'AI ASSISTANT' },
+                { id: 'profile', label: 'PROFILE' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleTabSelect(item.id as PortalTab)}
+                  className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    activeTab === item.id
+                      ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-dark-muted hover:text-slate-900 dark:hover:text-dark-text hover:bg-cool-100 dark:hover:bg-dark-card'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
 
-          <div className="text-[11px] text-slate-500 dark:text-dark-muted font-medium">
-            Active Target: <strong className="text-slate-800 dark:text-slate-200 font-semibold">{currentExam.replace('_', ' ')}</strong>
+            <div className="text-[11px] text-slate-500 dark:text-dark-muted font-medium">
+              Active Target: <strong className="text-slate-800 dark:text-slate-200 font-semibold">{currentExam.replace('_', ' ')}</strong>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Single-Feature View Area (Section 11 Compliance: SHOW ONLY THAT FEATURE) */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-5 sm:py-6 pb-24 md:pb-8 space-y-6">
+      <main className={`flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 ${isFocusTest ? 'pb-6' : 'pb-28 md:pb-8'} space-y-6`}>
         {/* TAB 1: HOME (Section 10) */}
         {activeTab === 'home' && (
           <HomeView
@@ -200,11 +206,13 @@ export function AppContent() {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation (6 Portal Tabs) */}
-      <BottomNav
-        activeTab={activeTab}
-        onTabChange={handleTabSelect}
-      />
+      {/* Mobile Bottom Navigation (6 Portal Tabs) - Suppressed in Focus Mode */}
+      {!isFocusTest && (
+        <BottomNav
+          activeTab={activeTab}
+          onTabChange={handleTabSelect}
+        />
+      )}
 
       {/* Sundaram AI Assistant Drawer (Available on demand) */}
       <SundaramAIAssistant

@@ -261,14 +261,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-dark-card rounded-3xl max-w-md w-full p-7 shadow-2xl border border-cool-200 dark:border-dark-border relative overflow-hidden text-slate-900 dark:text-white">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-dark-card rounded-t-3xl sm:rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-cool-200 dark:border-dark-border relative overflow-y-auto max-h-[92dvh] sm:max-h-[90vh] pb-safe text-slate-900 dark:text-white">
         {/* Top Accent bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-950 via-royal-600 to-indigo-500" />
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-950 via-brand-600 to-indigo-500" />
 
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:text-dark-muted dark:hover:text-white hover:bg-cool-100 dark:hover:bg-dark-surface transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:text-dark-muted dark:hover:text-white hover:bg-cool-100 dark:hover:bg-dark-surface transition-colors cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
         >
           <X className="w-4 h-4" />
         </button>

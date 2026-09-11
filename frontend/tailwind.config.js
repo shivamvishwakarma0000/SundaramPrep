@@ -21,6 +21,19 @@ export default {
           900: '#312e81',
           950: '#1e1b4b',
         },
+        royal: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#4f46e5', // Harmonized with Sundaram Brand Indigo
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#1e1b4b',
+          950: '#0f172a',
+        },
         violet: {
           50: '#f5f3ff',
           100: '#ede9fe',
