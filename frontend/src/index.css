@@ -3,12 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #4F46E5;
-  --color-secondary: #7C3AED;
-  --bg-app: #F8FAFC;
+  --color-primary: #0D3269;
+  --color-secondary: #FF671F;
+  --color-accent: #046A38;
+  --color-gold: #D4AF37;
+  --bg-app: #FFFFFF;
   --surface-app: #FFFFFF;
-  --text-main: #172033;
-  --text-muted: #64748B;
+  --text-main: #0B2545;
+  --text-muted: #475569;
   --border-app: #E2E8F0;
 
   /* Fluid typography tokens using clamp() */
@@ -19,13 +21,15 @@
 }
 
 .dark {
-  --color-primary: #6366F1;
-  --color-secondary: #8B5CF6;
-  --bg-app: #0B0F19;
-  --surface-app: #161E2E;
+  --color-primary: #357BB7;
+  --color-secondary: #FF671F;
+  --color-accent: #138808;
+  --color-gold: #FCD34D;
+  --bg-app: #06111E;
+  --surface-app: #0B1B30;
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
-  --border-app: #283548;
+  --border-app: #1A365D;
 }
 
 @layer base {
@@ -36,12 +40,48 @@
 
   body {
     background-color: var(--bg-app);
+    background-image: 
+      radial-gradient(ellipse 65% 50% at 95% 5%, rgba(255, 103, 31, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 45% at 5% 95%, rgba(4, 106, 56, 0.07) 0%, transparent 70%),
+      radial-gradient(circle 800px at 50% 20%, rgba(13, 50, 105, 0.03) 0%, transparent 60%);
+    background-attachment: fixed;
     color: var(--text-main);
     overflow-x: hidden;
     max-width: 100vw;
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
+
+  .dark body {
+    background-image: 
+      radial-gradient(ellipse 60% 50% at 95% 5%, rgba(255, 103, 31, 0.05) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 45% at 5% 95%, rgba(4, 106, 56, 0.05) 0%, transparent 70%),
+      radial-gradient(circle 800px at 50% 20%, rgba(13, 50, 105, 0.15) 0%, transparent 60%);
+  }
+}
+
+/* 3D Elevated Box Utility */
+.box-3d {
+  background-color: #FFFFFF;
+  border-radius: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 10px 25px -4px rgba(11, 37, 69, 0.09), 0 4px 10px -2px rgba(11, 37, 69, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.box-3d:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 35px -5px rgba(11, 37, 69, 0.14), 0 8px 16px -4px rgba(11, 37, 69, 0.06);
+}
+
+.dark .box-3d {
+  background-color: #0B1B30;
+  border-color: #1A365D;
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
+}
+
+.dark .box-3d:hover {
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.7), 0 8px 16px -4px rgba(0, 0, 0, 0.4);
 }
 
 /* Fluid Typography Utilities */

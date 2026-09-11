@@ -107,28 +107,37 @@ class PDFExtractor:
         """
         Extracts structured question dictionaries from raw text.
         Supports:
-        - English headers: Q1., Q.1, 1., Question 1:
-        - Hindi headers: प्र.1, प्रश्न 1, १., २.
-        - Options: (A), (B), (C), (D) or (क), (ख), (ग), (घ)
-        - Answers: Ans: B, Answer: C, उत्तर: (B)
+        - English headers: Q1., Q.1, 1., 1), (1), Question 1:, MCQ 1.
+        - Hindi headers: प्र.1, प्रश्न 1, १., २., (१)
+        - Options: (A), (B), (C), (D) or (a), (b), (c), (d) or A., B., C., D. or (क), (ख), (ग), (घ) or (1), (2), (3), (4)
+        - Answers: Ans: B, Answer: C, Key: A, उत्तर: (B), Ans - D
         """
         questions = []
         if not text:
             return questions
 
-        # Unified bilingual question split pattern
-        # Matches: Q.1, Q1., Question 1, 1., 1), प्र.1, प्रश्न 1, १.
-        split_pattern = r'(?:(?<=\n)|\A)(?:Q(?:uestion)?\.?\s*\d+|प्र(?:श्न)?\.?\s*\d+|\d+|[०-९]+)[\.:\)]?\s+'
-        blocks = re.split(split_pattern, text)
+        # Normalize line breaks and clean whitespace
+        clean_text = text.replace('\r\n', '\n').replace('\r', '\n')
+
+        # Enhanced split pattern catching all question numbering formats
+        split_pattern = r'(?:\n\s*|\A\s*|\s{3,})(?:Q(?:uestion)?\.?\s*\d+|प्र(?:श्न)?\.?\s*\d+|\b\d{1,3}[\.\)]|\([0-9]{1,3}\)|[०-९]{1,3}[\.\)])\s+'
+        blocks = re.split(split_pattern, clean_text)
+
+        # In case re.split returned the whole block (e.g. non-standard numbering), try alternative split
+        if len(blocks) <= 1:
+            split_pattern_alt = r'\b(?:Question|Q|प्रश्न)\s*\.?\s*\d+[\.:\)]?\s+'
+            alt_blocks = re.split(split_pattern_alt, clean_text, flags=re.IGNORECASE)
+            if len(alt_blocks) > 1:
+                blocks = alt_blocks
 
         for block in blocks:
             block = block.strip()
-            if not block or len(block) < 20:
+            if not block or len(block) < 15:
                 continue
 
             # 1. Detect explicit answer if present in the block
             ans_match = re.search(
-                r'\b(?:Ans(?:wer)?|Correct\s*Option|उत्तर)[\s:\-]*\(?([A-Da-dक-घअ-द1-4])\)?',
+                r'\b(?:Ans(?:wer)?|Correct\s*Option|Key|उत्तर)[\s:\-=]*\(?([A-Da-dक-घअ-द1-4])\)?',
                 block,
                 re.IGNORECASE
             )
@@ -138,20 +147,18 @@ class PDFExtractor:
                 explicit_answer = HINDI_OPT_MAP.get(raw_ans, raw_ans.upper())
 
             # 2. Extract options
-            # Matches: (A), (B), (C), (D) OR A), B) OR (क), (ख), (ग), (घ)
-            opt_pattern = r'(?:\(([A-Da-dक-घअ-द1-4])\)|(?:\b([A-Da-dक-घअ-द1-4])[\.\)]))\s+(.+?)(?=(?:\([A-Da-dक-घअ-द1-4]\)|\b[A-Da-dक-घअ-द1-4][\.\)]|\b(?:Ans(?:wer)?|Correct|उत्तर)\b|\Z))'
+            # Matches: (A), (B), (C), (D) OR A., B., C., D. OR A), B), C), D) OR (a), (b), (c), (d) OR (क), (ख), (ग), (घ) OR (1), (2), (3), (4)
+            opt_pattern = r'(?:\(([A-Da-dक-घअ-द1-4])\)|(?:\b([A-Da-dक-घअ-द1-4])[\.\)]))\s+(.+?)(?=(?:\([A-Da-dक-घअ-द1-4]\)|\b[A-Da-dक-घअ-द1-4][\.\)]|\b(?:Ans(?:wer)?|Correct|Key|उत्तर)\b|\Z))'
             opts_found = re.findall(opt_pattern, block, re.DOTALL)
 
             options = []
-            first_opt_pos = None
-
-            if opts_found:
+            if opts_found and len(opts_found) >= 2:
                 for match in opts_found:
                     raw_opt_id = match[0] or match[1]
                     norm_id = HINDI_OPT_MAP.get(raw_opt_id, raw_opt_id.upper())
                     opt_body = match[2].strip()
                     # Clean any trailing answer notes from option text
-                    opt_body = re.sub(r'\b(?:Ans(?:wer)?|उत्तर)[\s:\-].*$', '', opt_body, flags=re.IGNORECASE).strip()
+                    opt_body = re.sub(r'\b(?:Ans(?:wer)?|Key|उत्तर)[\s:\-=].*$', '', opt_body, flags=re.IGNORECASE).strip()
                     options.append({"id": norm_id, "text": opt_body})
 
                 # Determine question stem up to first option
@@ -161,14 +168,30 @@ class PDFExtractor:
                 else:
                     stem = block.split("\n")[0].strip()
             else:
-                # If options were not cleanly matched via regex, synthesize standard 4 options
-                stem = block.split("\n")[0].strip()
-                options = [
-                    {"id": "A", "text": "Statement 1 is correct"},
-                    {"id": "B", "text": "Statement 2 is correct"},
-                    {"id": "C", "text": "Both 1 and 2 are correct"},
-                    {"id": "D", "text": "Neither 1 nor 2 is correct"}
-                ]
+                # If options were not cleanly matched, check if lines look like options
+                lines = [line.strip() for line in block.split("\n") if line.strip()]
+                stem_lines = []
+                for line in lines:
+                    line_opt = re.match(r'^[\(\[]?([A-Da-d1-4])[\)\]\.\:\-]\s*(.*)$', line)
+                    if line_opt:
+                        opt_id = line_opt.group(1).upper()
+                        norm_id = HINDI_OPT_MAP.get(opt_id, opt_id)
+                        options.append({"id": norm_id, "text": line_opt.group(2)})
+                    else:
+                        if not options:
+                            stem_lines.append(line)
+                
+                if len(options) >= 2:
+                    stem = " ".join(stem_lines).strip()
+                else:
+                    # Fallback to standard 4 options
+                    stem = block.split("\n")[0].strip()
+                    options = [
+                        {"id": "A", "text": "Statement 1 is correct"},
+                        {"id": "B", "text": "Statement 2 is correct"},
+                        {"id": "C", "text": "Both 1 and 2 are correct"},
+                        {"id": "D", "text": "Neither 1 nor 2 is correct"}
+                    ]
 
             # 3. Clean up stem text
             stem = re.sub(r'\s+', ' ', stem).strip()

@@ -70,8 +70,52 @@ def start_practice_session():
         
     questions = []
     
+    document_id = payload.get("document_id")
+    
+    # 0. PDF DOCUMENT PRACTICE
+    if document_id:
+        from app.models.pdf_document import PDFQuestionDraft, Document
+        from app.models.question import QuestionOption
+        questions = Question.query.filter_by(source_document_id=document_id).all()
+        if not questions:
+            # Reconstruct from drafts if not in Question table
+            drafts = PDFQuestionDraft.query.filter_by(document_id=document_id).all()
+            doc_record = Document.query.get(document_id)
+            doc_name = doc_record.file_name if doc_record else "PDF Exam Paper"
+            for d in drafts:
+                q = Question(
+                    question_text=d.question_text,
+                    correct_answer=d.candidate_answer or "A",
+                    explanation=d.explanation_json or {
+                        "answer": f"Option {d.candidate_answer or 'A'}",
+                        "why": d.reasoning_summary or "Extracted from uploaded document.",
+                        "quick_fact": "Source: Uploaded PDF",
+                        "memory_trick": "Concept retention drill."
+                    },
+                    subject=doc_record.subject if doc_record and doc_record.subject else "General Studies",
+                    topic=doc_name,
+                    exam=doc_record.exam_category if doc_record and doc_record.exam_category else exam,
+                    source_type="PDF_EXTRACTED",
+                    source_reference=doc_name,
+                    source_document_id=document_id,
+                    is_verified=True,
+                    language=d.language or "EN"
+                )
+                db.session.add(q)
+                db.session.flush()
+                for opt in (d.options or []):
+                    q_opt = QuestionOption(
+                        question_id=q.id,
+                        option_key=opt["id"],
+                        option_text=opt["text"],
+                        is_correct=(opt["id"] == (d.candidate_answer or "A"))
+                    )
+                    db.session.add(q_opt)
+                questions.append(q)
+            db.session.commit()
+
     # 1. MISTAKE_PRACTICE MODE
-    if session_type == "MISTAKE_PRACTICE":
+    elif session_type == "MISTAKE_PRACTICE":
         mistakes = Mistake.query.filter_by(user_id=user_id, is_resolved=False)\
             .order_by(Mistake.repeated_mistakes_count.desc(), Mistake.last_mistake_at.desc())\
             .limit(count).all()

@@ -129,7 +129,7 @@ export const api = {
   getFilters: () => apiRequest<{ exams: string[]; subjects: string[]; topics: string[]; source_types: string[]; answer_statuses: string[] }>("/api/questions/filters"),
 
   // Practice & Focus Tests
-  startPractice: (body: { exam: string; session_type?: string; subject?: string; topic?: string; count?: number; time_limit_seconds?: number }) =>
+  startPractice: (body: { exam: string; session_type?: string; subject?: string; topic?: string; count?: number; time_limit_seconds?: number; document_id?: string }) =>
     apiRequest<{ session: any; questions: any[] }>("/api/practice/start", {
       method: "POST",
       body: JSON.stringify(body),

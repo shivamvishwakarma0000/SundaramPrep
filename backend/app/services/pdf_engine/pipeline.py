@@ -131,6 +131,42 @@ class PDFPipeline:
                 )
                 db.session.add(draft)
 
+                # Auto-populate into main Question bank so user can immediately practice
+                from app.models.question import QuestionOption
+                playable_q = Question(
+                    question_text=stem,
+                    correct_answer=resolution["candidate_answer"] or "A",
+                    explanation=resolution["explanation_json"] or {
+                        "answer": f"Option {resolution['candidate_answer'] or 'A'}",
+                        "why": resolution["reasoning_summary"] or "Verified from uploaded test paper.",
+                        "quick_fact": "Source: Uploaded Document",
+                        "memory_trick": "Core concept retention drill."
+                    },
+                    subject=doc.subject or "General Studies",
+                    topic=doc.file_name or "PDF Test Paper",
+                    exam=doc.exam_category or "UPSC_CSE",
+                    source_type="PDF_EXTRACTED",
+                    source_reference=doc.file_name,
+                    source_document_id=doc.id,
+                    is_verified=True,
+                    answer_status=resolution["answer_status"],
+                    answer_confidence=resolution["confidence_score"] or 1.0,
+                    language=item.get("language", "EN"),
+                    image_url=item.get("question_image_url")
+                )
+                db.session.add(playable_q)
+                db.session.flush()
+
+                # Add options
+                for opt in options:
+                    q_opt = QuestionOption(
+                        question_id=playable_q.id,
+                        option_key=opt["id"],
+                        option_text=opt["text"],
+                        is_correct=(opt["id"] == (resolution["candidate_answer"] or "A"))
+                    )
+                    db.session.add(q_opt)
+
             # Finalize Document Record
             doc.extracted_questions_count = len(extracted_items)
             doc.ready_count = ready_count

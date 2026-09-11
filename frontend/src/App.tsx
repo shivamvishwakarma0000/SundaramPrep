@@ -11,6 +11,8 @@ import { ProfileView } from './features/profile/ProfileView';
 import { SundaramAIAssistant } from './features/assistant/SundaramAIAssistant';
 import { AuthModal } from './features/auth/AuthModal';
 import { PWAInstallModal } from './components/common/PWAInstallModal';
+import { PDFUploadFAB } from './components/pdf/PDFUploadFAB';
+import { PDFUploadModal } from './components/pdf/PDFUploadModal';
 import { api } from './api/client';
 import type { User, ExamType, Question, PracticeMode } from './types';
 import { ThemeProvider } from './context/ThemeContext';
@@ -22,6 +24,10 @@ export function AppContent() {
 
   // Active Practice Session state (for Single-Feature Practice flow)
   const [activePracticeMode, setActivePracticeMode] = useState<PracticeMode | null>(null);
+  const [activePDFDoc, setActivePDFDoc] = useState<{ id: string; title: string } | null>(null);
+
+  // PDF Upload Modal State
+  const [isPDFUploadOpen, setIsPDFUploadOpen] = useState<boolean>(false);
 
   // Sundaram AI state
   const [isAIOpen, setIsAIOpen] = useState<boolean>(false);
@@ -91,13 +97,20 @@ export function AppContent() {
     }
     // If switching main sections, reset active drill to ensure Single-Feature UI Principle
     setActivePracticeMode(null);
+    setActivePDFDoc(null);
     setActiveTab(tab);
+  };
+
+  const handleStartPDFPractice = (docId: string, title: string) => {
+    setActivePDFDoc({ id: docId, title });
+    setActivePracticeMode('PDF_PRACTICE' as any);
+    setActiveTab('practice');
   };
 
   const isFocusTest = activePracticeMode === 'FOCUS_TEST';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-dark-bg text-slate-900 dark:text-dark-text flex flex-col antialiased transition-colors">
+    <div className="min-h-screen bg-transparent text-slate-900 dark:text-dark-text flex flex-col antialiased transition-colors">
       {/* Top Header - Hidden in Focus Mode for absolute distraction-free proctoring */}
       {!isFocusTest && (
         <Header
@@ -121,15 +134,15 @@ export function AppContent() {
 
       {/* Desktop Secondary Navigation Bar: Exactly 6 Student Portal Tabs */}
       {!isFocusTest && (
-        <div className="hidden md:block bg-white dark:bg-dark-surface border-b border-cool-200 dark:border-dark-border py-2 px-4 shadow-2xs transition-colors">
+        <div className="hidden md:block bg-white/90 dark:bg-dark-surface/90 backdrop-blur border-b border-slate-200 dark:border-dark-border py-2 px-4 shadow-2xs transition-colors">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               {[
                 { id: 'home', label: 'HOME' },
                 { id: 'practice', label: 'PRACTICE' },
-                { id: 'upload', label: 'UPLOAD' },
+                { id: 'upload', label: 'UPLOAD PDF' },
                 { id: 'progress', label: 'PROGRESS' },
-                { id: 'ai', label: 'AI ASSISTANT' },
+                { id: 'ai', label: 'AI TUTOR' },
                 { id: 'profile', label: 'PROFILE' },
               ].map((item) => (
                 <button
@@ -138,7 +151,7 @@ export function AppContent() {
                   className={`text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
                     activeTab === item.id
                       ? 'bg-brand-600 dark:bg-brand-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-dark-muted hover:text-slate-900 dark:hover:text-dark-text hover:bg-cool-100 dark:hover:bg-dark-card'
+                      : 'text-slate-600 dark:text-dark-muted hover:text-slate-900 dark:hover:text-dark-text hover:bg-slate-100 dark:hover:bg-dark-card'
                   }`}
                 >
                   {item.label}
@@ -168,6 +181,7 @@ export function AppContent() {
               setActiveTab('practice');
             }}
             onOpenAIWithPrompt={openAIWithPrompt}
+            onOpenUploadModal={() => setIsPDFUploadOpen(true)}
           />
         )}
 
@@ -177,8 +191,13 @@ export function AppContent() {
             <PracticeArena
               mode={activePracticeMode}
               currentExam={currentExam}
+              documentId={activePDFDoc?.id}
+              documentTitle={activePDFDoc?.title}
               onOpenAIWithQuestion={openAIWithQuestion}
-              onExit={() => setActivePracticeMode(null)}
+              onExit={() => {
+                setActivePracticeMode(null);
+                setActivePDFDoc(null);
+              }}
             />
           ) : (
             <PracticeHub
@@ -190,7 +209,11 @@ export function AppContent() {
         )}
 
         {/* TAB 3: UPLOAD (PDF Intelligence Studio) */}
-        {activeTab === 'upload' && <PDFStudio />}
+        {activeTab === 'upload' && (
+          <PDFStudio
+            onStartPractice={(docId, title) => handleStartPDFPractice(docId, title)}
+          />
+        )}
 
         {/* TAB 4: PROGRESS (Analytics & Mastery) */}
         {activeTab === 'progress' && (
@@ -205,6 +228,21 @@ export function AppContent() {
           />
         )}
       </main>
+
+      {/* Floating Action Button for PDF Upload (Prominent, always visible) */}
+      {!isFocusTest && (
+        <PDFUploadFAB onClick={() => setIsPDFUploadOpen(true)} />
+      )}
+
+      {/* PDF Upload Modal with Animated Percentage Progress Bar */}
+      <PDFUploadModal
+        isOpen={isPDFUploadOpen}
+        onClose={() => setIsPDFUploadOpen(false)}
+        onStartPracticeWithDoc={handleStartPDFPractice}
+        onNavigateToStudio={() => {
+          handleTabSelect('upload');
+        }}
+      />
 
       {/* Mobile Bottom Navigation (6 Portal Tabs) - Suppressed in Focus Mode */}
       {!isFocusTest && (
