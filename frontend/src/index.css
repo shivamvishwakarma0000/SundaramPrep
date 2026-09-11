@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #4F46E5;
+  --color-secondary: #7C3AED;
+  --bg-app: #F8FAFC;
+  --surface-app: #FFFFFF;
+  --text-main: #172033;
+  --text-muted: #64748B;
+  --border-app: #E2E8F0;
+}
+
+.dark {
+  --color-primary: #6366F1;
+  --color-secondary: #8B5CF6;
+  --bg-app: #0B0F19;
+  --surface-app: #161E2E;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --border-app: #283548;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+
+/* Safe area padding utilities for modern mobile notches and home bars */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0.5rem);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Smooth tap highlights for mobile ergonomics */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
