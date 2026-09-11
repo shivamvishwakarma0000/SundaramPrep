@@ -47,9 +47,9 @@ export async function apiRequest<T>(
 }
 
 export const api = {
-  // Production Auth & OTP
-  register: (data: { full_name: string; email: string; password: string; target_exam: string }) =>
-    apiRequest<{ email: string; name: string; requires_otp: boolean; status: string; otp_info: any }>("/api/auth/register", {
+  // Production Auth & Quick Login
+  register: (data: { full_name?: string; email?: string; phone?: string; password?: string; target_exam?: string }) =>
+    apiRequest<{ user?: any; token?: string; email?: string; name?: string; requires_otp?: boolean; status?: string }>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
     }),
@@ -63,7 +63,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  login: (data: { email: string; password: string }) =>
+  login: (data: { email?: string; phone?: string; password?: string; target_exam?: string }) =>
     apiRequest<{ user: any; token: string }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(data),

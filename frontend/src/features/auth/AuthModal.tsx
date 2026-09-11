@@ -23,7 +23,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
   // Registration / Credentials State
   const [fullName, setFullName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+  const [password, setPassword] = useState<string>('sundaram');
   const [targetExam, setTargetExam] = useState<ExamType>('UPSC_CSE');
   
   // OTP Verification State
@@ -75,7 +75,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
     }
   };
 
-  // Step 01: Account Creation
+  // Step 01: Account Creation (Instant Activation - No OTP required)
   const handleRegisterAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -85,15 +85,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
     try {
       const res = await api.register({
         full_name: fullName,
-        email: email.trim().toLowerCase(),
-        password,
+        email: email.trim(),
+        password: password.trim() || 'sundaram',
         target_exam: targetExam,
       });
 
-      setOtpPurpose('REGISTRATION');
-      setResendSeconds(res.otp_info?.resend_cooldown_seconds || 30);
-      setSuccessMsg(`A 6-digit verification code has been sent to ${email}.`);
-      setMode('register_02_verify');
+      if (res.token) {
+        localStorage.setItem('sundaram_token', res.token);
+      }
+      if (res.user) {
+        onLoginSuccess(res.user);
+      }
+      onClose();
     } catch (e: any) {
       setErrorMsg(e.message);
     } finally {
@@ -191,22 +194,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
 
     try {
       const res = await api.login({
-        email: email.trim().toLowerCase(),
-        password,
+        email: email.trim(),
+        password: password.trim() || 'sundaram',
+        target_exam: targetExam,
       });
 
       localStorage.setItem('sundaram_token', res.token);
       onLoginSuccess(res.user);
       onClose();
     } catch (e: any) {
-      if (e.code === 'EMAIL_NOT_VERIFIED') {
-        setOtpPurpose('REGISTRATION');
-        setResendSeconds(30);
-        setErrorMsg(e.message);
-        setMode('register_02_verify');
-      } else {
-        setErrorMsg(e.message);
-      }
+      setErrorMsg(e.message);
     } finally {
       setLoading(false);
     }
@@ -359,44 +356,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
             <form onSubmit={handleLogin} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Primary Email
+                  Mobile Number or Email
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-3" />
                   <input
-                    type="email"
+                    type="text"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="aspirant@sundaramprep.com"
+                    placeholder="e.g. 9876543210 or your email"
                     className="w-full pl-10 pr-3.5 py-2.5 text-xs rounded-xl border border-cool-200 dark:border-dark-border bg-white dark:bg-dark-surface text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-royal-500 focus:border-royal-500 outline-none"
                   />
                 </div>
               </div>
 
               <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Target Exam
+                </label>
+                <select
+                  value={targetExam}
+                  onChange={(e) => setTargetExam(e.target.value as ExamType)}
+                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-cool-200 dark:border-dark-border bg-white dark:bg-dark-surface focus:ring-2 focus:ring-royal-500 focus:border-royal-500 outline-none font-medium text-slate-800 dark:text-slate-200"
+                >
+                  <option value="UPSC_CSE">UPSC Civil Services (CSE)</option>
+                  <option value="SSC_CGL">SSC CGL</option>
+                  <option value="BANK_PO">Banking PO / Clerk</option>
+                  <option value="RAILWAY_RRB">Railway RRB</option>
+                  <option value="STATE_PSC">State PSC</option>
+                </select>
+              </div>
+
+              <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setErrorMsg(null);
-                      setSuccessMsg(null);
-                      setMode('forgot_01_email');
-                    }}
-                    className="text-[11px] text-royal-600 dark:text-royal-400 hover:text-royal-800 dark:hover:text-royal-300 font-semibold"
-                  >
-                    Forgot password?
-                  </button>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">
+                    Default: sundaram
+                  </span>
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-3" />
                   <input
                     type="password"
-                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="sundaram"
                     className="w-full pl-10 pr-3.5 py-2.5 text-xs rounded-xl border border-cool-200 dark:border-dark-border bg-white dark:bg-dark-surface text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-royal-500 focus:border-royal-500 outline-none"
                   />
                 </div>
@@ -407,23 +412,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
                 disabled={loading}
                 className="w-full py-3 mt-2 bg-royal-600 hover:bg-royal-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all active:scale-98 flex items-center justify-center gap-2"
               >
-                <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
+                <span>{loading ? 'Entering Portal...' : 'Enter Portal / Sign In'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>
 
             <div className="mt-5 text-center pt-3 border-t border-cool-100 dark:border-dark-border">
-              <button
-                type="button"
-                onClick={() => {
-                  setErrorMsg(null);
-                  setSuccessMsg(null);
-                  setMode('register_01_account');
-                }}
-                className="text-xs text-royal-600 dark:text-royal-400 hover:text-royal-800 dark:hover:text-royal-300 font-semibold"
-              >
-                New Aspirant? Create your account
-              </button>
+              <p className="text-[11px] text-slate-500 dark:text-dark-muted">
+                Any mobile number works! New users are registered automatically.
+              </p>
             </div>
           </div>
         )}

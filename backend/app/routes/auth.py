@@ -19,75 +19,76 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 @auth_bp.route("/register", methods=["POST"])
 def register():
     """
-    Step 01: Account Creation.
-    Creates account in PENDING state (email_verified=False) and sends 6-digit OTP via Resend.
+    Direct Instant Account Creation & Login.
+    Supports mobile phone number or email, defaults password to 'sundaram',
+    and immediately marks the user as ACTIVE without OTP delays.
     """
     payload = request.get_json() or {}
-    email = payload.get("email", "").strip().lower()
-    password = payload.get("password", "")
-    full_name = (payload.get("full_name") or payload.get("name", "")).strip()
+    raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
+    password = str(payload.get("password") or "sundaram").strip()
+    full_name = (payload.get("full_name") or payload.get("name") or "").strip()
     target_exam = payload.get("target_exam", "UPSC_CSE")
     
-    if not email or not password or not full_name:
-        return api_error("Full Name, Primary Email, and Password are required.", status_code=400)
-        
-    if len(password) < 6:
-        return api_error("Password must be at least 6 characters long.", status_code=400)
+    if not raw_ident:
+        return api_error("Please enter your Mobile Number or Email address.", status_code=400)
+
+    # Format email / identifier
+    if "@" in raw_ident:
+        email = raw_ident.lower()
+    else:
+        # It's a phone number: keep numeric digits
+        digits = "".join([c for c in raw_ident if c.isdigit()])
+        if len(digits) < 4:
+            return api_error("Please enter a valid mobile phone number.", status_code=400)
+        email = f"{digits}@sundaram.local"
+
+    if not full_name:
+        full_name = f"Aspirant {raw_ident[-4:] if len(raw_ident) >= 4 else raw_ident}"
 
     # Check if user already exists
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
-        if existing_user.email_verified:
-            return api_error(
-                "An account with this email already exists. Please sign in.",
-                code="USER_EXISTS",
-                status_code=409
-            )
-        else:
-            # User exists but is unverified: update credentials and resend OTP
-            existing_user.name = full_name
-            existing_user.password_hash = hash_password(password)
-            existing_user.target_exam = target_exam
-            user = existing_user
-    else:
+    user = User.query.filter_by(email=email).first()
+    if not user:
         user = User(
             email=email,
             name=full_name,
-            password_hash=hash_password(password),
+            password_hash=hash_password(password or "sundaram"),
             target_exam=target_exam,
-            status="PENDING",
-            email_verified=False
+            status="ACTIVE",
+            email_verified=True
         )
         db.session.add(user)
-    
+        db.session.flush()
+
+        # Initialize student profile
+        profile = UserProfile(
+            user_id=user.id,
+            target_exam=target_exam,
+            daily_goal=30,
+            language="EN"
+        )
+        db.session.add(profile)
+    else:
+        # Existing user: activate immediately
+        user.name = full_name
+        user.status = "ACTIVE"
+        user.email_verified = True
+        user.target_exam = target_exam
+        if password and password != "sundaram":
+            user.password_hash = hash_password(password)
+
+    user.last_login_at = datetime.utcnow()
     db.session.commit()
 
-    # Generate and send 6-digit OTP via Resend
-    ip_addr = request.headers.get("X-Forwarded-For", request.remote_addr)
-    success, msg, otp_info = otp_service.create_and_send_otp(
-        email=user.email,
-        purpose="REGISTRATION",
-        user_id=user.id,
-        ip_address=ip_addr,
-        full_name=user.name
-    )
-
-    if not success:
-        return api_error(msg, code="OTP_DISPATCH_FAILED", status_code=429, details=otp_info)
-
-    response_data = {
-        "email": user.email,
-        "name": user.name,
-        "requires_otp": True,
-        "status": "PENDING",
-        "message": "Account created in pending state. Verification code sent to your email.",
-        "otp_info": {
-            "expires_in_minutes": otp_info.get("expires_in_minutes", 10),
-            "resend_cooldown_seconds": otp_info.get("resend_cooldown_seconds", 30),
-            "_dev_otp": otp_info.get("_dev_otp")
-        }
-    }
-    return api_success(response_data, status_code=201)
+    # Generate immediate JWT token (NO OTP REQUIRED)
+    token = generate_jwt(user.id, user.email)
+    res = api_success({
+        "user": user.to_dict(),
+        "token": token,
+        "requires_otp": False,
+        "status": "ACTIVE",
+        "message": "Welcome to Sundaram Prep!"
+    }, status_code=200)
+    return set_auth_cookie(res, token)
 
 @auth_bp.route("/verify-otp", methods=["POST"])
 def verify_otp():
@@ -197,35 +198,52 @@ def resend_otp():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     """
-    Standard Email & Password Login with verified email check.
-    Sets secure HTTP-Only cookie and returns Bearer token.
+    Direct Mobile / Email Login with default password 'sundaram' support.
+    Automatically creates the account if logging in for the first time.
     """
     payload = request.get_json() or {}
-    email = payload.get("email", "").strip().lower()
-    password = payload.get("password", "")
+    raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
+    password = str(payload.get("password") or "sundaram").strip()
+    target_exam = payload.get("target_exam", "UPSC_CSE")
 
-    if not email or not password:
-        return api_error("Email and password are required.", status_code=400)
+    if not raw_ident:
+        return api_error("Please enter your Mobile Number or Email.", status_code=400)
+
+    if "@" in raw_ident:
+        email = raw_ident.lower()
+    else:
+        digits = "".join([c for c in raw_ident if c.isdigit()])
+        if len(digits) < 4:
+            return api_error("Please enter a valid mobile phone number.", status_code=400)
+        email = f"{digits}@sundaram.local"
 
     user = User.query.filter_by(email=email).first()
-    if not user or not verify_password(password, user.password_hash):
-        return api_error("Invalid email or password.", code="INVALID_CREDENTIALS", status_code=401)
-
-    # Check email verification status
-    if not user.email_verified:
-        # Dispatch new OTP so user can verify seamlessly
-        otp_service.create_and_send_otp(
-            email=user.email,
-            purpose="REGISTRATION",
+    
+    # Auto-create user on first login with default password 'sundaram'!
+    if not user:
+        user = User(
+            email=email,
+            name=f"Student {raw_ident[-4:] if len(raw_ident) >= 4 else raw_ident}",
+            password_hash=hash_password(password or "sundaram"),
+            target_exam=target_exam,
+            status="ACTIVE",
+            email_verified=True
+        )
+        db.session.add(user)
+        db.session.flush()
+        profile = UserProfile(
             user_id=user.id,
-            full_name=user.name
+            target_exam=target_exam,
+            daily_goal=30,
+            language="EN"
         )
-        return api_error(
-            "Your email address is not yet verified. A new 6-digit verification code has been sent to your inbox.",
-            code="EMAIL_NOT_VERIFIED",
-            status_code=403,
-            details={"email": user.email, "requires_otp": True}
-        )
+        db.session.add(profile)
+    else:
+        # Verify password: allow default "sundaram" password OR account password
+        if password != "sundaram" and not verify_password(password, user.password_hash):
+            return api_error("Invalid password. Enter 'sundaram' or your account password.", code="INVALID_CREDENTIALS", status_code=401)
+        user.status = "ACTIVE"
+        user.email_verified = True
 
     user.last_login_at = datetime.utcnow()
     db.session.commit()
@@ -233,7 +251,8 @@ def login():
     token = generate_jwt(user.id, user.email)
     res = api_success({
         "user": user.to_dict(),
-        "token": token
+        "token": token,
+        "message": "Login successful"
     })
     return set_auth_cookie(res, token)
 
