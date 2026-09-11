@@ -65,9 +65,12 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
   const fetchDocs = async () => {
     try {
       const res = await api.listPDFDocuments(1, 20);
-      setDocuments(res.documents);
-      if (res.documents.length > 0 && !selectedDoc) {
-        handleSelectDoc(res.documents[0]);
+      const filtered = (res.documents || []).filter(
+        (d: any) => !d.file_name.toLowerCase().includes('sample_polity_test')
+      );
+      setDocuments(filtered);
+      if (filtered.length > 0 && !selectedDoc) {
+        handleSelectDoc(filtered[0]);
       }
     } catch (e: any) {
       console.error(e);
@@ -346,23 +349,23 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
       )}
 
       {/* Main Studio Navigation Tabs */}
-      <div className="flex items-center gap-3 border-b border-cool-200 dark:border-dark-border pb-2">
+      <div className="flex items-center gap-3 border-b-2 border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('review')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'review'
-              ? 'bg-royal-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-cool-100 dark:hover:bg-dark-surface'
+              ? 'bg-brand-600 text-white shadow-xs'
+              : 'text-slate-900 hover:bg-slate-100'
           }`}
         >
           Review & Extraction Studio
         </button>
         <button
           onClick={() => setActiveTab('library')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'library'
-              ? 'bg-royal-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-cool-100 dark:hover:bg-dark-surface'
+              ? 'bg-brand-600 text-white shadow-xs'
+              : 'text-slate-900 hover:bg-slate-100'
           }`}
         >
           My PDFs Library ({documents.length})
@@ -373,28 +376,35 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
       {/* TAB 1: REVIEW STUDIO */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'review' && (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Active Document Selector Pill Bar */}
           {documents.length > 0 && (
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              <span className="text-xs font-bold text-slate-400 dark:text-dark-muted uppercase mr-1">Active File:</span>
-              {documents.map((doc) => (
-                <button
-                  key={doc.id}
-                  onClick={() => handleSelectDoc(doc)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-2 whitespace-nowrap transition-all ${
-                    selectedDoc?.id === doc.id
-                      ? 'bg-royal-50 dark:bg-royal-950/40 border-royal-600 dark:border-royal-500 text-royal-700 dark:text-royal-300 font-bold'
-                      : 'border-cool-200 dark:border-dark-border text-slate-600 dark:text-slate-300 hover:bg-cool-50 dark:hover:bg-dark-surface'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span className="truncate max-w-xs">{doc.file_name}</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-cool-200 dark:bg-dark-surface text-slate-700 dark:text-slate-300">
-                    {doc.extracted_questions_count}Q
-                  </span>
-                </button>
-              ))}
+              <span className="text-xs font-black text-slate-700 uppercase tracking-wider mr-1">Active File:</span>
+              {documents.map((doc) => {
+                const isSelected = selectedDoc?.id === doc.id;
+                return (
+                  <button
+                    key={doc.id}
+                    onClick={() => handleSelectDoc(doc)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black border-2 flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-brand-600 text-white border-brand-700 shadow-xs'
+                        : 'bg-white border-slate-300 text-slate-900 hover:border-brand-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span className="truncate max-w-xs">{doc.file_name}</span>
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                      isSelected
+                        ? 'bg-white/20 text-white'
+                        : 'bg-slate-100 text-slate-900 border border-slate-200'
+                    }`}>
+                      {doc.extracted_questions_count}Q
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
 

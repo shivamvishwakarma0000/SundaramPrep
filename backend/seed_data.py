@@ -160,6 +160,286 @@ SAMPLE_QUESTIONS = [
         "answer_confidence": 1.0,
         "is_verified": True,
         "language": "EN"
+    },
+    {
+        "question_text": "A Parliamentary System of Government is one in which:",
+        "options": [
+            {"id": "A", "text": "All political parties in the Parliament are represented in the Government"},
+            {"id": "B", "text": "The Government is responsible to the Parliament and can be removed by it"},
+            {"id": "C", "text": "The Government is elected by the people and cannot be removed by the Parliament"},
+            {"id": "D", "text": "The Government is chosen by the Parliament but cannot be removed before a fixed term"}
+        ],
+        "correct_answer": "B",
+        "explanation": {
+            "answer": "Option B is correct.",
+            "why": "In a Parliamentary system, the Executive (Council of Ministers) is collectively responsible to the Legislature (Lok Sabha in India, Article 75(3)) and stays in power only as long as it enjoys the confidence of the House.",
+            "quick_fact": "Collective responsibility is the bedrock principle of Parliamentary democracy.",
+            "memory_trick": "Parliamentary = Executive answers to Parliament!"
+        },
+        "subject_name": "Indian Polity",
+        "topic_name": "Parliamentary System & Government",
+        "subtopic_name": "Executive Accountability & Collective Responsibility",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["STATE_PSC", "SSC_CGL"],
+        "difficulty": QuestionDifficulty.EASY,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2020 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "Which one of the following suggested that the Governor should be an eminent person from outside the State and should be a detached figure without intense political links?",
+        "options": [
+            {"id": "A", "text": "First Administrative Reforms Commission (1966)"},
+            {"id": "B", "text": "Rajamannar Committee (1969)"},
+            {"id": "C", "text": "Sarkaria Commission (1983)"},
+            {"id": "D", "text": "National Commission to Review the Working of the Constitution (2000)"}
+        ],
+        "correct_answer": "C",
+        "explanation": {
+            "answer": "Sarkaria Commission (Option C).",
+            "why": "The Sarkaria Commission on Centre-State Relations (1988) recommended that the Governor should be an eminent person, an outsider not involved in local state politics, and not in active politics recently.",
+            "quick_fact": "Punchhi Commission (2007) also reaffirmed Sarkaria's recommendations on Governors.",
+            "memory_trick": "Sarkaria = Stable State-Center relations & detached Governors!"
+        },
+        "subject_name": "Indian Polity",
+        "topic_name": "Federalism & Centre-State Relations",
+        "subtopic_name": "Office of the Governor",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["STATE_PSC"],
+        "difficulty": QuestionDifficulty.MEDIUM,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2019 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "What is the term 'Blue Carbon' used to refer to?",
+        "options": [
+            {"id": "A", "text": "Carbon captured by oceans and coastal ecosystems"},
+            {"id": "B", "text": "Carbon sequestered in forest biomass and agricultural soils"},
+            {"id": "C", "text": "Carbon contained in petroleum and natural gas reserves"},
+            {"id": "D", "text": "Carbon emissions released during industrial deep-sea mining"}
+        ],
+        "correct_answer": "A",
+        "explanation": {
+            "answer": "Option A is correct.",
+            "why": "Blue Carbon is the carbon captured by the world's ocean and coastal ecosystems, particularly mangroves, tidal marshes, and seagrass meadows, which store up to 10 times more carbon per hectare than terrestrial forests.",
+            "quick_fact": "India's Sundarbans mangrove forest is one of the world's largest Blue Carbon sinks.",
+            "memory_trick": "Blue = Ocean / Coast Carbon capture!"
+        },
+        "subject_name": "Geography",
+        "topic_name": "Ecology & Climate Change",
+        "subtopic_name": "Carbon Sinks & Coastal Ecosystems",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["STATE_PSC", "SSC_CGL"],
+        "difficulty": QuestionDifficulty.EASY,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2021 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "With reference to the Indus river system, of the following four rivers, three of them pour into one of them which joins the Indus direct. Which one is such river that joins the Indus direct?",
+        "options": [
+            {"id": "A", "text": "Chenab"},
+            {"id": "B", "text": "Jhelum"},
+            {"id": "C", "text": "Ravi"},
+            {"id": "D", "text": "Sutlej"}
+        ],
+        "correct_answer": "D",
+        "explanation": {
+            "answer": "Sutlej (Option D) / Chenab system joins at Mithankot.",
+            "why": "The Jhelum and Ravi join Chenab; Chenab then meets Sutlej at Panjnad. Sutlej brings the combined waters of all five Punjab rivers and pours directly into the Indus a few miles north of Mithankot.",
+            "quick_fact": "Under the Indus Water Treaty 1960, India has unrestricted rights over the three Eastern rivers: Ravi, Beas, and Sutlej.",
+            "memory_trick": "Sutlej collects the Panjnad confluence into the mighty Indus!"
+        },
+        "subject_name": "Geography",
+        "topic_name": "Indian Drainage System",
+        "subtopic_name": "Indus River Basin & Tributaries",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["STATE_PSC", "RAILWAY_RRB"],
+        "difficulty": QuestionDifficulty.HARD,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2021 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "Which of the following is/are the indicators of the 'Money Multiplier' in an economy?",
+        "options": [
+            {"id": "A", "text": "Increase in the Cash Reserve Ratio (CRR)"},
+            {"id": "B", "text": "Increase in the banking habit of the population"},
+            {"id": "C", "text": "Increase in the Statutory Liquidity Ratio (SLR)"},
+            {"id": "D", "text": "Increase in the population of the country"}
+        ],
+        "correct_answer": "B",
+        "explanation": {
+            "answer": "Option B is correct.",
+            "why": "Money Multiplier (m = 1/reserve ratio) increases when people deposit more money in banks rather than holding cash in hand, because commercial banks can create more credit from deposits.",
+            "quick_fact": "Higher CRR or SLR decreases the money multiplier because banks must lock away more reserves.",
+            "memory_trick": "More Banking Habit = Higher Deposits = Greater Credit Creation!"
+        },
+        "subject_name": "Economy",
+        "topic_name": "Banking & Monetary Policy",
+        "subtopic_name": "Money Multiplier & Credit Creation",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["BANK_PO", "SSC_CGL"],
+        "difficulty": QuestionDifficulty.MEDIUM,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2019 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "Consider the following statements regarding the Preamble of the Constitution of India:\n1. The Preamble is a part of the Constitution.\n2. It has an independent legal effect apart from other provisions.\nWhich of the statements given above is/are correct?",
+        "options": [
+            {"id": "A", "text": "1 only"},
+            {"id": "B", "text": "2 only"},
+            {"id": "C", "text": "Both 1 and 2"},
+            {"id": "D", "text": "Neither 1 nor 2"}
+        ],
+        "correct_answer": "A",
+        "explanation": {
+            "answer": "Option A (1 only) is correct.",
+            "why": "In Kesavananda Bharati (1973), the Supreme Court ruled that Preamble is an integral part of the Constitution. However, it is non-justiciable and has no independent legal effect without the substantive provisions.",
+            "quick_fact": "The 42nd Amendment added the words 'Socialist, Secular, and Integrity' to the Preamble in 1976.",
+            "memory_trick": "Preamble = Part of Constitution, but NOT self-enforcing alone!"
+        },
+        "subject_name": "Indian Polity",
+        "topic_name": "Constitutional Framework",
+        "subtopic_name": "Preamble & Basic Structure",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["STATE_PSC", "SSC_CGL"],
+        "difficulty": QuestionDifficulty.MEDIUM,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2020 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "In India, which one of the following is responsible for maintaining price stability by controlling inflation?",
+        "options": [
+            {"id": "A", "text": "Department of Consumer Affairs"},
+            {"id": "B", "text": "Expenditure Management Commission"},
+            {"id": "C", "text": "Financial Stability and Development Council"},
+            {"id": "D", "text": "Reserve Bank of India (RBI)"}
+        ],
+        "correct_answer": "D",
+        "explanation": {
+            "answer": "Reserve Bank of India (Option D).",
+            "why": "Under the amended RBI Act 1934 (2016), the primary objective of monetary policy is to maintain price stability with a target of 4% (+/- 2%) Consumer Price Index (CPI) inflation while keeping in mind the objective of growth.",
+            "quick_fact": "The Monetary Policy Committee (MPC) has 6 members and meets at least 4 times a year.",
+            "memory_trick": "Price Stability & Inflation Targeting = RBI Mandate!"
+        },
+        "subject_name": "Economy",
+        "topic_name": "Monetary Policy",
+        "subtopic_name": "Inflation Targeting & RBI MPC",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["BANK_PO", "SSC_CGL"],
+        "difficulty": QuestionDifficulty.EASY,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2022 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "The Gandhi-Irwin Pact of 1931 included which of the following?\n1. Invitation to Congress to participate in the Round Table Conference\n2. Withdrawal of ordinances promulgated in connection with the Civil Disobedience Movement\n3. Acceptance of Gandhiji's suggestion for an inquiry into police excesses\n4. Release of those prisoners who were not charged with violence\nSelect the correct answer using the code below:",
+        "options": [
+            {"id": "A", "text": "1, 2 and 4 only"},
+            {"id": "B", "text": "1, 2 and 3 only"},
+            {"id": "C", "text": "2, 3 and 4 only"},
+            {"id": "D", "text": "1, 2, 3 and 4"}
+        ],
+        "correct_answer": "A",
+        "explanation": {
+            "answer": "Option A (1, 2 and 4 only) is correct.",
+            "why": "Lord Irwin accepted the release of non-violent political prisoners, withdrawal of emergency ordinances, and Congress agreed to join the Second Round Table Conference. However, Irwin categorically rejected a public inquiry into police excesses.",
+            "quick_fact": "The pact was signed on March 5, 1931, paving the way for the Karachi Session of Congress.",
+            "memory_trick": "Gandhi-Irwin: NO police inquiry, but YES to RTC and releasing peaceful prisoners!"
+        },
+        "subject_name": "Modern History",
+        "topic_name": "National Movement 1919-1947",
+        "subtopic_name": "Civil Disobedience Movement & Round Table Conferences",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["STATE_PSC", "SSC_CGL"],
+        "difficulty": QuestionDifficulty.HARD,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2020 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "Which of the following National Parks is unique in being a swamp with floating vegetation that supports a rich biodiversity?",
+        "options": [
+            {"id": "A", "text": "Bhitarkanika National Park"},
+            {"id": "B", "text": "Keibul Lamjao National Park"},
+            {"id": "C", "text": "Keoladeo Ghana National Park"},
+            {"id": "D", "text": "Sultanpur National Park"}
+        ],
+        "correct_answer": "B",
+        "explanation": {
+            "answer": "Keibul Lamjao National Park (Option B).",
+            "why": "Keibul Lamjao National Park in Manipur is the world's only floating national park, located on Loktak Lake. It is renowned for its floating decomposed plant biomass known as 'phumdis' and is the last natural habitat of the endangered Sangai brow-antlered deer.",
+            "quick_fact": "Loktak Lake is also a designated Ramsar Wetland of International Importance.",
+            "memory_trick": "Keibul Lamjao = Only Floating Park on Loktak Phumdis!"
+        },
+        "subject_name": "Geography",
+        "topic_name": "Protected Areas & Biodiversity",
+        "subtopic_name": "National Parks & Ramsar Sites",
+        "primary_exam": "UPSC_CSE",
+        "also_applicable_exams": ["STATE_PSC", "SSC_CGL"],
+        "difficulty": QuestionDifficulty.EASY,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "UPSC CSE Prelims 2015 Paper I",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
+    },
+    {
+        "question_text": "Who among the following was the founder of the 'Satya Shodhak Samaj' in Maharashtra in 1873?",
+        "options": [
+            {"id": "A", "text": "Gopal Hari Deshmukh"},
+            {"id": "B", "text": "Jyotirao Phule"},
+            {"id": "C", "text": "B.R. Ambedkar"},
+            {"id": "D", "text": "Mahadev Govind Ranade"}
+        ],
+        "correct_answer": "B",
+        "explanation": {
+            "answer": "Mahatma Jyotirao Phule (Option B).",
+            "why": "Jyotirao Govindrao Phule established the Satya Shodhak Samaj (Society of Seekers of Truth) in Pune in 1873 to liberate Shudras and Ati-Shudras from caste oppression and promote female education.",
+            "quick_fact": "Phule authored the celebrated book 'Gulamgiri' (Slavery) in 1873, dedicating it to the American abolitionist movement.",
+            "memory_trick": "Phule = Satya Shodhak Samaj + Gulamgiri + Women's Education!"
+        },
+        "subject_name": "Modern History",
+        "topic_name": "Socio-Religious Reform Movements",
+        "subtopic_name": "Anti-Caste & Social Justice Movements",
+        "primary_exam": "SSC_CGL",
+        "also_applicable_exams": ["UPSC_CSE", "STATE_PSC"],
+        "difficulty": QuestionDifficulty.EASY,
+        "source_type": QuestionSourceType.PYQ,
+        "source_reference": "SSC CGL 2022 Tier-1 General Awareness",
+        "answer_status": QuestionAnswerStatus.VERIFIED,
+        "answer_confidence": 1.0,
+        "is_verified": True,
+        "language": "EN"
     }
 ]
 
@@ -230,6 +510,11 @@ def seed_normalized_database():
                 subtopic = Subtopic(topic_id=topic.id, name=q_data["subtopic_name"])
                 db.session.add(subtopic)
                 db.session.flush()
+
+        # Check if question already exists to prevent duplicates
+        existing = Question.query.filter_by(question_text=q_data["question_text"]).first()
+        if existing:
+            continue
 
         # Create Question
         q = Question(

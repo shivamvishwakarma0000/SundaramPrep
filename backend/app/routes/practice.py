@@ -147,17 +147,30 @@ def start_practice_session():
 
     # 4. FOCUS_TEST / MOCK_TEST / LEARN / STANDARD PRACTICE
     else:
-        query = Question.query.filter_by(exam=exam)
+        if session_type in ["MOCK_TEST", "FOCUS_TEST"]:
+            count = max(10, count)
+
+        query = Question.query
         if subject:
             query = query.filter_by(subject=subject)
+        elif exam:
+            # Check if there are sufficient questions for this exam
+            exam_q_count = Question.query.filter_by(exam=exam).count()
+            if exam_q_count >= count:
+                query = query.filter_by(exam=exam)
         if topic:
             query = query.filter_by(topic=topic)
             
-        questions = query.limit(count).all()
-        if not questions:
-            questions = Question.query.filter_by(exam=exam).limit(count).all()
-        if not questions:
-            questions = Question.query.limit(count).all()
+        # Frequently randomized so each session presents fresh questions
+        questions = query.order_by(db.func.random()).limit(count).all()
+        if len(questions) < count:
+            more_needed = count - len(questions)
+            existing_ids = [q.id for q in questions]
+            fallback_query = Question.query
+            if existing_ids:
+                fallback_query = fallback_query.filter(~Question.id.in_(existing_ids))
+            additional = fallback_query.order_by(db.func.random()).limit(more_needed).all()
+            questions.extend(additional)
 
     # Set appropriate time limits
     if not time_limit_seconds:

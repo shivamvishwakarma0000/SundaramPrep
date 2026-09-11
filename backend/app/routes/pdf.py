@@ -102,7 +102,7 @@ def list_documents():
     limit = min(int(request.args.get("limit", 10)), 50)
     offset = (page - 1) * limit
     
-    query = PDFDocument.query
+    query = PDFDocument.query.filter(~PDFDocument.file_name.ilike('%sample_polity_test%'))
     if user_id:
         query = query.filter_by(user_id=user_id)
         

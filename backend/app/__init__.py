@@ -33,6 +33,15 @@ def create_app(config_class=config):
     app.register_blueprint(ai_bp)
     app.register_blueprint(pdf_bp)
     app.register_blueprint(student_bp)
+
+    # Automatically ensure questions are seeded on startup
+    with app.app_context():
+        try:
+            db.create_all()
+            from seed_data import seed_normalized_database
+            seed_normalized_database()
+        except Exception as e:
+            app.logger.warning(f"Auto-seed check: {e}")
     
     # Root status endpoint
     @app.route("/")
