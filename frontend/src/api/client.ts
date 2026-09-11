@@ -5,7 +5,9 @@ import type {
   StudentProfileData 
 } from "../types";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+const RAW_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || "http://localhost:5001";
+// Normalize base URL: strip trailing slash and trailing /api if provided so ${BASE_URL}/api/... is always clean
+const BASE_URL = RAW_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 
 export async function apiRequest<T>(
   endpoint: string,
