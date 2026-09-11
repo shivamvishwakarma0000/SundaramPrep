@@ -39,21 +39,26 @@ class EmailService:
         """Sends email via Resend, with automatic SMTP fallback (e.g. Gmail) if unverified."""
         # 1. Try Resend if configured
         if self.is_configured:
-            try:
-                params = {
-                    "from": self.from_email,
-                    "to": [to_email],
-                    "subject": subject,
-                    "html": html_content,
-                }
-                if text_content:
-                    params["text"] = text_content
-                    
-                response = self._resend.Emails.send(params)
-                logger.info(f"Email sent via Resend to {to_email}")
-                return {"sent": True, "provider": "resend", "response": response}
-            except Exception as e:
-                logger.warning(f"Resend send failed to {to_email}: {e}. Trying fallback...")
+            candidate_froms = [self.from_email]
+            if "onboarding@resend.dev" not in self.from_email:
+                candidate_froms.append("Sundaram Prep <onboarding@resend.dev>")
+
+            for from_addr in candidate_froms:
+                try:
+                    params = {
+                        "from": from_addr,
+                        "to": [to_email],
+                        "subject": subject,
+                        "html": html_content,
+                    }
+                    if text_content:
+                        params["text"] = text_content
+                        
+                    response = self._resend.Emails.send(params)
+                    logger.info(f"Email sent via Resend from {from_addr} to {to_email}")
+                    return {"sent": True, "provider": "resend", "response": response}
+                except Exception as e:
+                    logger.warning(f"Resend send failed from {from_addr} to {to_email}: {e}")
 
         # 2. Try SMTP if configured (e.g. Gmail SMTP)
         if config.SMTP_USER and config.SMTP_PASSWORD:
