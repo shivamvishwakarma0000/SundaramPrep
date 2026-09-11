@@ -226,7 +226,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
   };
 
   // Filter drafts based on selected review tab
-  const filteredDrafts = drafts.filter((d) => {
+  const filteredDrafts = (drafts || []).filter((d) => {
     if (filterMode === 'READY') {
       return !d.is_duplicate && ['PDF_VERIFIED', 'SOURCE_VERIFIED', 'AI_VERIFIED'].includes(d.answer_status);
     }

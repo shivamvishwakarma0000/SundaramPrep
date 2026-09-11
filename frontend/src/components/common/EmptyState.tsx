@@ -21,10 +21,15 @@ export function EmptyState({
 }: EmptyStateProps) {
   const renderIcon = () => {
     if (!icon) return <span>{emoji}</span>;
-    if (typeof icon === 'function') {
-      return React.createElement(icon, { className: 'w-7 h-7 text-royal-600 dark:text-royal-400' });
+    if (React.isValidElement(icon)) {
+      return icon;
     }
-    return icon;
+    try {
+      const IconComponent = icon as any;
+      return <IconComponent className="w-7 h-7 text-royal-600 dark:text-royal-400" />;
+    } catch {
+      return <span>{emoji}</span>;
+    }
   };
 
   return (
