@@ -34,6 +34,18 @@ def create_app(config_class=config):
     app.register_blueprint(pdf_bp)
     app.register_blueprint(student_bp)
     
+    # Root status endpoint
+    @app.route("/")
+    def index():
+        return {
+            "service": "Sundaram Prep Backend API",
+            "tagline": "Practice. Focus. Improve.",
+            "status": "online",
+            "version": "1.0.0",
+            "health": "/api/health",
+            "frontend": config.FRONTEND_URL
+        }, 200
+
     # Global error handlers
     @app.errorhandler(404)
     def handle_404(e):
