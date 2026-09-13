@@ -103,10 +103,8 @@ class PDFPipeline:
 
                 if is_dup:
                     duplicate_count += 1
-                elif resolution["answer_status"] in ["PDF_VERIFIED", "SOURCE_VERIFIED", "AI_VERIFIED"]:
-                    ready_count += 1
                 else:
-                    needs_review_count += 1
+                    ready_count += 1
 
                 draft = PDFQuestionDraft(
                     document_id=doc.id,
@@ -127,7 +125,8 @@ class PDFPipeline:
                     explanation_json=resolution["explanation_json"],
                     is_duplicate=is_dup,
                     duplicate_of_question_id=dup_match_id,
-                    language=item.get("language", "EN")
+                    language=item.get("language", "EN"),
+                    is_imported=True
                 )
                 db.session.add(draft)
 

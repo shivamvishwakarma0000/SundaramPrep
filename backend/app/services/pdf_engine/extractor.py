@@ -103,6 +103,50 @@ class PDFExtractor:
                 return "/assets/diagrams/sample_exam_figure.png"
         return None
 
+    def extract_global_answer_key(self, text: str) -> Dict[int, str]:
+        """
+        Scans document for comprehensive answer keys or answer tables.
+        Examples:
+        - "Answer Key: 1. (B) 2. (C) 3. (A) 4. (D)..."
+        - "Answers: 1 - B, 2 - D, 3 - A, 4 - C..."
+        - "1.(A) 2.(B) 3.(C)..."
+        - "Q1: A, Q2: C..."
+        - "1: B 2: C 3: A..."
+        - "1. A  2. B  3. C  4. D"
+        """
+        key_map: Dict[int, str] = {}
+        if not text:
+            return key_map
+
+        # Look for explicit Answer Key sections first
+        key_sections = re.findall(
+            r'(?:Answer\s*Key|Answers|Answer\s*Sheet|Solutions|उत्तर\s*कुंजी|उत्तरमाला)[\s\:\-\_]*(.*)',
+            text,
+            re.IGNORECASE | re.DOTALL
+        )
+        targets = key_sections if key_sections else [text]
+
+        for target in targets:
+            # Pattern matching: 1. A, 1.(A), 1 - A, 1: A, 1) A, Q1: A, Q.1 (B)
+            matches = re.findall(
+                r'(?:Q(?:uestion)?\.?\s*|\b)([0-9]{1,3})[\.\)\:\-\s]+\(?([A-Da-dक-घअ-द1-4])\)?',
+                target
+            )
+            for q_num_str, ans_char in matches:
+                try:
+                    q_num = int(q_num_str)
+                    mapped = HINDI_OPT_MAP.get(ans_char, ans_char.upper())
+                    if mapped in ["A", "B", "C", "D"]:
+                        # If inside an explicit answer key section, always overwrite
+                        if key_sections or q_num not in key_map:
+                            key_map[q_num] = mapped
+                except ValueError:
+                    continue
+
+        if key_map:
+            logger.info(f"Global answer key detected for {len(key_map)} questions.")
+        return key_map
+
     def parse_questions(self, text: str) -> List[Dict[str, Any]]:
         """
         Extracts structured question dictionaries from raw text.
@@ -110,7 +154,7 @@ class PDFExtractor:
         - English headers: Q1., Q.1, 1., 1), (1), Question 1:, MCQ 1.
         - Hindi headers: प्र.1, प्रश्न 1, १., २., (१)
         - Options: (A), (B), (C), (D) or (a), (b), (c), (d) or A., B., C., D. or (क), (ख), (ग), (घ) or (1), (2), (3), (4)
-        - Answers: Ans: B, Answer: C, Key: A, उत्तर: (B), Ans - D
+        - Answers: Inline (Ans: B) or Global Answer Key tables at end of document
         """
         questions = []
         if not text:
@@ -118,6 +162,9 @@ class PDFExtractor:
 
         # Normalize line breaks and clean whitespace
         clean_text = text.replace('\r\n', '\n').replace('\r', '\n')
+
+        # Extract global document answer key (e.g. from end of PDF or answer sheet table)
+        global_answer_key = self.extract_global_answer_key(clean_text)
 
         # Enhanced split pattern catching all question numbering formats
         split_pattern = r'(?:\n\s*|\A\s*|\s{3,})(?:Q(?:uestion)?\.?\s*\d+|प्र(?:श्न)?\.?\s*\d+|\b\d{1,3}[\.\)]|\([0-9]{1,3}\)|[०-९]{1,3}[\.\)])\s+'
@@ -135,6 +182,12 @@ class PDFExtractor:
             if not block or len(block) < 15:
                 continue
 
+            current_q_num = len(questions) + 1
+
+            # Check if block has leading question number (e.g. "1.", "Q1", "(1)")
+            num_match = re.match(r'^(?:Q(?:uestion)?\.?\s*|प्र(?:श्न)?\.?\s*)?([0-9]{1,3})[\.\)\:\s]', block)
+            detected_q_num = int(num_match.group(1)) if num_match else current_q_num
+
             # 1. Detect explicit answer if present in the block
             ans_match = re.search(
                 r'\b(?:Ans(?:wer)?|Correct\s*Option|Key|उत्तर)[\s:\-=]*\(?([A-Da-dक-घअ-द1-4])\)?',
@@ -145,6 +198,10 @@ class PDFExtractor:
             explicit_answer = None
             if raw_ans:
                 explicit_answer = HINDI_OPT_MAP.get(raw_ans, raw_ans.upper())
+
+            # If not in block, look up in global answer key extracted from document
+            if not explicit_answer and global_answer_key:
+                explicit_answer = global_answer_key.get(detected_q_num) or global_answer_key.get(current_q_num)
 
             # 2. Extract options
             # Matches: (A), (B), (C), (D) OR A., B., C., D. OR A), B), C), D) OR (a), (b), (c), (d) OR (क), (ख), (ग), (घ) OR (1), (2), (3), (4)
