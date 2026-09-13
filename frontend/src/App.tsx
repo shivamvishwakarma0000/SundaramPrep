@@ -26,7 +26,7 @@ export function AppContent() {
   const [activePracticeMode, setActivePracticeMode] = useState<PracticeMode | null>(null);
   const [activePracticeSubject, setActivePracticeSubject] = useState<string | undefined>(undefined);
   const [activePracticeTopic, setActivePracticeTopic] = useState<string | undefined>(undefined);
-  const [activePDFDoc, setActivePDFDoc] = useState<{ id: string; title: string } | null>(null);
+  const [activePDFDoc, setActivePDFDoc] = useState<{ id?: string; ids?: string[]; title: string } | null>(null);
 
   // PDF Upload Modal State
   const [isPDFUploadOpen, setIsPDFUploadOpen] = useState<boolean>(false);
@@ -253,6 +253,7 @@ export function AppContent() {
               subject={activePracticeSubject}
               topic={activePracticeTopic}
               documentId={activePDFDoc?.id}
+              documentIds={activePDFDoc?.ids}
               documentTitle={activePDFDoc?.title}
               onOpenAIWithQuestion={openAIWithQuestion}
               onExit={() => {
@@ -274,6 +275,15 @@ export function AppContent() {
                 setActivePracticeSubject(subject);
                 setActivePracticeTopic(topic);
               }}
+              onStartPDFMockTest={(documentIds, title) => {
+                setActivePracticeMode('MOCK_TEST');
+                setActivePDFDoc({
+                  id: documentIds.length === 1 ? documentIds[0] : undefined,
+                  ids: documentIds,
+                  title: title
+                });
+              }}
+              onNavigateToUpload={() => setActiveTab('upload')}
               onOpenAIWithQuestion={openAIWithQuestion}
             />
           )

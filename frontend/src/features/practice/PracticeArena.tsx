@@ -27,6 +27,7 @@ interface PracticeArenaProps {
   subject?: string;
   topic?: string;
   documentId?: string;
+  documentIds?: string[];
   documentTitle?: string;
   onOpenAIWithQuestion?: (question: Question, actionType: 'HINGLISH' | 'WHY_WRONG' | 'MEMORY_TRICK') => void;
   onExit: () => void;
@@ -39,6 +40,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   subject,
   topic,
   documentId,
+  documentIds,
   documentTitle,
   onExit,
   onRestartWithTopic,
@@ -79,9 +81,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
       setLoading(true);
       try {
         let count = 10;
-        if (documentId) count = 200; // Load all questions from uploaded PDF
+        if (documentIds && documentIds.length > 0 && mode !== 'MOCK_TEST') count = 200; // Load all questions if direct PDF practice
+        else if (documentId && mode !== 'MOCK_TEST') count = 200; // Load all questions from uploaded PDF
         else if (mode === 'FOCUS_TEST') count = 25; // Standard focus block
-        else if (mode === 'MOCK_TEST') count = 10; // Exactly 10 questions for topic mock test as user requested
+        else if (mode === 'MOCK_TEST') count = 10; // Exactly 10 questions for topic/PDF mock test as requested
         else if (mode === 'QUICK_10') count = 10;
 
         const res = await api.startPractice({
@@ -91,6 +94,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           subject: subject,
           topic: topic,
           document_id: documentId,
+          document_ids: documentIds,
         });
 
         if (mounted) {
@@ -115,7 +119,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     return () => {
       mounted = false;
     };
-  }, [mode, currentExam, subject, topic, documentId]);
+  }, [mode, currentExam, subject, topic, documentId, JSON.stringify(documentIds)]);
 
   // Focus Mode Violations Listener (visibilitychange, fullscreenchange, blur)
   useEffect(() => {

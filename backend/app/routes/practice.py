@@ -71,18 +71,39 @@ def start_practice_session():
     questions = []
     
     document_id = payload.get("document_id")
-    
-    # 0. PDF DOCUMENT PRACTICE
-    if document_id:
+    document_ids = payload.get("document_ids")
+    if not document_ids and document_id:
+        if isinstance(document_id, list):
+            document_ids = document_id
+        elif document_id == "ALL":
+            document_ids = ["ALL"]
+        elif "," in document_id:
+            document_ids = [d.strip() for d in document_id.split(",") if d.strip()]
+        else:
+            document_ids = [document_id]
+
+    # 0. PDF DOCUMENT PRACTICE / MOCK TEST FROM SELECTED PDFS
+    if document_ids:
         from app.models.pdf_document import PDFQuestionDraft, Document
         from app.models.question import QuestionOption
-        questions = Question.query.filter_by(source_document_id=document_id).all()
-        if not questions:
-            # Reconstruct from drafts if not in Question table
-            drafts = PDFQuestionDraft.query.filter_by(document_id=document_id).all()
-            doc_record = Document.query.get(document_id)
-            doc_name = doc_record.file_name if doc_record else "PDF Exam Paper"
+        import random
+
+        if "ALL" in document_ids:
+            all_docs = Document.query.filter(~Document.file_name.ilike('%sample_polity_test%')).all()
+            document_ids = [d.id for d in all_docs]
+
+        # Fetch questions already materialized
+        questions = Question.query.filter(Question.source_document_id.in_(document_ids)).all()
+
+        # Reconstruct / auto-materialize for any document whose drafts are not yet in Question table
+        found_doc_ids = set(q.source_document_id for q in questions if q.source_document_id)
+        missing_doc_ids = [did for did in document_ids if did not in found_doc_ids]
+        if missing_doc_ids:
+            drafts = PDFQuestionDraft.query.filter(PDFQuestionDraft.document_id.in_(missing_doc_ids)).all()
+            doc_records = {d.id: d for d in Document.query.filter(Document.id.in_(missing_doc_ids)).all()}
             for d in drafts:
+                doc_record = doc_records.get(d.document_id)
+                doc_name = doc_record.file_name if doc_record else "PDF Exam Paper"
                 q = Question(
                     question_text=d.question_text,
                     correct_answer=d.candidate_answer or "A",
@@ -92,12 +113,12 @@ def start_practice_session():
                         "quick_fact": "Source: Uploaded PDF",
                         "memory_trick": "Concept retention drill."
                     },
-                    subject=doc_record.subject if doc_record and doc_record.subject else "General Studies",
+                    subject=doc_record.subject if doc_record and hasattr(doc_record, 'subject') and doc_record.subject else "General Studies",
                     topic=doc_name,
-                    exam=doc_record.exam_category if doc_record and doc_record.exam_category else exam,
+                    exam=doc_record.exam_category if doc_record and hasattr(doc_record, 'exam_category') and doc_record.exam_category else exam,
                     source_type="PDF_EXTRACTED",
                     source_reference=doc_name,
-                    source_document_id=document_id,
+                    source_document_id=d.document_id,
                     is_verified=True,
                     language=d.language or "EN"
                 )
@@ -113,6 +134,11 @@ def start_practice_session():
                     db.session.add(q_opt)
                 questions.append(q)
             db.session.commit()
+
+        # Shuffle and sample randomized questions up to count
+        random.shuffle(questions)
+        if count and count > 0 and len(questions) > count:
+            questions = questions[:count]
 
     # 1. MISTAKE_PRACTICE MODE
     elif session_type == "MISTAKE_PRACTICE":

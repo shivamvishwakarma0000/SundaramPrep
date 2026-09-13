@@ -12,7 +12,10 @@ import {
   Lightbulb,
   FileCheck2,
   Brain,
-  Search
+  Search,
+  CheckSquare,
+  Square,
+  UploadCloud
 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { MistakeItem, BookmarkItem, ExamType, Question, PracticeMode } from '../../types';
@@ -22,6 +25,8 @@ import { EmptyState } from '../../components/common/EmptyState';
 interface PracticeHubProps {
   currentExam: ExamType;
   onStartMode: (mode: PracticeMode, subject?: string, topic?: string) => void;
+  onStartPDFMockTest?: (documentIds: string[], title: string) => void;
+  onNavigateToUpload?: () => void;
   onOpenAIWithQuestion: (question: Question, actionType: 'HINGLISH' | 'WHY_WRONG' | 'MEMORY_TRICK') => void;
 }
 
@@ -30,6 +35,8 @@ type PracticeSubView = 'hub' | 'mistakes' | 'bookmarks';
 export const PracticeHub: React.FC<PracticeHubProps> = ({
   currentExam,
   onStartMode,
+  onStartPDFMockTest,
+  onNavigateToUpload,
   onOpenAIWithQuestion,
 }) => {
   const [subView, setSubView] = useState<PracticeSubView>('hub');
@@ -40,6 +47,11 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
   const [searchTopic, setSearchTopic] = useState<string>('');
   const [isMistakesBookmarksOpen, setIsMistakesBookmarksOpen] = useState<boolean>(false);
   const [isModulesOpen, setIsModulesOpen] = useState<boolean>(false);
+
+  // PDF Mock Test States
+  const [uploadedPDFs, setUploadedPDFs] = useState<any[]>([]);
+  const [selectedPDFIds, setSelectedPDFIds] = useState<string[]>([]);
+  const [loadingPDFs, setLoadingPDFs] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadHubData() {
@@ -52,6 +64,62 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
     }
     loadHubData();
   }, [currentExam]);
+
+  // Load uploaded PDF documents for custom mock tests
+  useEffect(() => {
+    async function loadPDFs() {
+      setLoadingPDFs(true);
+      try {
+        const res = await api.listPDFDocuments(1, 50);
+        if (res && res.documents) {
+          setUploadedPDFs(res.documents);
+          // By default, auto-select all uploaded PDFs
+          if (res.documents.length > 0) {
+            setSelectedPDFIds(res.documents.map((d: any) => d.id));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load PDF documents for mock test:', e);
+      } finally {
+        setLoadingPDFs(false);
+      }
+    }
+    loadPDFs();
+  }, []);
+
+  const toggleSelectAllPDFs = () => {
+    if (selectedPDFIds.length === uploadedPDFs.length) {
+      setSelectedPDFIds([]);
+    } else {
+      setSelectedPDFIds(uploadedPDFs.map((d) => d.id));
+    }
+  };
+
+  const togglePDFSelection = (id: string) => {
+    setSelectedPDFIds((prev) => 
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleStartPDFMockTest = () => {
+    if (selectedPDFIds.length === 0) return;
+    const isAll = selectedPDFIds.length === uploadedPDFs.length && uploadedPDFs.length > 0;
+    const title = isAll 
+      ? "All Uploaded Papers (10-Q Mock)" 
+      : (selectedPDFIds.length === 1 
+          ? (uploadedPDFs.find(p => p.id === selectedPDFIds[0])?.file_name || "Uploaded PDF Mock") 
+          : `${selectedPDFIds.length} Selected Papers (10-Q Mock)`);
+
+    if (onStartPDFMockTest) {
+      onStartPDFMockTest(selectedPDFIds, title);
+    } else {
+      onStartMode('MOCK_TEST', undefined, title);
+    }
+  };
+
+  const totalQuestionsInSelection = uploadedPDFs
+    .filter((d) => selectedPDFIds.includes(d.id))
+    .reduce((sum, d) => sum + (d.extracted_questions_count || d.ready_count || 0), 0);
 
   const loadMistakes = async () => {
     setSubView('mistakes');
@@ -342,6 +410,146 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* 2. INSTANT 10-QUESTION MOCK TEST FROM YOUR UPLOADED PDF PAPERS */}
+      <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-5 shadow-xs space-y-4 transition-all">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <FileCheck2 className="w-3 h-3" />
+                <span>PDF Question Bank Mock Test</span>
+              </span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-dark-muted">
+                {uploadedPDFs.length} Papers in Database
+              </span>
+            </div>
+            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white mt-1">
+              Take Mock Test from Your Uploaded PDFs
+            </h2>
+            <p className="text-xs font-medium text-slate-500 dark:text-dark-muted">
+              Select any single PDF, multiple PDFs, or all uploaded papers. The AI will generate a randomized 10-question mock test exclusively from your selected documents.
+            </p>
+          </div>
+
+          {uploadedPDFs.length > 0 && (
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={toggleSelectAllPDFs}
+                className="px-3.5 py-2 bg-slate-100 dark:bg-dark-surface hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-dark-text text-xs font-extrabold rounded-xl border border-slate-200 dark:border-dark-border transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                {selectedPDFIds.length === uploadedPDFs.length ? (
+                  <>
+                    <CheckSquare className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                    <span>Deselect All</span>
+                  </>
+                ) : (
+                  <>
+                    <Square className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Select All PDFs ({uploadedPDFs.length})</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* PDF Documents Selector Grid */}
+        {loadingPDFs ? (
+          <div className="p-6 text-center text-xs font-bold text-slate-400">
+            Loading your uploaded question papers...
+          </div>
+        ) : uploadedPDFs.length === 0 ? (
+          <div className="p-6 rounded-xl border-2 border-dashed border-slate-200 dark:border-dark-border text-center space-y-2 bg-slate-50/50 dark:bg-dark-surface/40">
+            <UploadCloud className="w-8 h-8 text-slate-400 mx-auto" />
+            <p className="text-xs font-bold text-slate-700 dark:text-dark-text">
+              No Question Papers Uploaded Yet
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-dark-muted max-w-md mx-auto">
+              Upload any previous year question paper or coaching test in PDF Studio to take customized mock tests from your papers.
+            </p>
+            {onNavigateToUpload && (
+              <button
+                type="button"
+                onClick={onNavigateToUpload}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer mt-2"
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span>Go to PDF Studio</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-56 overflow-y-auto pr-1">
+              {uploadedPDFs.map((doc) => {
+                const isSelected = selectedPDFIds.includes(doc.id);
+                const qCount = doc.extracted_questions_count || doc.ready_count || 0;
+                return (
+                  <div
+                    key={doc.id}
+                    onClick={() => togglePDFSelection(doc.id)}
+                    className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 text-left ${
+                      isSelected
+                        ? 'border-brand-600 dark:border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 text-brand-950 dark:text-brand-100 shadow-xs ring-1 ring-brand-500/20'
+                        : 'border-slate-200 dark:border-dark-border hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/60 dark:bg-dark-surface/60 text-slate-800 dark:text-dark-text'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="shrink-0 text-brand-600 dark:text-brand-400">
+                        {isSelected ? (
+                          <CheckSquare className="w-4 h-4 fill-brand-600/10" />
+                        ) : (
+                          <Square className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-extrabold truncate" title={doc.file_name}>
+                          {doc.file_name}
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-dark-muted flex items-center gap-1.5 mt-0.5">
+                          <span>{doc.subject || 'General Studies'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                      isSelected 
+                        ? 'bg-brand-200/80 dark:bg-brand-900/60 text-brand-900 dark:text-brand-200' 
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-dark-muted'
+                    }`}>
+                      {qCount} Qs
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Selection Summary & Start Mock Test Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-dark-border">
+              <div className="text-xs text-slate-600 dark:text-dark-muted flex items-center gap-2">
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  {selectedPDFIds.length} PDF{selectedPDFIds.length === 1 ? '' : 's'} Selected
+                </span>
+                <span>·</span>
+                <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                  {totalQuestionsInSelection} Questions Pool Available
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleStartPDFMockTest}
+                disabled={selectedPDFIds.length === 0}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-black text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <Zap className="w-4 h-4 text-amber-300" />
+                <span>Start 10-Q Mock Test from Selected PDF{selectedPDFIds.length === 1 ? '' : 's'}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Top Banner (Pure White Box, Crisp 2px Border) */}
