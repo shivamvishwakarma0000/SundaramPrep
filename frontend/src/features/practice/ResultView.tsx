@@ -24,28 +24,74 @@ interface ResultViewProps {
     focus_score: number;
     focus_violations?: number;
   };
+  activeTopic?: string;
   aiCoach?: AICoachSummary | null;
   newPersonalBests?: { type: string; label: string; value: string }[];
   subjectBreakdown?: { subject: string; correct: number; total: number; accuracy: number; status: string }[];
   topicBreakdown?: { topic: string; subject: string; correct: number; total: number; accuracy: number; status: string }[];
   onReviewAnswers: () => void;
   onPracticeMistakes: () => void;
+  onRestartTopic?: (topic: string) => void;
   onReturnToHub: () => void;
 }
 
 export const ResultView: React.FC<ResultViewProps> = ({
   session,
   stats,
+  activeTopic,
   aiCoach,
   newPersonalBests = [],
   subjectBreakdown = [],
   topicBreakdown = [],
   onReviewAnswers,
   onPracticeMistakes,
+  onRestartTopic,
   onReturnToHub,
 }) => {
+  const currentTopic = activeTopic || (session as any).topic_id;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in pb-12 transition-colors">
+      {/* 10-Question Topic Practice & Retake Banner */}
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-md">
+              10-Question Topic Mock
+            </span>
+            {currentTopic && (
+              <span className="text-xs font-black text-slate-800">
+                Topic: <strong className="text-brand-600 font-black">{currentTopic}</strong>
+              </span>
+            )}
+          </div>
+          <h3 className="text-sm sm:text-base font-black text-slate-900">
+            {currentTopic ? `Ready for 10 more on "${currentTopic}"?` : 'Search & Practice Any Topic (10 Questions)'}
+          </h3>
+          <p className="text-xs text-slate-500">
+            Take instant 10-question tests on any topic or search another syllabus area.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          {currentTopic && onRestartTopic && (
+            <button
+              onClick={() => onRestartTopic(currentTopic)}
+              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Take 10 More on This Topic</span>
+            </button>
+          )}
+          <button
+            onClick={onReturnToHub}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200"
+          >
+            <span>Search Different Topic</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
       {/* Personal Best Celebration Banner */}
       {newPersonalBests.length > 0 && (
         <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 rounded-2xl p-4 text-white shadow-lg flex items-center justify-between">

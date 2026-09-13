@@ -24,6 +24,8 @@ export function AppContent() {
 
   // Active Practice Session state (for Single-Feature Practice flow)
   const [activePracticeMode, setActivePracticeMode] = useState<PracticeMode | null>(null);
+  const [activePracticeSubject, setActivePracticeSubject] = useState<string | undefined>(undefined);
+  const [activePracticeTopic, setActivePracticeTopic] = useState<string | undefined>(undefined);
   const [activePDFDoc, setActivePDFDoc] = useState<{ id: string; title: string } | null>(null);
 
   // PDF Upload Modal State
@@ -106,6 +108,8 @@ export function AppContent() {
     }
     if (activePracticeMode) {
       setActivePracticeMode(null);
+      setActivePracticeSubject(undefined);
+      setActivePracticeTopic(undefined);
       setActivePDFDoc(null);
       return;
     }
@@ -147,6 +151,8 @@ export function AppContent() {
     }
     // If switching main sections, reset active drill to ensure Single-Feature UI Principle
     setActivePracticeMode(null);
+    setActivePracticeSubject(undefined);
+    setActivePracticeTopic(undefined);
     setActivePDFDoc(null);
     setActiveTab(tab);
   };
@@ -244,18 +250,30 @@ export function AppContent() {
             <PracticeArena
               mode={activePracticeMode}
               currentExam={currentExam}
+              subject={activePracticeSubject}
+              topic={activePracticeTopic}
               documentId={activePDFDoc?.id}
               documentTitle={activePDFDoc?.title}
               onOpenAIWithQuestion={openAIWithQuestion}
               onExit={() => {
                 setActivePracticeMode(null);
+                setActivePracticeSubject(undefined);
+                setActivePracticeTopic(undefined);
                 setActivePDFDoc(null);
+              }}
+              onRestartWithTopic={(topicName) => {
+                setActivePracticeTopic(topicName);
+                setActivePracticeMode('MOCK_TEST');
               }}
             />
           ) : (
             <PracticeHub
               currentExam={currentExam}
-              onStartMode={(m) => setActivePracticeMode(m)}
+              onStartMode={(m, subject, topic) => {
+                setActivePracticeMode(m);
+                setActivePracticeSubject(subject);
+                setActivePracticeTopic(topic);
+              }}
               onOpenAIWithQuestion={openAIWithQuestion}
             />
           )

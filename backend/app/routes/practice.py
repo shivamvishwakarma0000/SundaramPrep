@@ -150,27 +150,41 @@ def start_practice_session():
         if session_type in ["MOCK_TEST", "FOCUS_TEST"]:
             count = max(10, count)
 
-        query = Question.query
-        if subject:
-            query = query.filter_by(subject=subject)
-        elif exam:
-            # Check if there are sufficient questions for this exam
-            exam_q_count = Question.query.filter_by(exam=exam).count()
-            if exam_q_count >= count:
-                query = query.filter_by(exam=exam)
         if topic:
-            query = query.filter_by(topic=topic)
+            # Flexible fuzzy search across topic, subject, and question_text
+            search_pattern = f"%{topic.strip()}%"
+            matched = Question.query.filter(
+                db.or_(
+                    Question.topic.ilike(search_pattern),
+                    Question.subject.ilike(search_pattern),
+                    Question.question_text.ilike(search_pattern)
+                )
+            ).order_by(db.func.random()).limit(count).all()
+            questions.extend(matched)
             
-        # Frequently randomized so each session presents fresh questions
-        questions = query.order_by(db.func.random()).limit(count).all()
-        if len(questions) < count:
-            more_needed = count - len(questions)
-            existing_ids = [q.id for q in questions]
-            fallback_query = Question.query
-            if existing_ids:
-                fallback_query = fallback_query.filter(~Question.id.in_(existing_ids))
-            additional = fallback_query.order_by(db.func.random()).limit(more_needed).all()
-            questions.extend(additional)
+            if len(questions) < count:
+                more_needed = count - len(questions)
+                existing_ids = [q.id for q in questions]
+                fallback = Question.query.filter(~Question.id.in_(existing_ids)).order_by(db.func.random()).limit(more_needed).all()
+                questions.extend(fallback)
+        else:
+            query = Question.query
+            if subject:
+                query = query.filter_by(subject=subject)
+            elif exam:
+                exam_q_count = Question.query.filter_by(exam=exam).count()
+                if exam_q_count >= count:
+                    query = query.filter_by(exam=exam)
+            
+            questions = query.order_by(db.func.random()).limit(count).all()
+            if len(questions) < count:
+                more_needed = count - len(questions)
+                existing_ids = [q.id for q in questions]
+                fallback_query = Question.query
+                if existing_ids:
+                    fallback_query = fallback_query.filter(~Question.id.in_(existing_ids))
+                additional = fallback_query.order_by(db.func.random()).limit(more_needed).all()
+                questions.extend(additional)
 
     # Set appropriate time limits
     if not time_limit_seconds:

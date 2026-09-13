@@ -118,15 +118,19 @@ class PDFExtractor:
         if not text:
             return key_map
 
-        # Look for explicit Answer Key sections first
+        # Look for explicit Answer Key sections first (e.g., at end of test paper)
         key_sections = re.findall(
             r'(?:Answer\s*Key|Answers|Answer\s*Sheet|Solutions|उत्तर\s*कुंजी|उत्तरमाला)[\s\:\-\_]*(.*)',
             text,
             re.IGNORECASE | re.DOTALL
         )
-        targets = key_sections if key_sections else [text]
+        
+        # Only parse global answer key if a dedicated Answer Key section was found!
+        # Do NOT scan the entire test paper text as an answer key, as that misidentifies question option A as the answer!
+        if not key_sections:
+            return key_map
 
-        for target in targets:
+        for target in key_sections:
             # Pattern matching: 1. A, 1.(A), 1 - A, 1: A, 1) A, Q1: A, Q.1 (B)
             matches = re.findall(
                 r'(?:Q(?:uestion)?\.?\s*|\b)([0-9]{1,3})[\.\)\:\-\s]+\(?([A-Da-dक-घअ-द1-4])\)?',
@@ -137,9 +141,7 @@ class PDFExtractor:
                     q_num = int(q_num_str)
                     mapped = HINDI_OPT_MAP.get(ans_char, ans_char.upper())
                     if mapped in ["A", "B", "C", "D"]:
-                        # If inside an explicit answer key section, always overwrite
-                        if key_sections or q_num not in key_map:
-                            key_map[q_num] = mapped
+                        key_map[q_num] = mapped
                 except ValueError:
                     continue
 
@@ -188,9 +190,9 @@ class PDFExtractor:
             num_match = re.match(r'^(?:Q(?:uestion)?\.?\s*|प्र(?:श्न)?\.?\s*)?([0-9]{1,3})[\.\)\:\s]', block)
             detected_q_num = int(num_match.group(1)) if num_match else current_q_num
 
-            # 1. Detect explicit answer if present in the block
+            # 1. Detect explicit answer if present in the block with explicit delimiter
             ans_match = re.search(
-                r'\b(?:Ans(?:wer)?|Correct\s*Option|Key|उत्तर)[\s:\-=]*\(?([A-Da-dक-घअ-द1-4])\)?',
+                r'\b(?:Ans(?:wer)?|Correct\s*(?:Option|Answer)?|Key|उत्तर)[\s]*[:\-=]\s*\(?([A-Da-dक-घअ-द1-4])\)?',
                 block,
                 re.IGNORECASE
             )

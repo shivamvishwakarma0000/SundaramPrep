@@ -7,10 +7,12 @@ import {
   ArrowRight, 
   BookOpen, 
   ChevronRight, 
+  ChevronDown,
   Trash2,
   Lightbulb,
   FileCheck2,
-  Brain
+  Brain,
+  Search
 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { MistakeItem, BookmarkItem, ExamType, Question, PracticeMode } from '../../types';
@@ -35,6 +37,9 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
   const [mistakes, setMistakes] = useState<MistakeItem[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [searchTopic, setSearchTopic] = useState<string>('');
+  const [isMistakesBookmarksOpen, setIsMistakesBookmarksOpen] = useState<boolean>(false);
+  const [isModulesOpen, setIsModulesOpen] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadHubData() {
@@ -275,6 +280,70 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
   // Primary Practice Hub View - Pure White Boxes, No Shadows, No Verbose Text
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in pb-12 transition-colors">
+      {/* 1. INSTANT 10-QUESTION TOPIC SEARCH MOCK GENERATOR */}
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-brand-600 bg-brand-50 border border-brand-200 px-2.5 py-0.5 rounded-full">
+              Topic-Wise 10-Question Mock Test
+            </span>
+            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 mt-1">
+              Search Any Topic & Start Instant 10-Question Test
+            </h2>
+            <p className="text-xs font-medium text-slate-500">
+              Type any syllabus topic to practice 10 questions. After completion, take 10 more or search another topic.
+            </p>
+          </div>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (searchTopic.trim()) {
+              onStartMode('MOCK_TEST', undefined, searchTopic.trim());
+            }
+          }}
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1"
+        >
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchTopic}
+              onChange={(e) => setSearchTopic(e.target.value)}
+              placeholder="Search topic (e.g. Dandi March, Fundamental Rights, Monetary Policy, 1857 Revolt)..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-600 focus:bg-white transition-all"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!searchTopic.trim()}
+            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <Zap className="w-4 h-4 text-amber-300" />
+            <span>Start 10-Q Mock Test</span>
+          </button>
+        </form>
+
+        {/* Quick Topic Chips */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+          <span className="text-[11px] font-bold text-slate-400">Popular:</span>
+          {['Dandi March', 'Fundamental Rights', 'Monetary Policy', 'Revolt of 1857', 'National Parks', 'Judiciary'].map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => {
+                setSearchTopic(t);
+                onStartMode('MOCK_TEST', undefined, t);
+              }}
+              className="text-[11px] font-bold text-slate-700 hover:text-brand-700 bg-slate-100 hover:bg-brand-50 hover:border-brand-300 border border-slate-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Top Banner (Pure White Box, Crisp 2px Border) */}
       <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -451,103 +520,152 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         </div>
       </div>
 
-      {/* Mistake Notebook & Saved Bookmarks Cards (White, No Verbose Text) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Mistakes Notebook Launcher */}
-        <div
-          onClick={loadMistakes}
-          className="bg-white border-2 border-slate-200 hover:border-rose-500 p-4 sm:p-5 rounded-2xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
+      {/* COLLAPSIBLE SECTION 1: Mistakes Notebook & Saved Bookmarks (Hidden by default, expands on click) */}
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs transition-all">
+        <button
+          type="button"
+          onClick={() => setIsMistakesBookmarksOpen(prev => !prev)}
+          className="w-full flex items-center justify-between cursor-pointer text-left"
         >
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <RotateCcw className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-black uppercase text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
-                Mistake Engine
-              </span>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center font-black shrink-0">
+              <RotateCcw className="w-4 h-4" />
             </div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-rose-700 transition-colors">
-              Mistakes Notebook
-            </h3>
-          </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-rose-700">
-            <span>Open Mistakes</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </div>
-
-        {/* Saved Bookmarks Launcher */}
-        <div
-          onClick={loadBookmarks}
-          className="bg-white border-2 border-slate-200 hover:border-amber-500 p-4 sm:p-5 rounded-2xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
-        >
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <BookmarkIcon className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-black uppercase text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                High-Yield
-              </span>
+            <div>
+              <h3 className="text-sm sm:text-base font-black font-display text-slate-900">
+                Mistake Engine & Saved Bookmarks
+              </h3>
+              <p className="text-xs font-medium text-slate-500 mt-0.5">
+                Practice failed questions and review bookmarked high-yield problems
+              </p>
             </div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-amber-800 transition-colors">
-              Saved Bookmarks
-            </h3>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-amber-800">
-            <span>Open Bookmarks</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-lg">
+              {isMistakesBookmarksOpen ? 'Hide' : 'Click to Open'}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isMistakesBookmarksOpen ? 'rotate-180' : ''}`} />
           </div>
-        </div>
-      </div>
+        </button>
 
-      {/* Subject-Wise Practice Grid (White Box, Crisp Border, NO FAKE DEMO NUMBERS) */}
-      <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-        <div>
-          <h3 className="text-base sm:text-lg font-black font-display text-slate-900">
-            Subject & Module Practice
-          </h3>
-          <p className="text-xs font-medium text-slate-500 mt-0.5">
-            Real official syllabus modules. Click any subject to practice real exam questions.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {(subjects.length > 0 ? subjects : [
-            { id: "polity", name: "Indian Polity & Governance" },
-            { id: "history", name: "Modern Indian History" },
-            { id: "economy", name: "Indian Economy & Fiscal Policy" },
-            { id: "geography", name: "Physical & Indian Geography" },
-            { id: "environment", name: "Ecology, Biodiversity & Climate" },
-            { id: "aptitude", name: "CSAT / Quantitative Aptitude" },
-          ]).map((s, idx) => (
+        {isMistakesBookmarksOpen && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mt-4 border-t border-slate-100 animate-in fade-in duration-200">
+            {/* Mistakes Notebook Launcher */}
             <div
-              key={idx}
-              onClick={() => onStartMode('PRACTICE', s.name)}
-              className="p-4 rounded-xl border-2 border-slate-200 hover:border-brand-600 bg-white hover:bg-slate-50 cursor-pointer transition-all group flex flex-col justify-between"
+              onClick={loadMistakes}
+              className="bg-slate-50 border-2 border-slate-200 hover:border-rose-500 p-4 sm:p-5 rounded-2xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-brand-50 border border-brand-200 flex items-center justify-center font-bold text-xs">
-                    <BookOpen className="w-4 h-4 text-brand-600" />
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-100 border border-rose-200 text-rose-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <RotateCcw className="w-5 h-5" />
                   </div>
-                  <span className="text-[10px] font-black uppercase text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-full">
-                    Syllabus Module
+                  <span className="text-[10px] font-black uppercase text-rose-700 bg-white border border-rose-200 px-2.5 py-0.5 rounded-full">
+                    Mistake Engine
                   </span>
                 </div>
-                <h4 className="text-sm font-black text-slate-900 group-hover:text-brand-600 transition-colors">
-                  {s.name}
-                </h4>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-rose-700 transition-colors">
+                  Mistakes Notebook
+                </h3>
               </div>
-
-              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-black text-brand-600">
-                <span>Start Practice</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs font-black text-rose-700">
+                <span>Open Mistakes</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Saved Bookmarks Launcher */}
+            <div
+              onClick={loadBookmarks}
+              className="bg-slate-50 border-2 border-slate-200 hover:border-amber-500 p-4 sm:p-5 rounded-2xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <BookmarkIcon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-amber-800 bg-white border border-amber-200 px-2.5 py-0.5 rounded-full">
+                    High-Yield
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-amber-800 transition-colors">
+                  Saved Bookmarks
+                </h3>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs font-black text-amber-800">
+                <span>Open Bookmarks</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* COLLAPSIBLE SECTION 2: Subject & Module Practice (Hidden by default, expands on click) */}
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs transition-all">
+        <button
+          type="button"
+          onClick={() => setIsModulesOpen(prev => !prev)}
+          className="w-full flex items-center justify-between cursor-pointer text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-brand-50 border border-brand-200 text-brand-600 flex items-center justify-center font-black shrink-0">
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-black font-display text-slate-900">
+                Subject & Module Practice
+              </h3>
+              <p className="text-xs font-medium text-slate-500 mt-0.5">
+                Real official syllabus modules (Polity, History, Economy, Geography, Ecology, CSAT)
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black text-brand-700 bg-brand-50 border border-brand-200 px-3 py-1 rounded-lg">
+              {isModulesOpen ? 'Hide Modules' : 'Click to Expand (6 Modules)'}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isModulesOpen ? 'rotate-180' : ''}`} />
+          </div>
+        </button>
+
+        {isModulesOpen && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-4 mt-4 border-t border-slate-100 animate-in fade-in duration-200">
+            {(subjects.length > 0 ? subjects : [
+              { id: "polity", name: "Indian Polity & Governance" },
+              { id: "history", name: "Modern Indian History" },
+              { id: "economy", name: "Indian Economy & Fiscal Policy" },
+              { id: "geography", name: "Physical & Indian Geography" },
+              { id: "environment", name: "Ecology, Biodiversity & Climate" },
+              { id: "aptitude", name: "CSAT / Quantitative Aptitude" },
+            ]).map((s, idx) => (
+              <div
+                key={idx}
+                onClick={() => onStartMode('PRACTICE', s.name)}
+                className="p-4 rounded-xl border-2 border-slate-200 hover:border-brand-600 bg-white hover:bg-slate-50 cursor-pointer transition-all group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-brand-50 border border-brand-200 flex items-center justify-center font-bold text-xs">
+                      <BookOpen className="w-4 h-4 text-brand-600" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase text-brand-700 bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-full">
+                      Syllabus Module
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900 group-hover:text-brand-600 transition-colors">
+                    {s.name}
+                  </h4>
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-black text-brand-600">
+                  <span>Start Practice</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

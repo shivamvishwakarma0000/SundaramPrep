@@ -24,18 +24,24 @@ import { QuestionSkeleton } from '../../components/common/Skeleton';
 interface PracticeArenaProps {
   mode: PracticeMode | string;
   currentExam: ExamType;
+  subject?: string;
+  topic?: string;
   documentId?: string;
   documentTitle?: string;
   onOpenAIWithQuestion?: (question: Question, actionType: 'HINGLISH' | 'WHY_WRONG' | 'MEMORY_TRICK') => void;
   onExit: () => void;
+  onRestartWithTopic?: (topic: string) => void;
 }
 
 export const PracticeArena: React.FC<PracticeArenaProps> = ({
   mode,
   currentExam,
+  subject,
+  topic,
   documentId,
   documentTitle,
   onExit,
+  onRestartWithTopic,
 }) => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [session, setSession] = useState<QuizSession | null>(null);
@@ -74,13 +80,15 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
       try {
         let count = 10;
         if (mode === 'FOCUS_TEST') count = 25; // Standard focus block
-        else if (mode === 'MOCK_TEST') count = 30;
+        else if (mode === 'MOCK_TEST') count = 10; // Exactly 10 questions for topic mock test as user requested
         else if (mode === 'QUICK_10') count = 10;
 
         const res = await api.startPractice({
           exam: currentExam,
           session_type: mode,
           count: count,
+          subject: subject,
+          topic: topic,
           document_id: documentId,
         });
 
@@ -106,7 +114,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     return () => {
       mounted = false;
     };
-  }, [mode, currentExam, documentId]);
+  }, [mode, currentExam, subject, topic, documentId]);
 
   // Focus Mode Violations Listener (visibilitychange, fullscreenchange, blur)
   useEffect(() => {
@@ -344,12 +352,41 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     );
   }
 
+  const handleRestartTopic = async (topicName: string) => {
+    if (onRestartWithTopic) {
+      onRestartWithTopic(topicName);
+      return;
+    }
+    setLoading(true);
+    setIsCompleted(false);
+    setCompletionData(null);
+    setCurrentIndex(0);
+    setSelectedOption(null);
+    setSubmittedAnswers({});
+    try {
+      const res = await api.startPractice({
+        exam: currentExam,
+        session_type: 'MOCK_TEST',
+        count: 10,
+        topic: topicName,
+      });
+      setSession(res.session);
+      setQuestions(res.questions);
+      setTimerSeconds(res.session.time_limit_seconds || 600);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Finished State: Render rich ResultView
   if (isCompleted && completionData) {
     return (
       <ResultView
         session={completionData.session}
         stats={completionData.stats}
+        activeTopic={topic}
         aiCoach={completionData.ai_coach}
         newPersonalBests={completionData.new_personal_bests}
         subjectBreakdown={completionData.subject_breakdown}
@@ -361,6 +398,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         onPracticeMistakes={() => {
           window.location.reload();
         }}
+        onRestartTopic={handleRestartTopic}
         onReturnToHub={onExit}
       />
     );

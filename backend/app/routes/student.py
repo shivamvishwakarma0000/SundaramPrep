@@ -463,43 +463,51 @@ def get_student_analytics():
     total_answers = TestAnswer.query.filter_by(user_id=user.id).count()
     correct_answers = TestAnswer.query.filter_by(user_id=user.id, correct=True).count()
     
-    overall_accuracy = round((correct_answers / max(1, total_answers)) * 100, 1) if total_answers > 0 else 74.5
-    
-    # 1. 4 Core Metrics
-    # Speed (avg seconds)
-    avg_speed = 42.0  # seconds / question average
-    # Consistency (% of active days in last 14 days)
+    if total_answers > 0:
+        overall_accuracy = round((correct_answers / total_answers) * 100, 1)
+        # Calculate real average speed from user's actual attempts
+        from sqlalchemy import func
+        avg_speed_query = db.session.query(func.avg(TestAnswer.time_taken_seconds))\
+            .filter(TestAnswer.user_id == user.id, TestAnswer.time_taken_seconds > 0).scalar()
+        avg_speed = round(float(avg_speed_query), 1) if avg_speed_query else 30.0
+    else:
+        overall_accuracy = 0.0
+        avg_speed = 0.0
+
     streak = Streak.query.filter_by(user_id=user.id).first()
-    current_streak = streak.current_streak if streak else 7
-    consistency = min(100, round((current_streak / 14) * 100, 1))
-    # Coverage (% of core syllabus topics tested)
+    current_streak = streak.current_streak if streak else 0
+    consistency = min(100, round((current_streak / 14) * 100, 1)) if current_streak else 0.0
+
     topic_count = UserTopicStats.query.filter_by(user_id=user.id).count()
-    coverage = min(100, max(25, round((topic_count / 40) * 100, 1)))
+    coverage = min(100, round((topic_count / 40) * 100, 1)) if topic_count else 0.0
 
-    # 2. Subject-level analytics
-    subjects = [
-        {"subject": "Indian Polity", "accuracy": 82.5, "attempts": 240, "status": "STRONG"},
-        {"subject": "Modern History", "accuracy": 68.0, "attempts": 180, "status": "IMPROVING"},
-        {"subject": "Indian Economy", "accuracy": 64.2, "attempts": 150, "status": "IMPROVING"},
-        {"subject": "Geography", "accuracy": 48.5, "attempts": 130, "status": "WEAK"},
-        {"subject": "Science & Tech", "accuracy": 72.0, "attempts": 110, "status": "STRONG"},
-        {"subject": "Current Affairs", "accuracy": 76.5, "attempts": 210, "status": "STRONG"},
-    ]
-    
-    # Re-evaluate status based on user thresholds
-    for s in subjects:
-        if s["accuracy"] >= strong_threshold:
-            s["status"] = "STRONG"
-        elif s["accuracy"] >= weak_threshold:
-            s["status"] = "IMPROVING"
-        else:
-            s["status"] = "WEAK"
+    # 2. Dynamic Real Subject Analytics (Calculated directly from student attempts)
+    from sqlalchemy import func
+    subject_rows = db.session.query(
+        Question.subject,
+        func.count(TestAnswer.id).label("attempts"),
+        func.sum(db.case((TestAnswer.correct == True, 1), else_=0)).label("correct_count")
+    ).join(Question, TestAnswer.question_id == Question.id)\
+     .filter(TestAnswer.user_id == user.id)\
+     .group_by(Question.subject).all()
 
-    # 3. Topic-level analytics from UserTopicStats
+    subjects = []
+    for s_name, att, corr in subject_rows:
+        if att and att > 0:
+            acc = round((int(corr or 0) / int(att)) * 100, 1)
+            status = "STRONG" if acc >= strong_threshold else ("IMPROVING" if acc >= weak_threshold else "WEAK")
+            subjects.append({
+                "subject": s_name or "General Studies",
+                "accuracy": acc,
+                "attempts": int(att),
+                "status": status
+            })
+
+    # 3. Dynamic Real Topic Analytics from UserTopicStats
     topic_stats = UserTopicStats.query.filter_by(user_id=user.id).all()
     topic_analytics = []
-    if topic_stats:
-        for t in topic_stats:
+    for t in topic_stats:
+        if t.total_attempts > 0:
             acc = round(t.accuracy * 100, 1)
             status = "STRONG" if acc >= strong_threshold else ("IMPROVING" if acc >= weak_threshold else "WEAK")
             topic_analytics.append({
@@ -509,14 +517,6 @@ def get_student_analytics():
                 "accuracy": acc,
                 "status": status
             })
-    else:
-        topic_analytics = [
-            {"topic": "Writ Jurisdiction (Art 32 vs 226)", "subject": "Indian Polity", "attempts": 28, "accuracy": 43.0, "status": "WEAK"},
-            {"topic": "Monetary Policy Transmission", "subject": "Indian Economy", "attempts": 22, "accuracy": 50.0, "status": "IMPROVING"},
-            {"topic": "Round Table Conferences", "subject": "Modern History", "attempts": 30, "accuracy": 62.0, "status": "IMPROVING"},
-            {"topic": "Preamble & Basic Structure", "subject": "Indian Polity", "attempts": 45, "accuracy": 88.0, "status": "STRONG"},
-            {"topic": "Monsoon Dynamics & ITCZ", "subject": "Geography", "attempts": 25, "accuracy": 48.0, "status": "WEAK"},
-        ]
 
     return api_success({
         "metrics": {
@@ -524,7 +524,7 @@ def get_student_analytics():
             "speed_seconds": avg_speed,
             "consistency_score": consistency,
             "coverage_percentage": coverage,
-            "total_questions_solved": max(142, total_answers),
+            "total_questions_solved": total_answers,
             "streak_days": current_streak
         },
         "thresholds": {
