@@ -49,6 +49,7 @@ def get_or_create_demo_user():
 # 1. HOME DASHBOARD (Section 10: Low-Transfer Aggregated Home)
 def get_user_actual_metrics(user):
     today = date.today()
+    yesterday = today - timedelta(days=1)
     from sqlalchemy import func
     
     # 1. Real actual questions answered today
@@ -63,53 +64,41 @@ def get_user_actual_metrics(user):
     else:
         goal.solved_today = actual_solved_today
         
-    # 2. Real day-wise streak calculation from distinct active dates
-    active_dates_records = db.session.query(func.date(TestAnswer.created_at))\
-        .filter(TestAnswer.user_id == user.id)\
-        .distinct().all()
-        
-    active_dates = set()
-    for (d,) in active_dates_records:
-        if isinstance(d, str):
-            try:
-                active_dates.add(datetime.strptime(d[:10], "%Y-%m-%d").date())
-            except Exception:
-                pass
-        elif isinstance(d, date):
-            active_dates.add(d)
-        elif isinstance(d, datetime):
-            active_dates.add(d.date())
-
-    current_streak = 0
-    if today in active_dates:
-        check_date = today
-        while check_date in active_dates:
-            current_streak += 1
-            check_date -= timedelta(days=1)
-    else:
-        yesterday = today - timedelta(days=1)
-        if yesterday in active_dates:
-            check_date = yesterday
-            while check_date in active_dates:
-                current_streak += 1
-                check_date -= timedelta(days=1)
-        else:
-            current_streak = 0
-
+    # 2. Daily consecutive streak tracking:
+    # Today = 1 day because user is using portal today.
+    # Tomorrow = 2 days if consecutive.
+    # If any day skipped, streak resets to 0 (and becomes 1 on next portal visit).
     streak = Streak.query.filter_by(user_id=user.id).first()
     if not streak:
         streak = Streak(
             user_id=user.id, 
-            current_streak=current_streak, 
-            longest_streak=current_streak, 
-            last_active_date=today if actual_solved_today > 0 else None
+            current_streak=1, 
+            longest_streak=1, 
+            last_active_date=today
         )
         db.session.add(streak)
+        current_streak = 1
     else:
-        streak.current_streak = current_streak
-        streak.longest_streak = max(streak.longest_streak or 0, current_streak)
-        if actual_solved_today > 0:
+        last_date = streak.last_active_date
+        if isinstance(last_date, datetime):
+            last_date = last_date.date()
+        elif isinstance(last_date, str):
+            try:
+                last_date = datetime.strptime(last_date[:10], "%Y-%m-%d").date()
+            except Exception:
+                last_date = None
+
+        if last_date == today:
+            current_streak = max(1, streak.current_streak or 1)
+        elif last_date == yesterday:
+            current_streak = (streak.current_streak or 0) + 1
             streak.last_active_date = today
+        else:
+            current_streak = 1
+            streak.last_active_date = today
+
+        streak.current_streak = current_streak
+        streak.longest_streak = max(streak.longest_streak or 1, current_streak)
 
     db.session.commit()
     return streak, goal, actual_solved_today, current_streak
@@ -371,7 +360,7 @@ def get_student_profile():
     user_id = get_current_user_id()
     user = User.query.get(user_id) if user_id else get_or_create_demo_user()
     
-    streak = Streak.query.filter_by(user_id=user.id).first()
+    streak, goal, actual_solved_today, current_streak = get_user_actual_metrics(user)
     
     # Aggregated metrics via SQL
     total_answers = TestAnswer.query.filter_by(user_id=user.id).count()
@@ -398,7 +387,7 @@ def get_student_profile():
             "questions_solved": total_answers,
             "tests_taken": total_tests,
             "overall_accuracy": accuracy,
-            "streak": streak.current_streak if streak else 0,
+            "streak": current_streak,
             "daily_goal": user.daily_goal or 30,
         },
         "settings": {

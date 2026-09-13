@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { Flame, Sparkles, User as UserIcon, Sun, Moon, Laptop, ArrowLeft } from 'lucide-react';
+import React from 'react';
+import { Flame, Sparkles, User as UserIcon, ArrowLeft } from 'lucide-react';
 import type { ExamType, User } from '../types';
-import { useTheme } from '../context/ThemeContext';
 import { SundaramLogo } from './common/SundaramLogo';
 
 interface HeaderProps {
@@ -12,6 +11,7 @@ interface HeaderProps {
   onOpenAuth: () => void;
   canGoBack?: boolean;
   onGoBack?: () => void;
+  streakCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,9 +22,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   canGoBack = false,
   onGoBack,
+  streakCount,
 }) => {
-  const { theme, resolvedTheme, setTheme } = useTheme();
-  const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const displayStreak = streakCount ?? (user?.streak_count || 1);
 
   const examOptions: { id: ExamType; label: string }[] = [
     { id: 'UPSC_CSE', label: 'UPSC CSE' },
@@ -84,73 +84,10 @@ export const Header: React.FC<HeaderProps> = ({
             </select>
           </div>
 
-          {/* Theme Selector Button */}
-          <div className="relative">
-            <button
-              onClick={() => setShowThemeMenu(!showThemeMenu)}
-              aria-label="Toggle Theme"
-              className="p-1 sm:p-2 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-dark-card hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-dark-text border border-slate-200 dark:border-dark-border transition-colors cursor-pointer flex items-center justify-center h-7 w-7 sm:h-9 sm:w-9"
-              title={`Current Theme: ${theme}`}
-            >
-              {resolvedTheme === 'dark' ? (
-                <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-300" />
-              ) : (
-                <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-saffron-500" />
-              )}
-            </button>
-
-            {showThemeMenu && (
-              <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-dark-surface rounded-xl shadow-card-3d border border-slate-200 dark:border-dark-border py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                <button
-                  onClick={() => {
-                    setTheme('light');
-                    setShowThemeMenu(false);
-                  }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold cursor-pointer ${
-                    theme === 'light'
-                      ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40'
-                      : 'text-slate-700 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-card'
-                  }`}
-                >
-                  <Sun className="w-3.5 h-3.5 text-saffron-500" />
-                  Light
-                </button>
-                <button
-                  onClick={() => {
-                    setTheme('dark');
-                    setShowThemeMenu(false);
-                  }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold cursor-pointer ${
-                    theme === 'dark'
-                      ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40'
-                      : 'text-slate-700 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-card'
-                  }`}
-                >
-                  <Moon className="w-3.5 h-3.5 text-brand-400" />
-                  Dark
-                </button>
-                <button
-                  onClick={() => {
-                    setTheme('system');
-                    setShowThemeMenu(false);
-                  }}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold cursor-pointer ${
-                    theme === 'system'
-                      ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40'
-                      : 'text-slate-700 dark:text-dark-muted hover:bg-slate-50 dark:hover:bg-dark-card'
-                  }`}
-                >
-                  <Laptop className="w-3.5 h-3.5 text-slate-400" />
-                  System
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* Streak Badge */}
           <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 px-1 xs:px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold shadow-xs shrink-0">
             <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-saffron-500 fill-saffron-500 shrink-0" />
-            <span>{user?.streak_count ?? 0}d</span>
+            <span>{displayStreak}d</span>
           </div>
 
           {/* Sundaram AI Trigger */}

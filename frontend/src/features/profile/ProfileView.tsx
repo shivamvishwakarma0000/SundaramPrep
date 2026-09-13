@@ -9,7 +9,6 @@ import {
   Bell, 
   Moon, 
   Sun,
-  Laptop,
   Lock, 
   Save
 } from 'lucide-react';
@@ -245,26 +244,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setTheme('light')}
-                  className={`p-1 rounded ${theme === 'light' ? 'bg-white dark:bg-dark-surface shadow-xs text-amber-500' : 'text-slate-400'}`}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all ${
+                    theme === 'light'
+                      ? 'bg-white dark:bg-dark-surface shadow-xs text-amber-600 font-bold'
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  }`}
                   title="Light mode"
                 >
-                  <Sun className="w-3.5 h-3.5" />
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Light</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setTheme('dark')}
-                  className={`p-1 rounded ${theme === 'dark' ? 'bg-white dark:bg-dark-surface shadow-xs text-royal-400' : 'text-slate-400'}`}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-all ${
+                    theme === 'dark'
+                      ? 'bg-white dark:bg-dark-surface shadow-xs text-royal-400 font-bold'
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  }`}
                   title="Dark mode"
                 >
-                  <Moon className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTheme('system')}
-                  className={`p-1 rounded ${theme === 'system' ? 'bg-white dark:bg-dark-surface shadow-xs text-slate-700 dark:text-white' : 'text-slate-400'}`}
-                  title="System preference"
-                >
-                  <Laptop className="w-3.5 h-3.5" />
+                  <Moon className="w-3.5 h-3.5 text-brand-400" />
+                  <span>Dark</span>
                 </button>
               </div>
             </div>

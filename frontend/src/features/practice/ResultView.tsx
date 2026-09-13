@@ -309,8 +309,8 @@ export const ResultView: React.FC<ResultViewProps> = ({
       {/* Sectional Performance & Topic Breakdown with Colourful Bars */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Subject Breakdown */}
-        <div className="box-3d p-5 space-y-4">
-          <h4 className="text-sm font-bold text-slate-900 dark:text-dark-text font-display flex items-center gap-2">
+        <div className="bg-white dark:bg-dark-surface p-5 rounded-2xl border border-slate-200 dark:border-dark-border shadow-xs space-y-4">
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white font-display flex items-center gap-2">
             <Award className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             Subject Performance Bars
           </h4>
@@ -327,10 +327,10 @@ export const ResultView: React.FC<ResultViewProps> = ({
                 const barColor = barColors[idx % barColors.length];
 
                 return (
-                  <div key={idx} className="bg-slate-50 dark:bg-dark-card p-3 rounded-xl border border-slate-200 dark:border-dark-border space-y-2 text-xs">
+                  <div key={idx} className="bg-slate-50 dark:bg-dark-card p-3 rounded-xl border border-slate-200/80 dark:border-dark-border space-y-2 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{subj.subject}</span>
-                      <span className="font-black text-sm text-slate-900 dark:text-dark-text">{subj.accuracy}%</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{subj.subject}</span>
+                      <span className="font-black text-sm text-slate-900 dark:text-white">{subj.accuracy}%</span>
                     </div>
 
                     {/* Progress Bar */}
@@ -341,10 +341,10 @@ export const ResultView: React.FC<ResultViewProps> = ({
                       />
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-dark-muted">
+                    <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
                       <span>{subj.correct} of {subj.total} correct</span>
                       <span className={`font-bold uppercase text-[9px] px-1.5 py-0.5 rounded ${
-                        subj.status === 'STRONG' ? 'bg-flagGreen-100 text-flagGreen-800' : (subj.status === 'IMPROVING' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')
+                        subj.status === 'STRONG' ? 'bg-flagGreen-100 dark:bg-emerald-950/60 text-flagGreen-800 dark:text-emerald-300' : (subj.status === 'IMPROVING' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300')
                       }`}>
                         {subj.status}
                       </span>
@@ -359,8 +359,8 @@ export const ResultView: React.FC<ResultViewProps> = ({
         </div>
 
         {/* Topic Breakdown */}
-        <div className="box-3d p-5 space-y-4">
-          <h4 className="text-sm font-bold text-slate-900 dark:text-dark-text font-display flex items-center gap-2">
+        <div className="bg-white dark:bg-dark-surface p-5 rounded-2xl border border-slate-200 dark:border-dark-border shadow-xs space-y-4">
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white font-display flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-saffron-600 dark:text-saffron-400" />
             Topic Breakdown & Weak Areas
           </h4>
@@ -376,13 +376,13 @@ export const ResultView: React.FC<ResultViewProps> = ({
                 const barColor = barColors[idx % barColors.length];
 
                 return (
-                  <div key={idx} className="bg-slate-50 dark:bg-dark-card p-3 rounded-xl border border-slate-200 dark:border-dark-border space-y-2 text-xs">
+                  <div key={idx} className="bg-slate-50 dark:bg-dark-card p-3 rounded-xl border border-slate-200/80 dark:border-dark-border space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <div className="max-w-[70%]">
-                        <span className="font-bold text-slate-800 dark:text-slate-200 block truncate">{top.topic}</span>
-                        <span className="text-[10px] text-slate-500 dark:text-dark-muted">{top.subject}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 block truncate">{top.topic}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">{top.subject}</span>
                       </div>
-                      <span className="font-black text-sm text-slate-900 dark:text-dark-text">{top.accuracy}%</span>
+                      <span className="font-black text-sm text-slate-900 dark:text-white">{top.accuracy}%</span>
                     </div>
 
                     {/* Progress Bar */}
@@ -393,10 +393,10 @@ export const ResultView: React.FC<ResultViewProps> = ({
                       />
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-dark-muted">
+                    <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400">
                       <span>{top.correct} of {top.total} correct</span>
                       <span className={`font-bold uppercase text-[9px] px-1.5 py-0.2 rounded ${
-                        top.status === 'STRONG' ? 'bg-flagGreen-100 text-flagGreen-800' : (top.status === 'IMPROVING' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800')
+                        top.status === 'STRONG' ? 'bg-flagGreen-100 dark:bg-emerald-950/60 text-flagGreen-800 dark:text-emerald-300' : (top.status === 'IMPROVING' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300')
                       }`}>
                         {top.status}
                       </span>

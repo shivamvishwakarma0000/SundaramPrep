@@ -39,6 +39,18 @@ export function AppContent() {
   // Auth modal state
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
 
+  // Synced real-time streak state (defaults to 1 for today)
+  const [syncedStreak, setSyncedStreak] = useState<number>(() => {
+    try {
+      const cached = localStorage.getItem("sundaram_home_summary_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (typeof parsed?.streak === 'number' && parsed.streak > 0) return parsed.streak;
+      }
+    } catch {}
+    return 1;
+  });
+
   // Check auth token on mount
   useEffect(() => {
     async function initApp() {
@@ -48,11 +60,21 @@ export function AppContent() {
           const res = await api.getMe();
           if (res.user) {
             setUser(res.user);
+            if (res.user.streak_count) {
+              setSyncedStreak(res.user.streak_count);
+            }
             if (res.user.target_exam) {
               setCurrentExam(res.user.target_exam);
             }
           }
         }
+        // Sync streak from live student home endpoint
+        try {
+          const homeRes = await api.getHomeSummary();
+          if (homeRes?.streak) {
+            setSyncedStreak(homeRes.streak);
+          }
+        } catch {}
       } catch (e) {
         localStorage.removeItem('sundaram_token');
       }
@@ -176,6 +198,7 @@ export function AppContent() {
           onExamChange={handleExamChange}
           canGoBack={canGoBack}
           onGoBack={handleGoBack}
+          streakCount={syncedStreak}
           onOpenAI={() => {
             setAiQuestionContext(null);
             setAiInitialPrompt(null);
