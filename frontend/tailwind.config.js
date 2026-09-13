@@ -128,6 +128,10 @@ export default {
         'card-3d-hover': '0 20px 35px -5px rgba(11, 37, 69, 0.16), 0 10px 15px -4px rgba(11, 37, 69, 0.08)',
         'floating': '0 14px 35px -4px rgba(13, 50, 105, 0.35), 0 6px 14px -3px rgba(255, 103, 31, 0.25)',
         'dark-card': '0 4px 20px -2px rgba(0, 0, 0, 0.6), 0 2px 6px -1px rgba(0, 0, 0, 0.4)',
+      },
+      screens: {
+        'xs': '380px',
+        '3xl': '1920px',
       }
     },
   },

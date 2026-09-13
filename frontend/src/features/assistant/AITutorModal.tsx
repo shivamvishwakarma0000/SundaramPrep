@@ -66,8 +66,8 @@ export const AITutorModal: React.FC<AITutorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-dark-card w-full max-w-2xl rounded-2xl shadow-2xl border border-cool-200 dark:border-dark-border overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white dark:bg-dark-card w-full max-w-2xl rounded-2xl shadow-2xl border border-cool-200 dark:border-dark-border overflow-hidden flex flex-col max-h-[92dvh]">
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-cool-200 dark:border-dark-border bg-gradient-to-r from-brand-950 via-indigo-900 to-brand-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">

@@ -263,8 +263,8 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
           </div>
 
           {/* Thin Upload Action */}
-          <div className="flex items-center gap-2 shrink-0">
-            <label className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl font-extrabold text-xs shadow-xs transition-all cursor-pointer">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <label className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-3.5 sm:px-4 py-2.5 rounded-xl font-extrabold text-xs shadow-xs transition-all cursor-pointer">
               <UploadCloud className="w-4 h-4" />
               <span>{uploading ? 'Processing PDF...' : 'Upload Exam PDF'}</span>
               <input
@@ -278,7 +278,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
             {selectedDoc && onStartPractice && (
               <button
                 onClick={() => onStartPractice(selectedDoc.id, selectedDoc.file_name)}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <Play className="w-4 h-4" />
                 <span>Practice in Arena</span>
@@ -327,10 +327,10 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
       )}
 
       {/* Main Studio Navigation Tabs */}
-      <div className="flex items-center gap-3 border-b-2 border-slate-200 pb-2">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 border-b-2 border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('review')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'review'
               ? 'bg-brand-600 text-white shadow-xs'
               : 'text-slate-900 hover:bg-slate-100'
@@ -340,7 +340,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
         </button>
         <button
           onClick={() => setActiveTab('library')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'library'
               ? 'bg-brand-600 text-white shadow-xs'
               : 'text-slate-900 hover:bg-slate-100'
@@ -419,7 +419,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                 {onStartPractice && (
                   <button
                     onClick={() => onStartPractice(selectedDoc.id, selectedDoc.file_name)}
-                    className="shrink-0 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
+                    className="w-full sm:w-auto shrink-0 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-black rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
                   >
                     <Play className="w-4 h-4" />
                     <span>Practice Entire PDF ({drafts.length || selectedDoc.extracted_questions_count} Qs)</span>

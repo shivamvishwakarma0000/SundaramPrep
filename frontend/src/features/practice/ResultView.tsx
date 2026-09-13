@@ -113,13 +113,13 @@ export const ResultView: React.FC<ResultViewProps> = ({
       )}
 
       {/* Main Scorecard Header */}
-      <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 sm:p-8 border border-cool-200 dark:border-dark-border shadow-card dark:shadow-dark-card transition-colors">
+      <div className="bg-white dark:bg-dark-surface rounded-2xl p-4 sm:p-6 md:p-8 border border-cool-200 dark:border-dark-border shadow-card dark:shadow-dark-card transition-colors">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cool-200 dark:border-dark-border pb-6">
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-900/40 px-2.5 py-1 rounded-md">
               {session.session_type?.replace('_', ' ')} Complete
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-dark-text mt-2">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black font-display text-slate-900 dark:text-dark-text mt-2">
               Performance Summary
             </h2>
             <p className="text-xs text-slate-500 dark:text-dark-muted mt-0.5">
@@ -127,17 +127,17 @@ export const ResultView: React.FC<ResultViewProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 self-start sm:self-auto">
             <button
               onClick={onReviewAnswers}
-              className="px-4 py-2 bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 text-slate-800 dark:text-dark-text text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 text-slate-800 dark:text-dark-text text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Review Answers
             </button>
             <button
               onClick={onReturnToHub}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               Practice Arena
               <ArrowRight className="w-3.5 h-3.5" />
@@ -146,7 +146,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
         </div>
 
         {/* Primary Metrics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-6">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 pt-6">
           <div className="bg-slate-50 dark:bg-dark-card rounded-xl p-3 border border-cool-200 dark:border-dark-border text-center">
             <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-dark-muted">Score</span>
             <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-dark-text mt-0.5">{stats.score}</p>

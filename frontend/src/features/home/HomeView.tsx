@@ -21,7 +21,7 @@ interface HomeViewProps {
 const DEFAULT_SUMMARY: StudentHomeSummary = {
   greeting: "Welcome, Aspirant",
   target_exam: "UPSC_CSE",
-  streak: 7,
+  streak: 0,
   daily_goal: {
     id: "default-goal",
     target_questions: 30,
@@ -154,9 +154,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Streak Box */}
-          <div className="flex items-center gap-2 bg-saffron-50 dark:bg-saffron-950/40 border border-saffron-200 dark:border-saffron-900/50 text-saffron-900 dark:text-saffron-300 px-3 py-2 rounded-xl text-xs font-extrabold">
+          <div className="flex items-center gap-2 bg-saffron-50 dark:bg-saffron-950/40 border border-saffron-200 dark:border-saffron-900/50 text-saffron-900 dark:text-saffron-300 px-3 py-2 rounded-xl text-xs font-extrabold shrink-0">
             <Flame className="w-5 h-5 text-saffron-500 fill-saffron-500 shrink-0" />
             <div>
               <div className="text-base leading-none font-black">{summary.streak} Days</div>
@@ -165,7 +165,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
 
           {/* Daily Solved Box */}
-          <div className="bg-slate-50 dark:bg-dark-surface border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white px-3.5 py-2 rounded-xl text-xs font-bold min-w-[130px]">
+          <div className="bg-slate-50 dark:bg-dark-surface border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold min-w-[120px] sm:min-w-[130px] flex-1 sm:flex-initial">
             <div className="flex items-center justify-between text-[11px] mb-1">
               <span className="text-slate-500 dark:text-dark-muted font-semibold">Today's Target</span>
               <span className="font-extrabold text-brand-600 dark:text-brand-400">{summary.daily_goal.solved_today}/{summary.daily_goal.target_questions} Qs</span>
@@ -211,7 +211,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
@@ -256,8 +256,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
         )}
       </div>
 
-      {/* 3. CORE 4 BOXES IN 2 ROWS & 2 COLUMNS (Calibrated for 11–11.5 inch Tablet & Desktop) */}
-      <div className="grid grid-cols-2 gap-3.5 sm:gap-5">
+      {/* 3. CORE 4 BOXES IN 2 ROWS & 2 COLUMNS (1 column on mobile, 2x2 on Tablet & Desktop) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
         {/* BOX 1: 🚀 START PRACTICE ARENA */}
         <div
           onClick={() => onNavigate('practice')}

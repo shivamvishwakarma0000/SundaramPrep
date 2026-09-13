@@ -120,7 +120,7 @@ export const PDFUploadModal: React.FC<PDFUploadModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="w-full max-w-lg bg-white dark:bg-dark-surface rounded-2xl shadow-card-3d border border-slate-200 dark:border-dark-border p-5 sm:p-7 relative transition-all">
+      <div className="w-full max-w-lg bg-white dark:bg-dark-surface rounded-2xl shadow-card-3d border border-slate-200 dark:border-dark-border p-5 sm:p-7 relative transition-all max-h-[90dvh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}

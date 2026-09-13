@@ -506,7 +506,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
       {/* Question Card */}
       {currentQ ? (
-        <div className={`rounded-2xl p-6 sm:p-8 border shadow-card dark:shadow-dark-card space-y-6 transition-colors ${
+        <div className={`rounded-2xl p-4 sm:p-6 md:p-8 border shadow-card dark:shadow-dark-card space-y-4 sm:space-y-6 transition-colors ${
           isFullscreen 
             ? 'bg-slate-800/90 border-slate-700 text-white' 
             : 'bg-white dark:bg-dark-surface border-cool-200 dark:border-dark-border'
@@ -658,12 +658,12 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           )}
 
           {/* Action Button Controls */}
-          <div className="flex items-center justify-between pt-4 border-t border-cool-200 dark:border-dark-border">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pt-4 border-t border-cool-200 dark:border-dark-border">
+            <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
               <button
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
-                className="px-3.5 py-2 bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-dark-text font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                className="px-3 xs:px-3.5 py-2 bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-dark-text font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Prev
@@ -672,7 +672,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               {mode !== 'FOCUS_TEST' && (
                 <button
                   onClick={handleSkip}
-                  className="px-3.5 py-2 bg-slate-100 dark:bg-dark-card hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-dark-muted font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  className="px-3 xs:px-3.5 py-2 bg-slate-100 dark:bg-dark-card hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-dark-muted font-bold text-xs rounded-xl transition-all cursor-pointer"
                 >
                   Skip
                 </button>
@@ -681,19 +681,19 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               {/* In-Question Ask AI button */}
               <button
                 onClick={() => setIsAITutorOpen(true)}
-                className="px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-950/70 text-indigo-900 dark:text-indigo-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-indigo-200 dark:border-indigo-900/40"
+                className="px-2.5 xs:px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-950/70 text-indigo-900 dark:text-indigo-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-indigo-200 dark:border-indigo-900/40"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 Ask AI
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
               {mode !== 'LEARN' && !currentSubmission && (
                 <button
                   onClick={handleSubmit}
                   disabled={!selectedOption}
-                  className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white font-bold text-xs rounded-xl transition-all shadow-xs cursor-pointer"
+                  className="px-4 xs:px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white font-bold text-xs rounded-xl transition-all shadow-xs cursor-pointer"
                 >
                   Submit
                 </button>
@@ -701,7 +701,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
               <button
                 onClick={handleNext}
-                className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                className="px-4 xs:px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-1 cursor-pointer"
               >
                 {currentIndex === questions.length - 1 ? 'Finish' : 'Next'}
                 <ArrowRight className="w-4 h-4" />
@@ -713,19 +713,19 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
       {/* Question Navigator Drawer Modal */}
       {isNavigatorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-dark-surface rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-cool-200 dark:border-dark-border transition-colors">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-dark-surface rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-cool-200 dark:border-dark-border transition-colors max-h-[85vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between border-b border-cool-200 dark:border-dark-border pb-3">
               <h4 className="text-sm font-bold text-slate-900 dark:text-dark-text font-display">Question Navigator</h4>
               <button 
                 onClick={() => setIsNavigatorOpen(false)}
-                className="text-xs font-bold text-slate-500 dark:text-dark-muted hover:text-slate-800 dark:hover:text-dark-text cursor-pointer"
+                className="text-xs font-bold text-slate-500 dark:text-dark-muted hover:text-slate-800 dark:hover:text-dark-text cursor-pointer p-1"
               >
                 Close
               </button>
             </div>
 
-            <div className="grid grid-cols-5 gap-2.5 max-h-64 overflow-y-auto p-1">
+            <div className="grid grid-cols-5 xs:grid-cols-6 sm:grid-cols-7 gap-2 max-h-72 overflow-y-auto p-1">
               {questions.map((q, idx) => {
                 const sub = submittedAnswers[q.id];
                 const isCur = idx === currentIndex;
