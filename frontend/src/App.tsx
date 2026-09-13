@@ -9,6 +9,7 @@ import { PDFStudio } from './features/pdf/PDFStudio';
 import { AnalyticsView } from './features/analytics/AnalyticsView';
 import { ProfileView } from './features/profile/ProfileView';
 import { SundaramAIAssistant } from './features/assistant/SundaramAIAssistant';
+import { AIFloatingTrigger } from './components/assistant/AIFloatingTrigger';
 import { AuthModal } from './features/auth/AuthModal';
 import { PWAInstallModal } from './components/common/PWAInstallModal';
 import { PDFUploadModal } from './components/pdf/PDFUploadModal';
@@ -296,6 +297,14 @@ export function AppContent() {
         <BottomNav
           activeTab={activeTab}
           onTabChange={handleTabSelect}
+        />
+      )}
+
+      {/* Floating 3D AI Assistant Trigger Button (Suppressed in Focus Mode or when AI panel is open) */}
+      {!isFocusTest && (
+        <AIFloatingTrigger
+          isOpen={isAIOpen}
+          onClick={() => setIsAIOpen(true)}
         />
       )}
 

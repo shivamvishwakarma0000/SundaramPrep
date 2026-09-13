@@ -1,7 +1,11 @@
-from flask import Blueprint, request
+import json
+import logging
+from flask import Blueprint, request, Response, stream_with_context
 from app.services.ai_service import ai_service
 from app.models import Question
 from app.utils.responses import api_success, api_error
+
+logger = logging.getLogger(__name__)
 
 ai_bp = Blueprint("ai_assistant", __name__, url_prefix="/api/ai")
 
@@ -22,6 +26,39 @@ def assistant_chat():
     )
     
     return api_success(response)
+
+@ai_bp.route("/chat/stream", methods=["POST"])
+def assistant_chat_stream():
+    """
+    Streaming AI chat endpoint with real-time SSE tokens,
+    conversation history context, and question context injection.
+    """
+    payload = request.get_json() or {}
+    query = payload.get("query", "").strip()
+    conversation_history = payload.get("conversation_history", [])
+    context = payload.get("context")
+    language_mode = payload.get("language_mode", "EN")
+    
+    if not query:
+        return api_error("Query cannot be empty", status_code=400)
+
+    def generate():
+        try:
+            for event in ai_service.ask_assistant_stream(
+                query=query,
+                conversation_history=conversation_history,
+                context=context,
+                language_mode=language_mode
+            ):
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception as e:
+            logger.error(f"Error in chat stream generator: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': 'AI service encountered a temporary interruption. Please try again.'})}\n\n"
+
+    response = Response(stream_with_context(generate()), mimetype="text/event-stream")
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["X-Accel-Buffering"] = "no"
+    return response
 
 @ai_bp.route("/tutor-action", methods=["POST"])
 def tutor_question_action():

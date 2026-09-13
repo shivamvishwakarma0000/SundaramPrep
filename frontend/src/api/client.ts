@@ -46,6 +46,95 @@ export async function apiRequest<T>(
   return json.data as T;
 }
 
+export interface StreamChatParams {
+  query: string;
+  conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  context?: any;
+  language_mode?: string;
+}
+
+export async function streamAssistantChat(
+  params: StreamChatParams,
+  onToken: (token: string) => void,
+  onDone: (data: { model_used?: string; sources?: string[] }) => void,
+  onError: (err: Error) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const token = localStorage.getItem("sundaram_token");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/ai/chat/stream`, {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(params),
+      signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Chat stream failed: HTTP ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error("No response body available for streaming");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+
+      for (const block of lines) {
+        const trimmed = block.trim();
+        if (trimmed.startsWith("data: ")) {
+          try {
+            const data = JSON.parse(trimmed.slice(6));
+            if (data.type === "token" && data.content) {
+              onToken(data.content);
+            } else if (data.type === "done") {
+              onDone({ model_used: data.model_used, sources: data.sources });
+            } else if (data.type === "error") {
+              onError(new Error(data.message || "Streaming error"));
+            }
+          } catch {
+            // Ignore parse errors on partial chunks
+          }
+        }
+      }
+    }
+
+    // Process leftover buffer if any
+    if (buffer.trim().startsWith("data: ")) {
+      try {
+        const data = JSON.parse(buffer.trim().slice(6));
+        if (data.type === "token" && data.content) {
+          onToken(data.content);
+        } else if (data.type === "done") {
+          onDone({ model_used: data.model_used, sources: data.sources });
+        }
+      } catch {}
+    }
+  } catch (err: any) {
+    if (err.name === "AbortError") {
+      return;
+    }
+    onError(err instanceof Error ? err : new Error(String(err)));
+  }
+}
+
 export const api = {
   // Production Auth & Quick Login
   register: (data: { full_name?: string; email?: string; phone?: string; password?: string; target_exam?: string }) =>
@@ -174,6 +263,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ query, context, language_mode }),
     }),
+  streamAssistantChat: (
+    params: { query: string; conversation_history?: Array<{ role: 'user' | 'assistant'; content: string }>; context?: any; language_mode?: string },
+    onToken: (token: string) => void,
+    onDone: (data: { model_used?: string; sources?: string[] }) => void,
+    onError: (err: Error) => void,
+    signal?: AbortSignal
+  ) => streamAssistantChat(params, onToken, onDone, onError, signal),
   tutorQuestionAction: (body: { action_type: string; question_id?: string; question?: any; user_selected?: string; language_mode?: string }) =>
     apiRequest<{ reply: string; model_used: string; sources?: string[]; notice?: string }>("/api/ai/tutor-action", {
       method: "POST",
