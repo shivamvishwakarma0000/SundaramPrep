@@ -467,8 +467,8 @@ def seed_normalized_database():
             state="Delhi",
             preferred_exam_categories=["Civil Services", "State PSC"]
         )
-        streak = Streak(user_id=demo_user.id, current_streak=7, longest_streak=14)
-        goal = DailyGoal(user_id=demo_user.id, target_questions=30, solved_today=18)
+        streak = Streak(user_id=demo_user.id, current_streak=0, longest_streak=0)
+        goal = DailyGoal(user_id=demo_user.id, target_questions=30, solved_today=0)
         db.session.add_all([profile, streak, goal])
 
     # 2. Seed Exams

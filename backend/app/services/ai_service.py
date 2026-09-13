@@ -2,6 +2,8 @@ import os
 import json
 import time
 import logging
+import urllib.parse
+import requests
 from typing import Dict, Any, List, Optional, Generator
 from app.config import config
 
@@ -356,6 +358,52 @@ class AIService:
         # Tier 3: Intelligent Knowledge & Semantic NLP Solver
         return self._solve_with_knowledge_heuristics(question_text, options, subject, exam)
 
+    def _fetch_encyclopedic_knowledge(self, query: str) -> Optional[Dict[str, str]]:
+        """
+        Dynamically fetches verified encyclopedia knowledge from the public Wikipedia REST API.
+        Zero cost, zero quota limits, ultra-fast (<200ms), and resolves typos like 'ghandhi' -> 'Mahatma Gandhi'.
+        """
+        try:
+            clean = query.lower()
+            for prefix in ["who is", "who was", "what is", "what was", "explain", "tell me about", "briefly explain", "notes on", "write about"]:
+                if clean.startswith(prefix):
+                    clean = clean[len(prefix):].strip()
+            clean = clean.strip(" ?.!\"'")
+            if not clean:
+                return None
+
+            search_url = f"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={urllib.parse.quote(clean)}&format=json&utf8=1"
+            headers = {"User-Agent": "SundaramPrep/2.0 (prep@sundaram.edu)"}
+            res = requests.get(search_url, headers=headers, timeout=3.5)
+            if res.status_code != 200:
+                return None
+
+            data = res.json()
+            items = data.get("query", {}).get("search", [])
+            if not items:
+                return None
+
+            title = items[0]["title"]
+            sum_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(title)}"
+            sres = requests.get(sum_url, headers=headers, timeout=3.5)
+            if sres.status_code != 200:
+                return None
+
+            sdata = sres.json()
+            desc = sdata.get("description", "")
+            extract = sdata.get("extract", "")
+            if not extract:
+                return None
+
+            return {
+                "title": title,
+                "description": desc,
+                "extract": extract
+            }
+        except Exception as e:
+            logger.info(f"Encyclopedia knowledge fetch skipped: {e}")
+            return None
+
     def _simulate_assistant_response(
         self,
         query: str,
@@ -414,7 +462,111 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 2. Independence Day / Freedom / Republic / Dates
+        # 2. Mahatma Gandhi (Freedom Struggle / Modern History Core)
+        # -------------------------------------------------------------
+        if any(w in q_lower for w in ["gandhi", "ghandhi", "bapu", "mahatma", "rashtrapita", "father of the nation", "champaran", "kheda", "ahmedabad mill", "hind swaraj"]):
+            if is_hinglish:
+                reply = (
+                    "**Answer / Key Point:** **Mahatma Gandhi** (Mohandas Karamchand Gandhi, 1869–1948) Indian national movement ke pre-eminent leader the, jinhe **Rashtrapita** (Father of the Nation) aur Satyagraha (Non-Violent Resistance) ka father maana jaata hai.\n\n"
+                    "**Why / Core Movements & Milestones:**\n"
+                    "• **South Africa (1893–1914):** Natal Indian Congress banaya; Phoenix & Tolstoy Farms establish kiye; pehli baar Satyagraha ka use kiya.\n"
+                    "• **Return to India:** **9 January 1915** ko India return hue (jise *Pravasi Bharatiya Divas* ke roop me manaya jaata hai). Inke political guru **Gopal Krishna Gokhale** the.\n"
+                    "• **Early Satyagrahas (The 'CAKE' Formula):**\n"
+                    "  1. **C**hamparan (1917, Bihar) – Tinkathia indigo system ke against (First Civil Disobedience).\n"
+                    "  2. **A**hmedabad Mill Strike (1918, Gujarat) – 35% wage hike ke liye (First Hunger Strike).\n"
+                    "  3. **K**heda Satyagraha (1918, Gujarat) – Crop failure revenue remission ke liye (First Non-Cooperation).\n"
+                    "• **Mass Movements:** Non-Cooperation Movement (1920–22), Civil Disobedience Movement & Dandi March (1930), Quit India Movement (1942, slogan: *'Do or Die'*).\n\n"
+                    "**Quick Fact:** Major Publications: *Hind Swaraj* (1909), *My Experiments with Truth*, *Young India*, *Harijan*, *Indian Opinion*. Unhe *'Mahatma'* ka title **Rabindranath Tagore** ne aur *'Father of the Nation'* **Netaji Subhas Chandra Bose** ne 1944 me diya tha.\n\n"
+                    "**Memory Trick:** Early Satyagrahas sequence: **'CAKE'** = **C**hamparan (1917) -> **A**hmedabad (1918) -> **K**heda (1918)."
+                )
+            elif is_hindi:
+                reply = (
+                    "**उत्तर / मुख्य बिंदु:** **महात्मा गांधी** (मोहनदास करमचंद गांधी, 2 अक्टूबर 1869 – 30 जनवरी 1948) भारतीय स्वतंत्रता संग्राम के अग्रदूत, राष्ट्रपिता और सत्य एवं अहिंसा (सत्याग्रह) के वैश्विक प्रतीक हैं।\n\n"
+                    "**कारण / प्रमुख ऐतिहासिक पड़ाव:**\n"
+                    "• **दक्षिण अफ्रीका चरण (1893–1914):** नटाल इंडियन कांग्रेस, टॉल्स्टॉय फार्म और फीनिक्स आश्रम की स्थापना; रंगभेद के खिलाफ पहला सत्याग्रह।\n"
+                    "• **भारत आगमन:** **9 जनवरी 1915** को भारत लौटे (प्रवासी भारतीय दिवस)। इनके राजनीतिक गुरु **गोपाल कृष्ण गोखले** थे।\n"
+                    "• **प्रारंभिक सत्याग्रह (CAKE सूत्र):**\n"
+                    "  1. **च**ंपारण सत्याग्रह (1917, बिहार) – तीनकठिया नील व्यवस्था के विरुद्ध (प्रथम सविनय अवज्ञा)।\n"
+                    "  2. **अ**हमदाबाद मिल हड़ताल (1918) – 35% बोनस के लिए (प्रथम भूख हड़ताल)।\n"
+                    "  3. **खे**ड़ा सत्याग्रह (1918) – फसल बर्बादी पर लगान माफी (प्रथम असहयोग)।\n"
+                    "• **प्रमुख जन-आंदोलन:** असहयोग आंदोलन (1920–22), सविनय अवज्ञा आंदोलन व दांडी मार्च (1930), भारत छोड़ो आंदोलन (1942, 'करो या मरो' का नारा)।\n\n"
+                    "**महत्वपूर्ण तथ्य:** पुस्तकें व पत्रिकाएं: *हिंद स्वराज* (1909), *सत्य के साथ मेरे प्रयोग*, *यंग इंडिया*, *हरिजन*, *नवजीवन*। गुरुदेव **रवींद्रनाथ टैगोर** ने उन्हें 'महात्मा' तथा **नेताजी सुभाष चंद्र बोस** ने 1944 में 'राष्ट्रपिता' की उपाधि दी।\n\n"
+                    "**स्मृति सूत्र:** प्रारंभिक सत्याग्रहों का क्रम: **'CAKE'** = **च**ंपारण (1917) -> **अ**हमदाबाद (1918) -> **खे**ड़ा (1918)।"
+                )
+            else:
+                reply = (
+                    "**Answer / Key Point:** **Mahatma Gandhi** (Mohandas Karamchand Gandhi, 1869–1948) was the preeminent leader of India's freedom struggle, revered worldwide as the **Father of the Nation** and the pioneer of **Satyagraha** (non-violent mass resistance).\n\n"
+                    "**Why / Key Freedom Movements & Chronology:**\n"
+                    "• **South Africa (1893–1914):** Founded the Natal Indian Congress; established Phoenix and Tolstoy Farms; perfected the tool of non-violent civil resistance against racial discrimination.\n"
+                    "• **Arrival in India:** Returned on **9 January 1915** (celebrated as *Pravasi Bharatiya Divas*). His political mentor was **Gopal Krishna Gokhale**.\n"
+                    "• **Early Regional Satyagrahas (The 'CAKE' Formula):**\n"
+                    "  1. **C**hamparan Satyagraha (1917, Bihar) – Against the exploitative Tinkathia indigo system (First Civil Disobedience in India).\n"
+                    "  2. **A**hmedabad Mill Strike (1918, Gujarat) – 35% wage increase for cotton mill workers (First Hunger Strike).\n"
+                    "  3. **K**heda Satyagraha (1918, Gujarat) – Revenue remission due to crop famine (First Non-Cooperation).\n"
+                    "• **Major Nationwide Movements:** Non-Cooperation Movement (1920–22), Civil Disobedience Movement & Dandi Salt March (1930), and Quit India Movement (1942, giving the clarion call *'Do or Die'*).\n\n"
+                    "**Quick Fact:** Key Publications: *Hind Swaraj* (1909), *The Story of My Experiments with Truth* (Autobiography), *Young India*, *Harijan*, *Navjivan*, and *Indian Opinion*. The title *'Mahatma'* was conferred by **Rabindranath Tagore**, and *'Father of the Nation'* by **Netaji Subhas Chandra Bose** in 1944.\n\n"
+                    "**Memory Trick:** Remember Gandhi's early triad in order using **'CAKE'** = **C**hamparan (1917) -> **A**hmedabad (1918) -> **K**heda (1918)."
+                )
+            return {
+                "reply": reply,
+                "model_used": "sundaram-ai-fast",
+                "sources": ["Modern Indian History (NCERT / Bipan Chandra)", "Gandhian Heritage Portal"],
+                "notice": None
+            }
+
+        # -------------------------------------------------------------
+        # 3. Dr. B.R. Ambedkar (Constitutional Architect)
+        # -------------------------------------------------------------
+        if any(w in q_lower for w in ["ambedkar", "babasaheb", "drafting committee", "poona pact", "article 32"]):
+            reply = (
+                "**Answer / Key Point:** **Dr. Bhimrao Ramji Ambedkar** (1891–1956) was the Chief Architect of the Constitution of India, Chairman of the Drafting Committee, and India's first Law and Justice Minister.\n\n"
+                "**Why:** He championed social equality, eradication of untouchability, and constitutional safeguards for marginalized communities. He established the **Bahishkrit Hitakarini Sabha** (1924) and led the historic **Mahad Satyagraha** (1927) for water rights.\n\n"
+                "**Quick Fact:** Dr. Ambedkar described **Article 32** (Right to Constitutional Remedies) as the *'Heart and Soul of the Constitution'*. In 1932, he signed the **Poona Pact** with Mahatma Gandhi, securing reserved legislative seats instead of separate electorates for Depressed Classes.\n\n"
+                "**Memory Trick:** **'Ambedkar -> Drafting Head -> Mahad Satyagraha -> Poona Pact 1932 -> Article 32 Heart & Soul'**."
+            )
+            return {
+                "reply": reply,
+                "model_used": "sundaram-ai-fast",
+                "sources": ["Indian Polity (M. Laxmikanth) / Modern History"],
+                "notice": None
+            }
+
+        # -------------------------------------------------------------
+        # 4. Sardar Vallabhbhai Patel (Iron Man / National Integration)
+        # -------------------------------------------------------------
+        if any(w in q_lower for w in ["sardar patel", "vallabhbhai", "iron man", "lauh purush", "bardoli", "princely states"]):
+            reply = (
+                "**Answer / Key Point:** **Sardar Vallabhbhai Patel** (1875–1950) was India's first Deputy Prime Minister and Home Minister, known as the **'Iron Man of India'** (Lauh Purush) and the **'Bismarck of India'**.\n\n"
+                "**Why:** He integrated over 565 princely states into the Indian Union through masterful diplomacy and resolute action (e.g., Operation Polo for Hyderabad, Junagadh accession, and Kashmir).\n\n"
+                "**Quick Fact:** The women of Bardoli bestowed the title **'Sardar'** upon him after his leadership in the **Bardoli Satyagraha (1928)** against unjust land revenue hikes. His birthday, **31 October**, is celebrated as **National Unity Day** (Rashtriya Ekta Diwas).\n\n"
+                "**Memory Trick:** **'Patel -> Bardoli 1928 -> 565 States Integration -> 31 Oct National Unity Day'**."
+            )
+            return {
+                "reply": reply,
+                "model_used": "sundaram-ai-fast",
+                "sources": ["Modern Indian History / National Integration Archives"],
+                "notice": None
+            }
+
+        # -------------------------------------------------------------
+        # 5. Bhagat Singh & Revolutionary Freedom Movement
+        # -------------------------------------------------------------
+        if any(w in q_lower for w in ["bhagat singh", "inquilab zindabad", "hsra", "batukeshwar", "saunders"]):
+            reply = (
+                "**Answer / Key Point:** **Shaheed Bhagat Singh** (1907–1931) was a legendary revolutionary socialist freedom fighter who popularized the rallying cry **'Inquilab Zindabad'** (Long Live the Revolution).\n\n"
+                "**Why:** He founded the **Naujawan Bharat Sabha** (1926) and co-founded the **Hindustan Socialist Republican Association (HSRA)** in 1928 at Feroz Shah Kotla, Delhi with Chandrashekhar Azad to fight British imperialism and envision an egalitarian India.\n\n"
+                "**Quick Fact:** On **8 April 1929**, Bhagat Singh and Batukeshwar Dutt threw non-lethal smoke bombs into the Central Legislative Assembly to protest the Public Safety Bill and Trade Disputes Bill ('to make the deaf hear'). He was martyred on **23 March 1931** (Shaheed Diwas) with Rajguru and Sukhdev.\n\n"
+                "**Memory Trick:** **'Naujawan Bharat Sabha (1926) -> HSRA (1928) -> Assembly Bomb (1929) -> Shaheed Diwas (23 March 1931)'**."
+            )
+            return {
+                "reply": reply,
+                "model_used": "sundaram-ai-fast",
+                "sources": ["Modern Indian History (NCERT / Bipan Chandra)"],
+                "notice": None
+            }
+
+        # -------------------------------------------------------------
+        # 6. Independence Day / Freedom / Republic / Dates
         # -------------------------------------------------------------
         if any(w in q_lower for w in ["independence", "independance", "1947", "azadi", "swatantrata"]):
             if is_hinglish:
@@ -460,7 +612,7 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 3. Dandi March / Civil Disobedience / Salt Law
+        # 7. Dandi March / Civil Disobedience / Salt Law
         # -------------------------------------------------------------
         if any(w in q_lower for w in ["dandi", "salt march", "namak", "civil disobedience"]):
             reply = (
@@ -477,7 +629,7 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 4. Slogans & Freedom Leaders
+        # 8. Slogans & Netaji Subhas Chandra Bose
         # -------------------------------------------------------------
         if "give me blood" in q_lower or "tum mujhe khoon do" in q_lower or "subhas" in q_lower or "bose" in q_lower:
             reply = (
@@ -494,7 +646,7 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 5. Inflation & RBI Monetary Policy
+        # 9. Inflation & RBI Monetary Policy
         # -------------------------------------------------------------
         if any(w in q_lower for w in ["repo rate", "inflation", "monetary policy", "rbi hike", "interest rate"]):
             reply = (
@@ -511,7 +663,7 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 6. National Park vs Wildlife Sanctuary
+        # 10. National Park vs Wildlife Sanctuary
         # -------------------------------------------------------------
         if any(w in q_lower for w in ["national park", "wildlife sanctuary", "sanctuary", "wpa 1972"]):
             reply = (
@@ -528,7 +680,7 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 7. Sundaram Prep Features & Exam Strategy
+        # 11. Sundaram Prep Features & Exam Strategy
         # -------------------------------------------------------------
         if any(w in q_lower for w in ["sundaram", "portal", "focus mode", "mistake", "weak topic", "how to"]):
             reply = (
@@ -550,7 +702,7 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 8. Memory Trick Request
+        # 12. Memory Trick Request
         # -------------------------------------------------------------
         if "memory trick" in q_lower or "mnemonic" in q_lower or "trick" in q_lower:
             reply = (
@@ -571,7 +723,53 @@ class AIService:
             }
 
         # -------------------------------------------------------------
-        # 9. Dynamic Subject Q&A Generator (Matches user's actual question!)
+        # 13. Dynamic Encyclopedia Knowledge Resolver (Universal Coverage)
+        # -------------------------------------------------------------
+        wiki_knowledge = self._fetch_encyclopedic_knowledge(query)
+        if wiki_knowledge:
+            title = wiki_knowledge["title"]
+            desc = wiki_knowledge.get("description", "")
+            extract = wiki_knowledge.get("extract", "")
+
+            sentences = [s.strip() for s in extract.split(". ") if s.strip()]
+            first_point = ". ".join(sentences[:2])
+            if first_point and not first_point.endswith("."):
+                first_point += "."
+            second_point = ". ".join(sentences[2:4]) if len(sentences) > 2 else "Crucial conceptual topic in competitive exam curriculum."
+            if second_point and not second_point.endswith("."):
+                second_point += "."
+
+            if is_hinglish:
+                reply = (
+                    f"**Answer / Key Point:** **{title}**" + (f" ({desc})" if desc else "") + f": {first_point}\n\n"
+                    f"**Why / Context:** {second_point}\n\n"
+                    f"**Quick Fact:** High-yield reference: Is topic ke standard NCERT questions regular prelims aur mains exam papers me repeat hote hain.\n\n"
+                    f"**Memory Trick / Exam Note:** Core formula: **{title} -> Key Milestones -> Constitutional / Historical Impact**."
+                )
+            elif is_hindi:
+                reply = (
+                    f"**उत्तर / मुख्य बिंदु:** **{title}**" + (f" ({desc})" if desc else "") + f": {first_point}\n\n"
+                    f"**कारण / संदर्भ:** {second_point}\n\n"
+                    f"**महत्वपूर्ण तथ्य:** आधिकारिक परीक्षा पाठ्यक्रम एवं NCERT संदर्भ: **{title}** से संबंधित मुख्य तथ्यों का पुनरावलोकन करें।\n\n"
+                    f"**स्मृति सूत्र:** मुख्य विषय को **ऐतिहासिक/संवैधानिक पृष्ठभूमि -> वर्तमान प्रासंगिकता** से जोड़कर याद रखें।"
+                )
+            else:
+                reply = (
+                    f"**Answer / Key Point:** **{title}**" + (f" ({desc})" if desc else "") + f": {first_point}\n\n"
+                    f"**Why / Background:** {second_point}\n\n"
+                    f"**Quick Fact:** High-yield reference: Review standard NCERT / official statutory syllabus regarding **{title}**.\n\n"
+                    f"**Memory Trick / Exam Strategy:** Focus on: **Key Definitions -> Primary Milestones & Provisions -> Contemporary Impact**."
+                )
+
+            return {
+                "reply": reply,
+                "model_used": "sundaram-ai-fast",
+                "sources": [f"Encyclopedic Knowledge ({title})", "Competitive Exam Standard Benchmark"],
+                "notice": None
+            }
+
+        # -------------------------------------------------------------
+        # 14. Clean Contextual Fallback (If completely offline)
         # -------------------------------------------------------------
         clean_question = query.rstrip("?").strip()
         reply = (

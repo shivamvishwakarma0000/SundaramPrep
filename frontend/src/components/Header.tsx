@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Flame, Sparkles, User as UserIcon, Sun, Moon, Laptop, ArrowLeft } from 'lucide-react';
 import type { ExamType, User } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { SundaramLogo } from './common/SundaramLogo';
 
 interface HeaderProps {
   user: User | null;
@@ -49,11 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden xs:inline">Back</span>
             </button>
           )}
-          <img
-            src="/favicon.png"
-            alt="Sundaram Prep Logo"
-            className="w-7 h-7 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-brand-600/30 dark:ring-brand-500/50 bg-white dark:bg-dark-surface shrink-0"
-          />
+          <SundaramLogo size="sm" className="w-7 h-7 sm:w-9 sm:h-9" />
           <div className="min-w-0">
             <div className="flex items-center gap-1 sm:gap-2">
               <h1 className="text-[11px] xs:text-xs sm:text-lg font-extrabold font-display tracking-tight text-brand-700 dark:text-dark-text leading-tight whitespace-nowrap truncate">

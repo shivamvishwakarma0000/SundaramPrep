@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { StudentHomeSummary, PortalTab } from '../../types';
+import { SundaramLogo } from '../../components/common/SundaramLogo';
 
 interface HomeViewProps {
   onNavigate: (tab: PortalTab) => void;
@@ -52,7 +53,15 @@ const DEFAULT_SUMMARY: StudentHomeSummary = {
 function getInitialSummary(): StudentHomeSummary {
   try {
     const cached = localStorage.getItem("sundaram_home_summary_cache");
-    if (cached) return JSON.parse(cached);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      // Discard obsolete dummy 7-day streak cache if it had old test defaults
+      if (parsed && (parsed.streak === 7 || parsed.daily_goal?.target_questions === 35 || parsed.daily_goal?.solved_today === 38)) {
+        localStorage.removeItem("sundaram_home_summary_cache");
+        return DEFAULT_SUMMARY;
+      }
+      return parsed;
+    }
   } catch {}
   return DEFAULT_SUMMARY;
 }
@@ -139,11 +148,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* 1. Header Banner with Streak & Daily Target (Clean White Card, Crisp Border) */}
       <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <img
-            src="/favicon.png"
-            alt="Sundaram Prep Logo"
-            className="w-12 h-12 rounded-xl object-cover ring-2 ring-brand-600/20 bg-white dark:bg-dark-surface shrink-0"
-          />
+          <SundaramLogo size="lg" className="w-12 h-12" />
           <div>
             <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white tracking-tight">
               SUNDARAM PREP
@@ -261,36 +266,36 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* BOX 1: 🚀 START PRACTICE ARENA */}
         <div
           onClick={() => onNavigate('practice')}
-          className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border hover:border-brand-600 dark:hover:border-brand-500 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
+          className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-600 dark:hover:border-sky-400 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-center text-brand-600 dark:text-brand-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-50 dark:bg-sky-950/70 border border-sky-200 dark:border-sky-700/60 flex items-center justify-center text-sky-600 dark:text-sky-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
                 🚀
               </div>
-              <span className="text-[10px] sm:text-[11px] font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-brand-200 dark:border-brand-800 uppercase tracking-wide">
+              <span className="text-[10px] sm:text-[11px] font-black text-sky-800 dark:text-sky-200 bg-sky-50 dark:bg-sky-900/50 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-sky-200 dark:border-sky-600/50 uppercase tracking-wide">
                 Live Answers
               </span>
             </div>
-            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">
+            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-sky-400 transition-colors">
               Start Practice Arena
             </h3>
-            <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-dark-muted mt-1 leading-snug">
-              Instant MCQs with instant feedback & key exam takeaways.
+            <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-200 mt-1.5 leading-snug">
+              Instant MCQs with real-time feedback & high-yield takeaways.
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-dark-border">
+          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onLaunchQuick10();
               }}
-              className="text-[11px] font-extrabold px-2 py-1 rounded-lg bg-slate-100 dark:bg-dark-surface hover:bg-slate-200 text-slate-900 dark:text-white transition-colors cursor-pointer"
+              className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
             >
               Quick 10
             </button>
-            <div className="flex items-center gap-1 text-xs font-black text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center gap-1 text-xs font-black text-brand-600 dark:text-sky-400 group-hover:translate-x-1 transition-transform">
               <span>Start</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
@@ -300,30 +305,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* BOX 2: 📄 UPLOAD PDF & SOLVE */}
         <div
           onClick={onOpenUploadModal}
-          className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border hover:border-saffron-500 dark:hover:border-saffron-400 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
+          className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 hover:border-saffron-500 dark:hover:border-amber-400 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-saffron-50 dark:bg-saffron-950/60 border border-saffron-200 dark:border-saffron-800 flex items-center justify-center text-saffron-600 dark:text-saffron-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-700/60 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
                 📄
               </div>
-              <span className="text-[10px] sm:text-[11px] font-black text-saffron-700 dark:text-saffron-300 bg-saffron-50 dark:bg-saffron-950/60 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-saffron-200 dark:border-saffron-800 uppercase tracking-wide">
+              <span className="text-[10px] sm:text-[11px] font-black text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/50 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-amber-200 dark:border-amber-600/50 uppercase tracking-wide">
                 Auto-Extract
               </span>
             </div>
-            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-saffron-600 transition-colors">
+            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
               Upload PDF
             </h3>
-            <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-dark-muted mt-1 leading-snug">
+            <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-200 mt-1.5 leading-snug">
               Convert test paper PDFs into interactive MCQs with speed metrics.
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-dark-border">
-            <span className="text-[11px] font-bold text-slate-600 dark:text-dark-muted">
+          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
               Fast · Bilingual
             </span>
-            <div className="flex items-center gap-1 text-xs font-black text-saffron-600 dark:text-saffron-400 group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform">
               <span>Upload</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
@@ -333,30 +338,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* BOX 3: ⏱️ TIME FOCUS TEST */}
         <div
           onClick={onLaunchFocusTest}
-          className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border hover:border-flagGreen-600 dark:hover:border-flagGreen-500 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
+          className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 hover:border-flagGreen-600 dark:hover:border-emerald-400 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-flagGreen-50 dark:bg-flagGreen-950/60 border border-flagGreen-200 dark:border-flagGreen-800 flex items-center justify-center text-flagGreen-600 dark:text-flagGreen-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-700/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
                 ⏱️
               </div>
-              <span className="text-[10px] sm:text-[11px] font-black text-flagGreen-700 dark:text-flagGreen-300 bg-flagGreen-50 dark:bg-flagGreen-950/60 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-flagGreen-200 dark:border-flagGreen-800 uppercase tracking-wide">
+              <span className="text-[10px] sm:text-[11px] font-black text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-900/50 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-emerald-200 dark:border-emerald-600/50 uppercase tracking-wide">
                 Proctor Sim
               </span>
             </div>
-            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-flagGreen-600 transition-colors">
+            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
               Time Focus Test
             </h3>
-            <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-dark-muted mt-1 leading-snug">
+            <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-200 mt-1.5 leading-snug">
               Timed simulation with negative marking and focus integrity tracking.
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-dark-border">
-            <span className="text-[11px] font-bold text-slate-600 dark:text-dark-muted">
+          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
               Strict Countdown
             </span>
-            <div className="flex items-center gap-1 text-xs font-black text-flagGreen-600 dark:text-flagGreen-400 group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center gap-1 text-xs font-black text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
               <span>Launch</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
@@ -366,30 +371,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
         {/* BOX 4: 📈 PROGRESS & MISTAKE */}
         <div
           onClick={() => onNavigate('progress')}
-          className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border hover:border-gold-500 dark:hover:border-gold-400 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
+          className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 hover:border-gold-500 dark:hover:border-yellow-400 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md cursor-pointer flex flex-col justify-between group transition-all"
         >
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gold-50 dark:bg-gold-950/60 border border-gold-200 dark:border-gold-800 flex items-center justify-center text-gold-600 dark:text-gold-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-yellow-50 dark:bg-yellow-950/70 border border-yellow-200 dark:border-yellow-700/60 flex items-center justify-center text-yellow-600 dark:text-yellow-400 group-hover:scale-105 transition-transform text-lg sm:text-xl">
                 📈
               </div>
-              <span className="text-[10px] sm:text-[11px] font-black text-gold-700 dark:text-gold-300 bg-gold-50 dark:bg-gold-950/60 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-gold-200 dark:border-gold-800 uppercase tracking-wide">
+              <span className="text-[10px] sm:text-[11px] font-black text-yellow-800 dark:text-yellow-200 bg-yellow-50 dark:bg-yellow-900/50 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-yellow-200 dark:border-yellow-600/50 uppercase tracking-wide">
                 Analytics
               </span>
             </div>
-            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-gold-600 transition-colors">
+            <h3 className="text-base sm:text-xl font-black font-display text-slate-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
               Progress & Mistake
             </h3>
-            <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-dark-muted mt-1 leading-snug">
+            <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-200 mt-1.5 leading-snug">
               Accuracy, speed, consistency metrics, and error notebook drills.
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-dark-border">
-            <span className="text-[11px] font-bold text-slate-600 dark:text-dark-muted">
+          <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
               Live Diagnostics
             </span>
-            <div className="flex items-center gap-1 text-xs font-black text-gold-600 dark:text-gold-400 group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center gap-1 text-xs font-black text-yellow-600 dark:text-yellow-400 group-hover:translate-x-1 transition-transform">
               <span>Review</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </div>

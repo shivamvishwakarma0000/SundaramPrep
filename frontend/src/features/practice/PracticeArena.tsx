@@ -539,7 +539,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           </div>
 
           {/* Question Stem - Responsive Fluid Typography clamp() */}
-          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-dark-text leading-relaxed font-display text-fluid-q">
+          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-dark-text leading-relaxed font-display text-fluid-q break-words min-w-0">
             {currentQ.question_text}
           </h3>
 
@@ -578,14 +578,14 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                   key={opt.id}
                   onClick={() => handleSelectOption(opt.id)}
                   disabled={Boolean(currentSubmission && mode === 'FOCUS_TEST')}
-                  className={`w-full min-h-[48px] p-3.5 sm:p-4 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-start gap-3.5 cursor-pointer ${optStyle}`}
+                  className={`w-full min-h-[48px] p-3.5 sm:p-4 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-start gap-3.5 cursor-pointer overflow-hidden ${optStyle}`}
                 >
                   <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
                     isSelected ? 'bg-brand-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-dark-muted'
                   }`}>
                     {opt.id}
                   </span>
-                  <span className="flex-1 leading-relaxed">{opt.text}</span>
+                  <span className="flex-1 leading-relaxed break-words min-w-0">{opt.text}</span>
 
                   {mode !== 'FOCUS_TEST' && currentSubmission && opt.id === currentSubmission.correct_answer && (
                     <CheckCircle2 className="w-5 h-5 text-flagGreen-600 dark:text-flagGreen-400 shrink-0 mt-0.5" />

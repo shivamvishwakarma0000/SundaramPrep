@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Lock, Mail, User as UserIcon, Sparkles, ArrowRight, CheckCircle2, ShieldCheck, KeyRound, RefreshCw } from 'lucide-react';
 import { api } from '../../api/client';
 import type { User, ExamType } from '../../types';
+import { SundaramLogo } from '../../components/common/SundaramLogo';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -294,11 +295,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
           </div>
         ) : (
           <div className="text-center mb-6 pt-1 flex flex-col items-center">
-            <img
-              src="/favicon.png"
-              alt="Sundaram Prep Logo"
-              className="w-14 h-14 rounded-2xl object-cover shadow-sm mb-2 ring-2 ring-brand-400/40 dark:ring-brand-500/40 bg-white dark:bg-dark-surface"
-            />
+            <SundaramLogo size="xl" className="w-14 h-14 mb-2" />
             <span className="text-[11px] font-extrabold tracking-widest text-royal-600 dark:text-royal-400 uppercase font-display">
               Sundaram Prep
             </span>

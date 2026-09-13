@@ -47,6 +47,75 @@ def get_or_create_demo_user():
 
 # =========================================================================
 # 1. HOME DASHBOARD (Section 10: Low-Transfer Aggregated Home)
+def get_user_actual_metrics(user):
+    today = date.today()
+    from sqlalchemy import func
+    
+    # 1. Real actual questions answered today
+    today_start = datetime.combine(today, datetime.min.time())
+    actual_solved_today = db.session.query(func.count(TestAnswer.id))\
+        .filter(TestAnswer.user_id == user.id, TestAnswer.created_at >= today_start).scalar() or 0
+        
+    goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
+    if not goal:
+        goal = DailyGoal(user_id=user.id, target_questions=user.daily_goal or 30, date=today, solved_today=actual_solved_today)
+        db.session.add(goal)
+    else:
+        goal.solved_today = actual_solved_today
+        
+    # 2. Real day-wise streak calculation from distinct active dates
+    active_dates_records = db.session.query(func.date(TestAnswer.created_at))\
+        .filter(TestAnswer.user_id == user.id)\
+        .distinct().all()
+        
+    active_dates = set()
+    for (d,) in active_dates_records:
+        if isinstance(d, str):
+            try:
+                active_dates.add(datetime.strptime(d[:10], "%Y-%m-%d").date())
+            except Exception:
+                pass
+        elif isinstance(d, date):
+            active_dates.add(d)
+        elif isinstance(d, datetime):
+            active_dates.add(d.date())
+
+    current_streak = 0
+    if today in active_dates:
+        check_date = today
+        while check_date in active_dates:
+            current_streak += 1
+            check_date -= timedelta(days=1)
+    else:
+        yesterday = today - timedelta(days=1)
+        if yesterday in active_dates:
+            check_date = yesterday
+            while check_date in active_dates:
+                current_streak += 1
+                check_date -= timedelta(days=1)
+        else:
+            current_streak = 0
+
+    streak = Streak.query.filter_by(user_id=user.id).first()
+    if not streak:
+        streak = Streak(
+            user_id=user.id, 
+            current_streak=current_streak, 
+            longest_streak=current_streak, 
+            last_active_date=today if actual_solved_today > 0 else None
+        )
+        db.session.add(streak)
+    else:
+        streak.current_streak = current_streak
+        streak.longest_streak = max(streak.longest_streak or 0, current_streak)
+        if actual_solved_today > 0:
+            streak.last_active_date = today
+
+    db.session.commit()
+    return streak, goal, actual_solved_today, current_streak
+
+# =========================================================================
+# 1. HOME DASHBOARD (Section 10: Low-Transfer Aggregated Home)
 # Transfers < 2KB instead of querying entire question banks
 # =========================================================================
 @student_bp.route("/home", methods=["GET"])
@@ -54,19 +123,9 @@ def get_home_summary():
     user_id = get_current_user_id()
     user = User.query.get(user_id) if user_id else get_or_create_demo_user()
     
-    # 1. Daily Goal & Streak (Selective lookup)
+    # 1. Real Day-Wise Streak & Real Daily Goal
     today = date.today()
-    goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
-    if not goal:
-        goal = DailyGoal(user_id=user.id, target_questions=user.daily_goal or 30, date=today, solved_today=0)
-        db.session.add(goal)
-        db.session.commit()
-
-    streak = Streak.query.filter_by(user_id=user.id).first()
-    if not streak:
-        streak = Streak(user_id=user.id, current_streak=0, longest_streak=0, last_active_date=None)
-        db.session.add(streak)
-        db.session.commit()
+    streak, goal, actual_solved_today, current_streak = get_user_actual_metrics(user)
 
     # 2. Continue Practice (Last in-progress or recent session)
     recent_session = TestSession.query.filter_by(user_id=user.id)\
@@ -108,21 +167,29 @@ def get_home_summary():
         "exam_relevance": "UPSC GS-II (Polity & Governance)"
     }
 
-    # 5. Weekly Progress (7-Day sparkline points)
-    weekly_points = [
-        {"day": "Mon", "solved": 25, "accuracy": 80},
-        {"day": "Tue", "solved": 30, "accuracy": 75},
-        {"day": "Wed", "solved": 20, "accuracy": 85},
-        {"day": "Thu", "solved": 35, "accuracy": 78},
-        {"day": "Fri", "solved": 28, "accuracy": 82},
-        {"day": "Sat", "solved": 40, "accuracy": 90},
-        {"day": "Sun", "solved": goal.solved_today, "accuracy": 84}
-    ]
+    # 5. Real Weekly Progress (Past 7 days calculated from actual user attempts)
+    weekly_points = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        d_start = datetime.combine(d, datetime.min.time())
+        d_end = datetime.combine(d, datetime.max.time())
+        day_answers = TestAnswer.query.filter(
+            TestAnswer.user_id == user.id,
+            TestAnswer.created_at >= d_start,
+            TestAnswer.created_at <= d_end
+        ).all()
+        solved = len(day_answers)
+        acc = round((sum(1 for a in day_answers if a.correct) / solved) * 100) if solved > 0 else 0
+        weekly_points.append({
+            "day": d.strftime("%a"),
+            "solved": solved,
+            "accuracy": acc
+        })
 
     return api_success({
         "greeting": f"Good day, {user.name.split(' ')[0]}",
         "target_exam": user.target_exam,
-        "streak": streak.current_streak,
+        "streak": current_streak,
         "daily_goal": goal.to_dict(),
         "continue_practice": continue_practice,
         "quick_10_ready": True,
@@ -474,8 +541,7 @@ def get_student_analytics():
         overall_accuracy = 0.0
         avg_speed = 0.0
 
-    streak = Streak.query.filter_by(user_id=user.id).first()
-    current_streak = streak.current_streak if streak else 0
+    streak, goal, actual_solved_today, current_streak = get_user_actual_metrics(user)
     consistency = min(100, round((current_streak / 14) * 100, 1)) if current_streak else 0.0
 
     topic_count = UserTopicStats.query.filter_by(user_id=user.id).count()
@@ -549,14 +615,18 @@ def get_personal_bests():
     user_id = get_current_user_id()
     user = User.query.get(user_id) if user_id else get_or_create_demo_user()
     
-    streak = Streak.query.filter_by(user_id=user.id).first()
-    longest_streak = streak.longest_streak if streak else 14
+    streak, goal, actual_solved_today, current_streak = get_user_actual_metrics(user)
+    
+    total_answers = TestAnswer.query.filter_by(user_id=user.id).count()
+    correct_answers = TestAnswer.query.filter_by(user_id=user.id, correct=True).count()
+    accuracy = round((correct_answers / total_answers) * 100, 1) if total_answers > 0 else 0.0
     
     bests = dict(user.personal_bests or {})
-    bests.setdefault("highest_score", 184.5)
-    bests.setdefault("highest_accuracy", 92.0)
-    bests.setdefault("longest_streak", max(longest_streak, 14))
-    bests.setdefault("most_questions_solved_day", 65)
+    # If the user has taken real tests, calculate bests from actual answers; otherwise start clean at 0
+    bests.setdefault("highest_score", accuracy)
+    bests.setdefault("highest_accuracy", accuracy)
+    bests.setdefault("longest_streak", current_streak)
+    bests.setdefault("most_questions_solved_day", actual_solved_today)
     
     return api_success({
         "personal_bests": bests
