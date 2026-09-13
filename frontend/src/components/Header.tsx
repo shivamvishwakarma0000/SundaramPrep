@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
   Flame, 
-  Sparkles, 
   User as UserIcon, 
   ArrowLeft, 
   Sun, 
@@ -19,7 +18,7 @@ interface HeaderProps {
   user: User | null;
   currentExam: ExamType;
   onExamChange: (exam: ExamType) => void;
-  onOpenAI: () => void;
+  onOpenAI?: () => void;
   onOpenAuth: () => void;
   canGoBack?: boolean;
   onGoBack?: () => void;
@@ -32,7 +31,6 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   currentExam,
   onExamChange,
-  onOpenAI,
   onOpenAuth,
   canGoBack = false,
   onGoBack,
@@ -56,7 +54,6 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'practice', label: 'Practice', icon: FileEdit },
     { id: 'upload', label: 'Upload PDF', icon: UploadCloud },
     { id: 'progress', label: 'Progress', icon: TrendingUp },
-    { id: 'ai', label: 'AI Tutor', icon: Sparkles },
     { id: 'profile', label: 'Profile', icon: UserIcon },
   ];
 
@@ -154,15 +151,6 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden xl:inline text-[10px] text-amber-700 dark:text-amber-400 font-semibold">Active Streak</span>
             </div>
           </div>
-
-          {/* Sundaram AI Trigger Button */}
-          <button
-            onClick={onOpenAI}
-            className="hidden xs:flex items-center gap-1.5 bg-gradient-to-r from-brand-700 to-brand-600 hover:from-brand-800 hover:to-brand-700 text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold shadow-xs transition-all transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-            <span className="font-bold">AI Tutor</span>
-          </button>
 
           {/* User Profile / Login */}
           <button

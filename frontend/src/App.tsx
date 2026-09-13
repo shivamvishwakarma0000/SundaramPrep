@@ -226,7 +226,6 @@ export function AppContent() {
                 { id: 'practice', label: 'PRACTICE' },
                 { id: 'upload', label: 'UPLOAD PDF' },
                 { id: 'progress', label: 'PROGRESS' },
-                { id: 'ai', label: 'AI TUTOR' },
                 { id: 'profile', label: 'PROFILE' },
               ].map((item) => (
                 <button

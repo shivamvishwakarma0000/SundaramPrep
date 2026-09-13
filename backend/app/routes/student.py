@@ -577,6 +577,36 @@ def get_student_analytics():
                 "status": status
             })
 
+    # If UserTopicStats has no entries yet, compute directly from real TestAnswers
+    if not topic_analytics:
+        topic_answers = db.session.query(Question.topic, Question.subject, TestAnswer.correct)\
+            .join(Question, TestAnswer.question_id == Question.id)\
+            .filter(TestAnswer.user_id == user.id).all()
+        topic_counts = {}
+        for t_name, s_name, corr in topic_answers:
+            top = t_name or "Core Practice"
+            sub = s_name or "General Studies"
+            key = (top, sub)
+            if key not in topic_counts:
+                topic_counts[key] = {"attempts": 0, "correct": 0}
+            topic_counts[key]["attempts"] += 1
+            if corr:
+                topic_counts[key]["correct"] += 1
+        for (top, sub), t_data in topic_counts.items():
+            if t_data["attempts"] > 0:
+                acc = round((t_data["correct"] / t_data["attempts"]) * 100, 1)
+                status = "STRONG" if acc >= strong_threshold else ("IMPROVING" if acc >= weak_threshold else "WEAK")
+                topic_analytics.append({
+                    "topic": top,
+                    "subject": sub,
+                    "attempts": t_data["attempts"],
+                    "accuracy": acc,
+                    "status": status
+                })
+
+    topic_count = len(topic_analytics)
+    coverage = min(100, round((topic_count / 40) * 100, 1)) if topic_count else 0.0
+
     return api_success({
         "metrics": {
             "accuracy": overall_accuracy,
