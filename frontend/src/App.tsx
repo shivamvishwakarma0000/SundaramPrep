@@ -199,6 +199,8 @@ export function AppContent() {
           canGoBack={canGoBack}
           onGoBack={handleGoBack}
           streakCount={syncedStreak}
+          activeTab={activeTab}
+          onTabSelect={handleTabSelect}
           onOpenAI={() => {
             setAiQuestionContext(null);
             setAiInitialPrompt(null);
@@ -214,9 +216,9 @@ export function AppContent() {
         />
       )}
 
-      {/* Desktop Secondary Navigation Bar: Exactly 6 Student Portal Tabs */}
+      {/* Secondary Navigation Bar on Tablets (hidden on lg+ screens where Header has integrated center tabs) */}
       {!isFocusTest && (
-        <div className="hidden md:block bg-white/90 dark:bg-dark-surface/90 backdrop-blur border-b border-slate-200 dark:border-dark-border py-2 px-4 shadow-2xs transition-colors">
+        <div className="hidden md:block lg:hidden bg-white/90 dark:bg-dark-surface/90 backdrop-blur border-b border-slate-200 dark:border-dark-border py-2 px-4 shadow-2xs transition-colors">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               {[
@@ -254,6 +256,7 @@ export function AppContent() {
         {activeTab === 'home' && (
           <HomeView
             onNavigate={handleTabSelect}
+            currentExam={currentExam}
             onLaunchQuick10={() => {
               setActivePracticeMode('QUICK_10');
               setActiveTab('practice');
