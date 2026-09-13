@@ -79,7 +79,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
       setLoading(true);
       try {
         let count = 10;
-        if (mode === 'FOCUS_TEST') count = 25; // Standard focus block
+        if (documentId) count = 200; // Load all questions from uploaded PDF
+        else if (mode === 'FOCUS_TEST') count = 25; // Standard focus block
         else if (mode === 'MOCK_TEST') count = 10; // Exactly 10 questions for topic mock test as user requested
         else if (mode === 'QUICK_10') count = 10;
 
@@ -207,8 +208,9 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
     if (currentSubmission && mode === 'FOCUS_TEST') return;
     setSelectedOption(optId);
 
-    // Instant feedback on click for all practice modes (except proctored FOCUS_TEST)
-    if (mode !== 'FOCUS_TEST') {
+    // Only in LEARN mode do we give instant feedback on option click
+    // In MOCK_TEST, PRACTICE, FOCUS_TEST, PDF_PRACTICE, etc. answers are shown after submit
+    if (mode === 'LEARN') {
       submitAnswerDirect(optId, false);
     }
   };
@@ -253,6 +255,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   };
 
   const handleNext = () => {
+    // If option was selected but not explicitly submitted, submit in background
+    if (selectedOption && !currentSubmission) {
+      submitAnswerDirect(selectedOption, false);
+    }
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       const nextQ = questions[currentIndex + 1];

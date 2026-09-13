@@ -62,6 +62,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
   } | null>(null);
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<Set<string>>(new Set());
+  const [showQuestionList, setShowQuestionList] = useState<boolean>(false);
 
   const toggleExpand = (id: string) => {
     setExpandedQuestionIds((prev) => {
@@ -485,22 +486,54 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
             </div>
           )}
 
-          {/* Question Cards Feed */}
-          {loadingDrafts ? (
-            <div className="space-y-4">
-              <QuestionSkeleton />
-              <QuestionSkeleton />
+          {/* Collapsible Questions Toggle Header */}
+          {selectedDoc && (
+            <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-4 sm:p-5 shadow-xs transition-all">
+              <button
+                type="button"
+                onClick={() => setShowQuestionList((prev) => !prev)}
+                className="w-full flex items-center justify-between cursor-pointer text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 font-black flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                      Extracted Questions ({filteredDrafts.length} Questions)
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
+                      Click "Practice Entire PDF" above to start the test, or expand here to view individual questions.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-brand-700 bg-brand-50 border border-brand-200 px-3 py-1 rounded-lg">
+                    {showQuestionList ? 'Hide Questions' : 'Click to View Questions'}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${showQuestionList ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
             </div>
-          ) : filteredDrafts.length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title="No Questions Found"
-              description="No questions match the selected filter. Try selecting 'ALL' or upload a new PDF document."
-              actionLabel="Show All Questions"
-              onAction={() => setFilterMode('ALL')}
-            />
-          ) : (
-            <div className="space-y-3">
+          )}
+
+          {/* Question Cards Feed (Visible only when expanded) */}
+          {showQuestionList && (
+            loadingDrafts ? (
+              <div className="space-y-4">
+                <QuestionSkeleton />
+                <QuestionSkeleton />
+              </div>
+            ) : filteredDrafts.length === 0 ? (
+              <EmptyState
+                icon={FileText}
+                title="No Questions Found"
+                description="No questions match the selected filter. Try selecting 'ALL' or upload a new PDF document."
+                actionLabel="Show All Questions"
+                onAction={() => setFilterMode('ALL')}
+              />
+            ) : (
+              <div className="space-y-3 animate-in fade-in duration-200">
               {filteredDrafts.map((draft, idx) => {
                 const isExpanded = expandedQuestionIds.has(draft.id);
 
@@ -707,9 +740,10 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                 );
               })}
             </div>
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
+    )}
 
       {/* ------------------------------------------------------------- */}
       {/* TAB 2: MY PDFS LIBRARY (Section 9) */}

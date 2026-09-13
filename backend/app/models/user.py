@@ -37,6 +37,7 @@ class User(db.Model):
             "language": self.language,
             "avatar": self.avatar,
             "daily_goal": self.daily_goal,
+            "streak_count": self.streak.current_streak if self.streak else 0,
             "personal_bests": self.personal_bests or {},
             "timezone": self.timezone,
             "status": self.status,

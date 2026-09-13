@@ -58,13 +58,13 @@ def get_home_summary():
     today = date.today()
     goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
     if not goal:
-        goal = DailyGoal(user_id=user.id, target_questions=user.daily_goal or 30, date=today, solved_today=18)
+        goal = DailyGoal(user_id=user.id, target_questions=user.daily_goal or 30, date=today, solved_today=0)
         db.session.add(goal)
         db.session.commit()
 
     streak = Streak.query.filter_by(user_id=user.id).first()
     if not streak:
-        streak = Streak(user_id=user.id, current_streak=7, longest_streak=14, last_active_date=today)
+        streak = Streak(user_id=user.id, current_streak=0, longest_streak=0, last_active_date=None)
         db.session.add(streak)
         db.session.commit()
 
@@ -311,7 +311,7 @@ def get_student_profile():
     correct_answers = TestAnswer.query.filter_by(user_id=user.id, correct=True).count()
     total_tests = TestSession.query.filter_by(user_id=user.id).count()
     
-    accuracy = round((correct_answers / max(1, total_answers)) * 100, 1) if total_answers > 0 else 78.4
+    accuracy = round((correct_answers / total_answers) * 100, 1) if total_answers > 0 else 0.0
     
     return api_success({
         "user": {
@@ -328,10 +328,10 @@ def get_student_profile():
             "created_at": user.created_at.isoformat() if user.created_at else None,
         },
         "stats": {
-            "questions_solved": max(142, total_answers),
-            "tests_taken": max(18, total_tests),
+            "questions_solved": total_answers,
+            "tests_taken": total_tests,
             "overall_accuracy": accuracy,
-            "streak": streak.current_streak if streak else 7,
+            "streak": streak.current_streak if streak else 0,
             "daily_goal": user.daily_goal or 30,
         },
         "settings": {
@@ -467,8 +467,8 @@ def get_student_analytics():
         overall_accuracy = round((correct_answers / total_answers) * 100, 1)
         # Calculate real average speed from user's actual attempts
         from sqlalchemy import func
-        avg_speed_query = db.session.query(func.avg(TestAnswer.time_taken_seconds))\
-            .filter(TestAnswer.user_id == user.id, TestAnswer.time_taken_seconds > 0).scalar()
+        avg_speed_query = db.session.query(func.avg(TestAnswer.time_taken))\
+            .filter(TestAnswer.user_id == user.id, TestAnswer.time_taken > 0).scalar()
         avg_speed = round(float(avg_speed_query), 1) if avg_speed_query else 30.0
     else:
         overall_accuracy = 0.0
@@ -482,24 +482,28 @@ def get_student_analytics():
     coverage = min(100, round((topic_count / 40) * 100, 1)) if topic_count else 0.0
 
     # 2. Dynamic Real Subject Analytics (Calculated directly from student attempts)
-    from sqlalchemy import func
-    subject_rows = db.session.query(
-        Question.subject,
-        func.count(TestAnswer.id).label("attempts"),
-        func.sum(db.case((TestAnswer.correct == True, 1), else_=0)).label("correct_count")
-    ).join(Question, TestAnswer.question_id == Question.id)\
-     .filter(TestAnswer.user_id == user.id)\
-     .group_by(Question.subject).all()
+    subject_answers = db.session.query(Question.subject, TestAnswer.correct)\
+        .join(Question, TestAnswer.question_id == Question.id)\
+        .filter(TestAnswer.user_id == user.id).all()
+
+    subject_counts = {}
+    for s_name, corr in subject_answers:
+        s = s_name or "General Studies"
+        if s not in subject_counts:
+            subject_counts[s] = {"attempts": 0, "correct": 0}
+        subject_counts[s]["attempts"] += 1
+        if corr:
+            subject_counts[s]["correct"] += 1
 
     subjects = []
-    for s_name, att, corr in subject_rows:
-        if att and att > 0:
-            acc = round((int(corr or 0) / int(att)) * 100, 1)
+    for s_name, s_data in subject_counts.items():
+        if s_data["attempts"] > 0:
+            acc = round((s_data["correct"] / s_data["attempts"]) * 100, 1)
             status = "STRONG" if acc >= strong_threshold else ("IMPROVING" if acc >= weak_threshold else "WEAK")
             subjects.append({
-                "subject": s_name or "General Studies",
+                "subject": s_name,
                 "accuracy": acc,
-                "attempts": int(att),
+                "attempts": s_data["attempts"],
                 "status": status
             })
 

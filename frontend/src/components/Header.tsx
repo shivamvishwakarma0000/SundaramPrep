@@ -153,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Streak Badge */}
           <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold shadow-xs">
             <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-saffron-500 fill-saffron-500 shrink-0" />
-            <span>{user ? user.streak_count : 7}d</span>
+            <span>{user?.streak_count ?? 0}d</span>
           </div>
 
           {/* Sundaram AI Trigger */}
