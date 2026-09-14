@@ -69,11 +69,12 @@ export const CurrentAffairsView: React.FC = () => {
   const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false);
 
   // Fetch articles from backend
-  const fetchNews = useCallback(async (pageNum: number, category: string, append = false) => {
+  const fetchNews = useCallback(async (pageNum: number, category: string, search: string = '', append = false) => {
     try {
       if (!append) setLoading(true);
       const catParam = category === 'all' ? undefined : category;
-      const res = await api.getNewsFeed({ page: pageNum, limit: 12, category: catParam });
+      const searchParam = search.trim() ? search.trim() : undefined;
+      const res = await api.getNewsFeed({ page: pageNum, limit: 12, category: catParam, search: searchParam });
       
       if (res && res.articles) {
         if (append) {
@@ -126,19 +127,27 @@ export const CurrentAffairsView: React.FC = () => {
     }
   }, []);
 
-  // Initial load
+  // Live search and category change listener with debounce
   useEffect(() => {
-    fetchNews(1, selectedCategory, false);
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchNews(1, selectedCategory, searchQuery, false);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [fetchNews, selectedCategory, searchQuery]);
+
+  // Initial load for digest and bookmarks
+  useEffect(() => {
     fetchTodayDigest();
     fetchSavedNews();
-  }, [fetchNews, fetchTodayDigest, fetchSavedNews, selectedCategory]);
+  }, [fetchTodayDigest, fetchSavedNews]);
 
   // Handle Load More
   const handleLoadMore = () => {
     if (loading || !hasMore) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchNews(nextPage, selectedCategory, true);
+    fetchNews(nextPage, selectedCategory, searchQuery, true);
   };
 
   // Handle Refresh
@@ -151,7 +160,7 @@ export const CurrentAffairsView: React.FC = () => {
       setRefreshMessage(res.message || `Fetched ${res.new_articles_count} new articles.`);
       setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setPage(1);
-      await fetchNews(1, selectedCategory, false);
+      await fetchNews(1, selectedCategory, searchQuery, false);
       await fetchTodayDigest();
     } catch (err) {
       console.error('Failed to refresh news:', err);

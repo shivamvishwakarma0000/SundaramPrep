@@ -297,8 +297,12 @@ class NewsService:
                 db.or_(
                     NewsArticle.title.ilike(sq),
                     NewsArticle.short_summary.ilike(sq),
+                    NewsArticle.detailed_summary.ilike(sq),
                     NewsArticle.category.ilike(sq),
+                    NewsArticle.gs_paper.ilike(sq),
                     NewsArticle.why_in_news.ilike(sq),
+                    NewsArticle.what_happened.ilike(sq),
+                    NewsArticle.background.ilike(sq),
                     NewsArticle.upsc_relevance.ilike(sq)
                 )
             )
@@ -359,7 +363,7 @@ class NewsService:
             for a in top_stories[:3]
         ])
         if not summary_text:
-            summary_text = "Today's high-yield UPSC topics span Constitutional jurisprudence, macroeconomic indicators, green hydrogen innovation, and multilateral diplomacy."
+            summary_text = "Today's high-yield UPSC topics span G20 multilateral consensus, Constitutional jurisprudence, macroeconomic stability, green hydrogen transition, and indigenous space exploration."
 
         return {
             "date": today.strftime("%d %B %Y"),
@@ -625,13 +629,59 @@ class NewsService:
         return ai_service.ask_assistant(extended_query, context=context)
 
     def _ensure_seed_articles_exist(self):
-        """Populates rich, high-yield UPSC current affairs articles on fresh environments."""
+        """Populates rich, high-yield UPSC current affairs articles across all core syllabus categories."""
         try:
-            if NewsArticle.query.count() > 0:
-                return
-
             today = datetime.utcnow()
             seed_data = [
+                {
+                    "title": "G20 New Delhi Leaders' Declaration: African Union Permanent Induction, Global Biofuels Alliance & IMEEC Corridor",
+                    "original_url": "https://pib.gov.in",
+                    "source": "Ministry of External Affairs / G20 India",
+                    "category": "International Relations",
+                    "gs_paper": "GS-II",
+                    "image_url": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80",
+                    "relevance_score": 99,
+                    "is_featured": True,
+                    "read_time_minutes": 4,
+                    "short_summary": "The G20 Leaders' Summit under India's presidency achieved 100% consensus, formally admitting the African Union (AU) as a permanent member and launching the India-Middle East-Europe Economic Corridor (IMEEC) and Global Biofuels Alliance (GBA).",
+                    "detailed_summary": "Under the theme 'Vasudhaiva Kutumbakam' (One Earth, One Family, One Future), India's G20 Presidency positioned the Global South at the center of international diplomacy. Key milestones include tripling global renewable energy capacity by 2030, the G20 High-Level Principles on Lifestyles for Sustainable Development (LiFE), and strengthening Multilateral Development Banks (MDBs).",
+                    "why_in_news": "Landmark multilateral outcome establishing new strategic connectivity corridors and representing developing nations in global governance.",
+                    "what_happened": "Unanimous adoption of the 83-paragraph New Delhi Declaration without dissenting footnotes.",
+                    "background": "G20 founded in 1999 brings together the world's major developed and emerging economies, accounting for ~85% of global GDP, 75% of global trade, and two-thirds of world population.",
+                    "upsc_relevance": "Top-tier UPSC CSE GS-II topic (Bilateral & Regional Groupings, Effect of Policies of Developed & Developing Nations on India's Interests).",
+                    "key_facts": [
+                        "African Union (55 member states) became the 21st permanent member of G20.",
+                        "India-Middle East-Europe Economic Corridor (IMEEC) comprises Eastern Corridor (India to Arabian Gulf) and Northern Corridor (Gulf to Europe).",
+                        "Global Biofuels Alliance (GBA) launched with 19 countries and 12 international organizations.",
+                        "G20 Green Development Pact commits to tripling global renewable energy capacity by 2030."
+                    ],
+                    "prelims_facts": [
+                        "Troika: India, Brazil, South Africa.",
+                        "G20 has no permanent secretariat; host nation leads the agenda with the Troika."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Global South Leadership", "Counter to China's BRI via IMEEC", "Multilateral MDB Reform"],
+                        "challenges": ["Geopolitical instability in the Middle East affecting IMEEC transit", "Funding concessional climate finance for developing nations"],
+                        "way_forward": "Fast-track port-rail interoperability standards and mobilize blended finance for green corridors."
+                    },
+                    "important_terms": ["IMEEC", "Global Biofuels Alliance", "Global South", "Vasudhaiva Kutumbakam", "MDB Reforms", "Troika"],
+                    "possible_mains_questions": [
+                        "'India's G20 Presidency marked a paradigm shift by democratizing multilateral diplomacy and institutionalizing the voice of the Global South.' Critically evaluate with special reference to the African Union's induction and the IMEEC corridor. (250 words / 15 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "Regarding the India-Middle East-Europe Economic Corridor (IMEEC) launched at the G20 New Delhi Summit, consider the following statements:\n1. It comprises two distinct corridors: the East Corridor connecting India to the Arabian Gulf and the Northern Corridor connecting the Arabian Gulf to Europe.\n2. It includes a railway network, ship-to-rail transit network, and clean hydrogen export pipelines.\nWhich of the statements given above is/are correct?",
+                            "options": [
+                                {"id": "A", "text": "1 only"},
+                                {"id": "B", "text": "2 only"},
+                                {"id": "C", "text": "Both 1 and 2"},
+                                {"id": "D", "text": "Neither 1 nor 2"}
+                            ],
+                            "correct_answer": "C",
+                            "explanation": "Both statements are correct. IMEEC consists of the Eastern and Northern corridors, incorporating rail, shipping, electricity cables, digital connectivity, and clean hydrogen pipelines."
+                        }
+                    ]
+                },
                 {
                     "title": "Supreme Court 9-Judge Bench Reaffirms Article 21 Privacy Proportionality Limits",
                     "original_url": "https://pib.gov.in",
@@ -677,6 +727,54 @@ class NewsService:
                             ],
                             "correct_answer": "A",
                             "explanation": "Option A is correct. The Puttaswamy proportionality test requires: (1) Legitimate aim, (2) Rational connection, (3) Least restrictive measure (necessity), and (4) Balance of rights."
+                        }
+                    ]
+                },
+                {
+                    "title": "106th Constitutional Amendment Act: Nari Shakti Vandan Adhiniyam Mandates 33% Reservation for Women in Lok Sabha and State Assemblies",
+                    "original_url": "https://pib.gov.in",
+                    "source": "Ministry of Law & Justice / PIB",
+                    "category": "Polity & Governance",
+                    "gs_paper": "GS-II",
+                    "image_url": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
+                    "relevance_score": 97,
+                    "is_featured": True,
+                    "read_time_minutes": 4,
+                    "short_summary": "Parliament enacted the Constitution (One Hundred and Sixth Amendment) Act, inserting Articles 330A, 332A, and 334A to reserve one-third of seats for women in the Lok Sabha, State Legislative Assemblies, and Legislative Assembly of NCT of Delhi.",
+                    "detailed_summary": "The historic legislation provides horizontal reservation for women including SC/ST categories for a period of 15 years from commencement, with implementation tied to the subsequent delimitation exercise based on relevant census figures.",
+                    "why_in_news": "Enactment of the historic women's political representation act in the Special Session of Parliament.",
+                    "what_happened": "Passed with near-unanimous support across both houses of Parliament and ratified by State Legislatures.",
+                    "background": "73rd and 74th Amendments (1992) had previously provided 33% reservation for women in Panchayati Raj Institutions and Urban Local Bodies.",
+                    "upsc_relevance": "GS-II (Indian Constitution, Representation of People's Act, Role of Women in Democracy) & Essay.",
+                    "key_facts": [
+                        "Articles inserted: Article 330A (Lok Sabha), Article 332A (State Assemblies), Article 334A (Sunset & Delimitation clause).",
+                        "Sub-reservation: One-third of seats reserved for SCs and STs shall be reserved for women of those communities.",
+                        "Duration: 15 years with provision for extension by parliamentary statute."
+                    ],
+                    "prelims_facts": [
+                        "Article 239AA amended to provide 33% women's reservation in Delhi Legislative Assembly.",
+                        "Requires delimitation exercise post-census for constituency demarcation."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Gender-Inclusive Governance", "Policy Prioritization for Care Economy", "Electoral Reforms"],
+                        "challenges": ["Proxy representation (Sarpanch Pati phenomenon risk)", "Delay pending census and delimitation"],
+                        "way_forward": "Strengthen internal political party ticket quotas and institutional capacity-building for elected women representatives."
+                    },
+                    "important_terms": ["Article 330A", "Article 332A", "Horizontal Reservation", "Delimitation", "Sunset Clause"],
+                    "possible_mains_questions": [
+                        "Evaluate how the 106th Constitutional Amendment Act (Nari Shakti Vandan Adhiniyam) can transform substantive gender representation in India's legislative institutions. (250 words / 15 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "Which new articles were inserted into the Constitution of India by the 106th Constitutional Amendment Act (Nari Shakti Vandan Adhiniyam)?",
+                            "options": [
+                                {"id": "A", "text": "Articles 330A, 332A, and 334A"},
+                                {"id": "B", "text": "Articles 243D, 243T, and 243Z"},
+                                {"id": "C", "text": "Articles 338A, 338B, and 340"},
+                                {"id": "D", "text": "Articles 371A, 371B, and 371J"}
+                            ],
+                            "correct_answer": "A",
+                            "explanation": "The 106th Amendment inserted Articles 330A (Lok Sabha), 332A (State Assemblies), and 334A (commencement/sunset) to reserve 33% seats for women."
                         }
                     ]
                 },
@@ -729,6 +827,55 @@ class NewsService:
                     ]
                 },
                 {
+                    "title": "DRDO Successfully Flight-Tests Agni-5 Ballistic Missile with MIRV Technology under Mission Divyastra",
+                    "original_url": "https://pib.gov.in",
+                    "source": "DRDO / Ministry of Defence",
+                    "category": "Defence & Security",
+                    "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1579965342575-16428a7c8881?auto=format&fit=crop&w=800&q=80",
+                    "relevance_score": 96,
+                    "is_featured": True,
+                    "read_time_minutes": 3,
+                    "short_summary": "DRDO conducted the maiden flight test of the indigenously developed Agni-5 missile equipped with Multiple Independently Targetable Re-entry Vehicle (MIRV) technology from Dr APJ Abdul Kalam Island, Odisha.",
+                    "detailed_summary": "Mission Divyastra propelled India into an elite group of nations possessing MIRV capability. MIRV allows a single intercontinental ballistic missile (ICBM) to deliver multiple warheads to distinct geographic targets hundreds of kilometers apart, overcoming anti-ballistic missile defence shields.",
+                    "why_in_news": "Successful maiden demonstration of indigenous MIRV capability by Defence Research and Development Organisation (DRDO).",
+                    "what_happened": "Telemetry and radar stations confirmed the re-entry vehicles hit separate designated points with high precision.",
+                    "background": "Agni-5 is a three-stage solid-fuelled missile with a strike range exceeding 5,000 km, strengthening India's Credible Minimum Deterrence nuclear doctrine.",
+                    "upsc_relevance": "GS-III (Security Challenges, Defence Indigenization, Strategic Nuclear Posture) & GS-II (Geopolitics).",
+                    "key_facts": [
+                        "MIRV: Multiple Independently Targetable Re-entry Vehicle.",
+                        "Range: 5,000+ km (Intercontinental category).",
+                        "Propulsion: Three-stage composite rocket motor using solid propellant.",
+                        "Nuclear Doctrine: No First Use (NFU) and Massive Retaliation."
+                    ],
+                    "prelims_facts": [
+                        "Launch site: Dr APJ Abdul Kalam Island (formerly Wheeler Island), off Odisha coast.",
+                        "Other nations with MIRV: USA, Russia, China, France, UK."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Second-Strike Capability", "Strategic Stability in Indo-Pacific", "Technological Autonomy"],
+                        "challenges": ["Regional nuclear arms race dynamics", "BMD counter-proliferation treaties"],
+                        "way_forward": "Integrate advanced satellite reconnaissance with canisterized mobile road-rail launch platforms."
+                    },
+                    "important_terms": ["MIRV", "Mission Divyastra", "Credible Minimum Deterrence", "No First Use (NFU)", "Solid Propellant"],
+                    "possible_mains_questions": [
+                        "How does the operationalization of MIRV (Multiple Independently Targetable Re-entry Vehicle) technology on the Agni-5 missile enhance India's strategic nuclear deterrence and second-strike capability? (150 words / 10 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "What is the primary technological significance of Multiple Independently Targetable Re-entry Vehicle (MIRV) technology tested under Mission Divyastra?",
+                            "options": [
+                                {"id": "A", "text": "It enables a single missile to carry multiple nuclear or conventional warheads assigned to different targets."},
+                                {"id": "B", "text": "It transforms a ballistic missile into a low-flying supersonic cruise missile."},
+                                {"id": "C", "text": "It uses liquid oxygen for atmospheric re-entry propulsion."},
+                                {"id": "D", "text": "It eliminates the need for radar guidance during terminal phase."}
+                            ],
+                            "correct_answer": "A",
+                            "explanation": "Option A is correct. MIRV enables a single ballistic missile to deploy multiple warheads, each capable of independently striking distinct targets at separate locations."
+                        }
+                    ]
+                },
+                {
                     "title": "India Adds 5 New Wetlands to Ramsar List, Total Tally Reaches Milestone 85",
                     "original_url": "https://pib.gov.in",
                     "source": "Ministry of Environment, Forest and Climate Change (MoEFCC)",
@@ -745,7 +892,7 @@ class NewsService:
                     "background": "The Ramsar Convention (signed in Ramsar, Iran in 1971) is an intergovernmental treaty that provides the framework for the conservation and wise use of wetlands.",
                     "upsc_relevance": "Crucial for UPSC CSE Prelims (Locations, Biodiversity, Ramsar Sites) and GS-III (Biodiversity, Climate Change).",
                     "key_facts": [
-                        "India has the largest network of Ramsar sites in South Asia.",
+                        "India has the largest network of Ramsar sites in South Asia (85 sites).",
                         "Sundarbans in West Bengal is the largest Ramsar site in India.",
                         "Renuka Wetland in Himachal Pradesh is the smallest Ramsar site in India."
                     ],
@@ -755,7 +902,7 @@ class NewsService:
                     ],
                     "mains_perspective": {
                         "dimensions": ["Ecosystem Services", "Flood Mitigation", "Ecotourism & Livelihoods"],
-                        "challenges": ["Encroachment and urban runoff discharge", "Invasive alien weed proliferation (e.g. Water Hyacinth)"],
+                        "challenges": ["Encroachment and urban runoff discharge", "Invasive alien weed proliferation"],
                         "way_forward": "Implement integrated wetland catchment management and community-led eco-tourism under the Amrit Dharohar scheme."
                     },
                     "important_terms": ["Ramsar Convention", "Montreux Record", "Wise Use Concept", "Central Asian Flyway", "Amrit Dharohar"],
@@ -772,7 +919,7 @@ class NewsService:
                                 {"id": "D", "text": "Vembanad Lake (Kerala)"}
                             ],
                             "correct_answer": "A",
-                            "explanation": "Loktak Lake (Manipur) and Keoladeo National Park (Rajasthan) are currently on the Montreux Record. Chilika Lake was removed from the Montreux Record following successful ecological restoration."
+                            "explanation": "Loktak Lake (Manipur) and Keoladeo National Park (Rajasthan) are currently on the Montreux Record."
                         }
                     ]
                 },
@@ -820,7 +967,7 @@ class NewsService:
                                 {"id": "D", "text": "Liquid Methane and Solid Aluminum Powder"}
                             ],
                             "correct_answer": "A",
-                            "explanation": "Option A is correct. Cryogenic rocket engines use Liquid Hydrogen (LH2) at -253°C as fuel and Liquid Oxygen (LOX) at -183°C as oxidizer."
+                            "explanation": "Cryogenic rocket engines use Liquid Hydrogen (LH2) at -253°C as fuel and Liquid Oxygen (LOX) at -183°C as oxidizer."
                         }
                     ]
                 },
@@ -868,42 +1015,150 @@ class NewsService:
                                 {"id": "D", "text": "25 Million Metric Tonnes (MMT)"}
                             ],
                             "correct_answer": "A",
-                            "explanation": "Option A is correct. The National Green Hydrogen Mission targets producing at least 5 MMT of green hydrogen per annum by 2030."
+                            "explanation": "The National Green Hydrogen Mission targets producing at least 5 MMT of green hydrogen per annum by 2030."
+                        }
+                    ]
+                },
+                {
+                    "title": "PM Surya Ghar Muft Bijli Yojana: Cabinet Approves ₹75,000 Crore Rooftop Solar Scheme for 1 Crore Households",
+                    "original_url": "https://pib.gov.in",
+                    "source": "Ministry of New and Renewable Energy / PIB",
+                    "category": "Government Schemes",
+                    "gs_paper": "GS-II",
+                    "image_url": "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=800&q=80",
+                    "relevance_score": 95,
+                    "is_featured": True,
+                    "read_time_minutes": 3,
+                    "short_summary": "The Union Cabinet approved PM-Surya Ghar: Muft Bijli Yojana with an outlay of ₹75,021 crore to provide up to 300 units of free electricity monthly to 1 crore households through rooftop solar installations.",
+                    "detailed_summary": "The scheme provides direct Central Financial Assistance (CFA) up to 60% for 2 kW systems and 40% for additional capacity up to 3 kW. It integrates collateral-free low-interest loans (around 7%) through national portal applications.",
+                    "why_in_news": "Cabinet approval and nationwide operationalization of the PM Surya Ghar Portal.",
+                    "what_happened": "Comprehensive scheme rollout targeting 30 GW rooftop solar capacity additions in the residential sector.",
+                    "background": "India achieved over 70 GW of total solar capacity by 2024 as part of its Nationally Determined Contributions (NDC) to reach 500 GW non-fossil energy by 2030.",
+                    "upsc_relevance": "GS-II (Govt Schemes, Welfare Policies) & GS-III (Renewable Energy, DISCOM Health).",
+                    "key_facts": [
+                        "Subsidies: ₹30,000 per kW up to 2 kW; ₹18,000 for 3rd kW.",
+                        "Target: 1 crore households generating ~1000 BUs of clean electricity and cutting 720 million tonnes of CO2 emissions.",
+                        "DISCOM incentives: Direct financial grants for distribution infrastructure upgrades."
+                    ],
+                    "prelims_facts": [
+                        "Nodal agency: National Portal for Rooftop Solar (REC Limited as implementing lead).",
+                        "India's NDC target: 50% cumulative electric power installed capacity from non-fossil fuel-based energy resources by 2030."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Decentralized Renewable Generation", "Relief to State DISCOM Finances", "Green Job Creation"],
+                        "challenges": ["Net metering policy variations across States", "Roof structural integrity in semi-urban areas"],
+                        "way_forward": "Standardize grid-tie inverter inspections and establish district solar service centers (Surya Mitras)."
+                    },
+                    "important_terms": ["PM Surya Ghar", "DISCOM", "Net Metering", "NDC Targets", "Surya Mitra"],
+                    "possible_mains_questions": [
+                        "How does the PM Surya Ghar Muft Bijli Yojana address the twin challenges of household energy security and state power distribution company (DISCOM) financial viability? (150 words / 10 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "What is the key target of the PM-Surya Ghar: Muft Bijli Yojana approved by the Union Cabinet?",
+                            "options": [
+                                {"id": "A", "text": "Provide rooftop solar installations and up to 300 units free monthly power to 1 crore households."},
+                                {"id": "B", "text": "Replace all diesel agricultural pumps with off-grid micro-hydro units."},
+                                {"id": "C", "text": "Mandate 100% solar power for all commercial shopping malls by 2025."},
+                                {"id": "D", "text": "Export green solar power to Southeast Asian nations through undersea cables."}
+                            ],
+                            "correct_answer": "A",
+                            "explanation": "Option A is correct. PM-Surya Ghar aims to install rooftop solar in 1 crore households, providing up to 300 units of free electricity every month."
+                        }
+                    ]
+                },
+                {
+                    "title": "Minimum Support Price (MSP) and CACP Formula: Swaminathan Commission 50% Profit Margin Principles Explained",
+                    "original_url": "https://pib.gov.in",
+                    "source": "Commission for Agricultural Costs and Prices (CACP) / Ministry of Agriculture",
+                    "category": "Geography & Agriculture",
+                    "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80",
+                    "relevance_score": 95,
+                    "is_featured": False,
+                    "read_time_minutes": 4,
+                    "short_summary": "Agricultural pricing dynamics and the statutory debate surrounding Minimum Support Price (MSP) calculation methodologies (A2, A2+FL, and C2) recommended by the National Commission on Farmers headed by Prof. M.S. Swaminathan.",
+                    "detailed_summary": "The Commission for Agricultural Costs and Prices (CACP) recommends MSP for 22 mandated crops and Fair and Remunerative Price (FRP) for sugarcane. Government sets MSP at a minimum of 1.5 times the all-India weighted average cost of production (A2+FL).",
+                    "why_in_news": "Debate on legal guarantee for MSP and implementation of Swaminathan Commission recommendations.",
+                    "what_happened": "Cabinet notified revised MSP for Kharif and Rabi marketing seasons ensuring guaranteed 50% return over cost A2+FL.",
+                    "background": "The National Commission on Farmers (2004-2006) submitted five reports recommending comprehensive agricultural reforms, including MSP at C2+50%.",
+                    "upsc_relevance": "Core topic for UPSC CSE Prelims & GS-III (Agricultural Economics, Farm Subsidies, Food Security).",
+                    "key_facts": [
+                        "Mandated crops: 7 cereals, 5 pulses, 7 oilseeds, and 3 commercial crops (cotton, raw jute, copra).",
+                        "A2 Cost: Paid-out costs on seeds, fertilizers, pesticides, hired labor, fuel, and irrigation.",
+                        "A2+FL Cost: A2 cost plus imputed value of unpaid family labor.",
+                        "C2 Cost: Comprehensive cost including A2+FL plus rentals/interest on owned land and fixed capital."
+                    ],
+                    "prelims_facts": [
+                        "CACP is an attached office of the Ministry of Agriculture and Farmers Welfare.",
+                        "Cabinet Committee on Economic Affairs (CCEA) chaired by the Prime Minister takes the final decision on MSP levels."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Income Security for Farmers", "Crop Diversification away from Water-Intensive Paddy", "Inflationary & Fiscal Impacts"],
+                        "challenges": ["Procurement concentration in select States (Punjab, Haryana, MP)", "WTO Agreement on Agriculture Aggregate Measurement of Support (AMS) limits"],
+                        "way_forward": "Promote Price Deficiency Payment schemes (like Bhavantar Bhugtan Yojana) and decentralized procurement of millets (Shree Anna) and pulses."
+                    },
+                    "important_terms": ["MSP", "CACP", "CCEA", "A2+FL", "C2 Formula", "Swaminathan Commission", "FRP Sugarcane"],
+                    "possible_mains_questions": [
+                        "Distinguish between A2+FL and C2 cost metrics in the determination of Minimum Support Price (MSP). What are the fiscal, economic, and crop diversification implications of providing a statutory guarantee for MSP in India? (250 words / 15 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "Which authority takes the final decision on the Minimum Support Prices (MSP) recommended by the Commission for Agricultural Costs and Prices (CACP)?",
+                            "options": [
+                                {"id": "A", "text": "Cabinet Committee on Economic Affairs (CCEA)"},
+                                {"id": "B", "text": "NITI Aayog Governing Council"},
+                                {"id": "C", "text": "Reserve Bank of India Monetary Policy Committee"},
+                                {"id": "D", "text": "Parliamentary Standing Committee on Agriculture"}
+                            ],
+                            "correct_answer": "A",
+                            "explanation": "The final decision on MSP is taken by the Cabinet Committee on Economic Affairs (CCEA) chaired by the Prime Minister."
                         }
                     ]
                 }
             ]
 
+            # Upsert each seed article if not already existing by title
             for s in seed_data:
-                art = NewsArticle(
-                    title=s["title"],
-                    original_url=s["original_url"],
-                    source=s["source"],
-                    published_at=today,
-                    category=s["category"],
-                    gs_paper=s["gs_paper"],
-                    image_url=s.get("image_url") or get_category_default_image(s["category"], s["gs_paper"]),
-                    relevance_score=s["relevance_score"],
-                    is_featured=s["is_featured"],
-                    read_time_minutes=s["read_time_minutes"],
-                    short_summary=s["short_summary"],
-                    detailed_summary=s["detailed_summary"],
-                    why_in_news=s["why_in_news"],
-                    what_happened=s["what_happened"],
-                    background=s["background"],
-                    upsc_relevance=s["upsc_relevance"],
-                    key_facts=s["key_facts"],
-                    prelims_facts=s["prelims_facts"],
-                    mains_perspective=s["mains_perspective"],
-                    important_terms=s["important_terms"],
-                    possible_mains_questions=s["possible_mains_questions"],
-                    practice_mcqs=s["practice_mcqs"]
-                )
-                db.session.add(art)
+                existing = NewsArticle.query.filter(NewsArticle.title == s["title"]).first()
+                if not existing:
+                    art = NewsArticle(
+                        title=s["title"],
+                        original_url=s["original_url"],
+                        source=s["source"],
+                        published_at=today,
+                        category=s["category"],
+                        gs_paper=s["gs_paper"],
+                        image_url=s.get("image_url") or get_category_default_image(s["category"], s["gs_paper"]),
+                        relevance_score=s["relevance_score"],
+                        is_featured=s["is_featured"],
+                        read_time_minutes=s["read_time_minutes"],
+                        short_summary=s["short_summary"],
+                        detailed_summary=s["detailed_summary"],
+                        why_in_news=s["why_in_news"],
+                        what_happened=s["what_happened"],
+                        background=s["background"],
+                        upsc_relevance=s["upsc_relevance"],
+                        key_facts=s["key_facts"],
+                        prelims_facts=s["prelims_facts"],
+                        mains_perspective=s["mains_perspective"],
+                        important_terms=s["important_terms"],
+                        possible_mains_questions=s["possible_mains_questions"],
+                        practice_mcqs=s["practice_mcqs"]
+                    )
+                    db.session.add(art)
+                else:
+                    # Update image and category if missing
+                    if not existing.image_url or "photo-" not in existing.image_url:
+                        existing.image_url = s.get("image_url") or get_category_default_image(s["category"], s["gs_paper"])
             
             db.session.commit()
-            logger.info("Successfully seeded verified UPSC Current Affairs articles.")
+            logger.info("Successfully verified and seeded high-yield UPSC Current Affairs articles.")
         except Exception as e:
-            logger.warning(f"Seed articles check: {e}")
+            logger.warning(f"Seed articles check error: {e}")
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
 news_service = NewsService()
