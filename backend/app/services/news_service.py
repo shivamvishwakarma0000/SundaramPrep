@@ -151,9 +151,11 @@ class PIBProvider(NewsProvider):
 class NationalNewsRSSProvider(NewsProvider):
     """
     Fetches headlines from reliable Indian public editorial RSS feeds
-    (The Hindu, Indian Express, LiveMint, Sansad TV / DD News).
+    (India Today, The Hindu, Indian Express, LiveMint, Sansad TV / DD News).
     """
     RSS_FEEDS = [
+        ("India Today", "https://www.indiatoday.in/rss/1206584", "Polity & Governance"),
+        ("India Today", "https://www.indiatoday.in/rss/1206578", "Other Important News"),
         ("The Hindu", "https://www.thehindu.com/news/national/feeder/default.rss", "Polity & Governance"),
         ("Indian Express", "https://indianexpress.com/section/india/feed/", "Polity & Governance"),
         ("LiveMint", "https://www.livemint.com/rss/economy", "Economy & Development"),
@@ -174,11 +176,20 @@ class NationalNewsRSSProvider(NewsProvider):
                         desc = item.findtext("description", "").strip()
                         clean_desc = re.sub(r'<[^>]+>', '', desc).strip()
 
-                        # Extract media image tag if present
+                        # Extract media image tag if present (including media:content & media:thumbnail)
+                        img_url = None
                         enclosure = item.find("enclosure")
-                        img_url = enclosure.attrib.get("url") if enclosure is not None else None
+                        if enclosure is not None and "url" in enclosure.attrib:
+                            img_url = enclosure.attrib.get("url")
+                        
                         if not img_url:
-                            # Try finding image in html description
+                            for elem in item.iter():
+                                if elem.tag.endswith("content") or elem.tag.endswith("thumbnail"):
+                                    if "url" in elem.attrib:
+                                        img_url = elem.attrib["url"]
+                                        break
+
+                        if not img_url:
                             img_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', desc)
                             if img_match:
                                 img_url = img_match.group(1)
@@ -246,6 +257,7 @@ class NewsService:
             NationalNewsRSSProvider()
         ]
         self.last_fetched_at: Optional[datetime] = None
+        self._seed_synced: bool = False
 
     def get_articles(
         self,
@@ -253,6 +265,7 @@ class NewsService:
         search_query: Optional[str] = None,
         date_filter: Optional[str] = None,
         gs_paper: Optional[str] = None,
+        source: Optional[str] = None,
         page: int = 1,
         limit: int = 15,
         only_featured: bool = False
@@ -285,6 +298,10 @@ class NewsService:
                     NewsArticle.category == category
                 )
             )
+
+        if source and source.strip().lower() not in ["all", "all sources", ""]:
+            src_clean = source.strip().lower()
+            query = query.filter(NewsArticle.source.ilike(f"%{src_clean}%"))
 
         if gs_paper and gs_paper.strip().lower() not in ["all", ""]:
             query = query.filter(NewsArticle.gs_paper.ilike(f"%{gs_paper.strip()}%"))
@@ -635,6 +652,8 @@ class NewsService:
 
     def _ensure_seed_articles_exist(self):
         """Populates rich, high-yield UPSC current affairs articles across all core syllabus categories."""
+        if self._seed_synced:
+            return
         try:
             today = datetime.utcnow()
             seed_data = [
@@ -1120,6 +1139,102 @@ class NewsService:
                             "explanation": "The final decision on MSP is taken by the Cabinet Committee on Economic Affairs (CCEA) chaired by the Prime Minister."
                         }
                     ]
+                },
+                {
+                    "title": "Defence Acquisition Council Clears ₹84,560 Crore Indigenous Military Procurement under Make in India",
+                    "original_url": "https://www.indiatoday.in/india/story/defence-acquisition-council-nod-for-procurement-of-weapons-military-equipment-2502184-2024-02-16",
+                    "source": "India Today / Defence News",
+                    "category": "Defence & Security",
+                    "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
+                    "relevance_score": 96,
+                    "is_featured": True,
+                    "read_time_minutes": 4,
+                    "short_summary": "The Defence Acquisition Council (DAC) chaired by Defence Minister Rajnath Singh accorded Acceptance of Necessity (AoN) for capital acquisition proposals worth ₹84,560 crore for the Armed Forces.",
+                    "detailed_summary": "The cleared procurements emphasize 'Buy (Indian-Indigenously Designed, Developed and Manufactured - IDDM)' category, including new generation anti-tank mines, flight refueler aircraft (FRA), heavy heavyweight torpedoes, and medium-range maritime reconnaissance platforms.",
+                    "why_in_news": "Strategic DAC clearance boosting indigenous defence manufacturing and self-reliance (Aatmanirbhar Bharat).",
+                    "what_happened": "Acceptance of Necessity granted for 100% indigenous procurement to strengthen tri-services combat readiness.",
+                    "background": "The DAC is the highest decision-making body of the Ministry of Defence for capital procurement, established post-Kargil War (2001) recommendations.",
+                    "upsc_relevance": "Directly relevant for UPSC GS-III (Defence Indigenization, Security Challenges, Defence Procurement Procedure DPP/DAP 2020).",
+                    "key_facts": [
+                        "DAC Chairperson: Union Defence Minister.",
+                        "Category: Buy (Indian-IDDM) accorded highest procurement priority under DAP 2020.",
+                        "Defence indigenization target: Over 70% domestic defence procurement by 2025-26."
+                    ],
+                    "prelims_facts": [
+                        "Defence Acquisition Procedure (DAP) 2020 mandates 50% indigenous content in Buy (Indian-IDDM).",
+                        "Strategic Partnership (SP) model enables private Indian firms to tie up with global OEMs."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Military Modernization", "Indigenous R&D and Defence Exports", "Fiscal Capital Outlay"],
+                        "challenges": ["Transfer of technology absorption delays", "Component supply chain dependencies"],
+                        "way_forward": "Incentivize defence MSMEs and streamline Innovations for Defence Excellence (iDEX) funding."
+                    },
+                    "important_terms": ["DAC", "Acceptance of Necessity (AoN)", "Buy (Indian-IDDM)", "DAP 2020", "iDEX"],
+                    "possible_mains_questions": [
+                        "Assess how the Defence Acquisition Procedure (DAP) 2020 has catalyzed India's transition from the world's largest arms importer towards a net defence exporter. (150 words / 10 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "Who serves as the Chairperson of the Defence Acquisition Council (DAC) in India?",
+                            "options": [
+                                {"id": "A", "text": "Union Minister of Defence"},
+                                {"id": "B", "text": "Prime Minister of India"},
+                                {"id": "C", "text": "Chief of Defence Staff (CDS)"},
+                                {"id": "D", "text": "National Security Advisor (NSA)"}
+                            ],
+                            "correct_answer": "A",
+                            "explanation": "The Defence Acquisition Council (DAC) is chaired by the Union Minister of Defence."
+                        }
+                    ]
+                },
+                {
+                    "title": "India Semiconductor Mission: Tata & Powerchip Break Ground on First Commercial 28nm Semiconductor Fab in Dholera",
+                    "original_url": "https://www.indiatoday.in/technology/news/story/tata-groups-semiconductor-plant-in-gujarat-begins-construction-details-here-2514332-2024-03-13",
+                    "source": "India Today / Science & Tech",
+                    "category": "Science & Technology",
+                    "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+                    "relevance_score": 97,
+                    "is_featured": True,
+                    "read_time_minutes": 4,
+                    "short_summary": "Construction commenced on India's first commercial semiconductor fabrication facility in Dholera, Gujarat, with a ₹91,000 crore investment to produce 50,000 silicon wafers monthly.",
+                    "detailed_summary": "The fab is a joint venture between Tata Electronics and Taiwan's Powerchip Semiconductor Manufacturing Corporation (PSMC), establishing domestic production of 28nm and 90nm chips for power management, electric vehicles, AI hardware, and consumer electronics.",
+                    "why_in_news": "Milestone transition from chip design to domestic silicon wafer fabrication under the India Semiconductor Mission (ISM).",
+                    "what_happened": "Groundbreaking ceremony at Dholera Special Investment Region (DSIR), Gujarat.",
+                    "background": "The ₹76,000 crore India Semiconductor Mission (ISM) approved by the Union Cabinet provides 50% fiscal support for setting up silicon fabs and display fabs.",
+                    "upsc_relevance": "Core topic under GS-III (Science & Technology, Industrial Policy, Critical & Emerging Technologies, Supply Chain Resilience).",
+                    "key_facts": [
+                        "Fab Capacity: 50,000 wafer starts per month (WSPM).",
+                        "Node Technologies: 28nm, 40nm, 90nm (mature high-volume automotive and IoT nodes).",
+                        "Location: Dholera Special Investment Region (Gujarat)."
+                    ],
+                    "prelims_facts": [
+                        "Silicon is the primary semiconductor element due to its wide bandgap and abundance in Earth's crust (silica sand).",
+                        "India Semiconductor Mission is an independent business division within Digital India Corporation under MeitY."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Geopolitical Supply Chain Resilience", "Electronics Manufacturing Ecosystem", "Deep-Tech Employment"],
+                        "challenges": ["Ultra-pure water and uninterrupted power requirements", "Global talent pool competition"],
+                        "way_forward": "Scale domestic chemical and specialty gas ecosystems and foster university chip-design curricula under the Chips2Startup program."
+                    },
+                    "important_terms": ["Semiconductor Fab", "India Semiconductor Mission", "28nm Node", "Dholera DSIR", "Silicon Wafer"],
+                    "possible_mains_questions": [
+                        "Examine the strategic and economic significance of establishing domestic semiconductor wafer fabrication facilities in India. How does the India Semiconductor Mission address vulnerabilities in critical technology supply chains? (250 words / 15 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "Under the modified India Semiconductor Mission (ISM), what percentage of fiscal support on a pari-passu basis is provided by the Central Government for setting up Silicon Semiconductor Fabs in India?",
+                            "options": [
+                                {"id": "A", "text": "50% of the Capital Expenditure"},
+                                {"id": "B", "text": "25% of the Capital Expenditure"},
+                                {"id": "C", "text": "75% of the Capital Expenditure"},
+                                {"id": "D", "text": "10% of the Capital Expenditure"}
+                            ],
+                            "correct_answer": "A",
+                            "explanation": "The Government of India provides fiscal support of 50% of Capital Expenditure (CapEx) on a pari-passu basis for setting up Silicon Semiconductor Fabs across all technology nodes."
+                        }
+                    ]
                 }
             ]
 
@@ -1175,6 +1290,7 @@ class NewsService:
                 pib_art.original_url = "https://pib.gov.in/allRel.aspx"
 
             db.session.commit()
+            self._seed_synced = True
             logger.info("Successfully verified, synchronized and seeded high-yield UPSC Current Affairs articles.")
         except Exception as e:
             logger.warning(f"Seed articles check error: {e}")

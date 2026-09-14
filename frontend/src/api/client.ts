@@ -398,9 +398,10 @@ export const api = {
   // =========================================================================
   // UPSC Current Affairs & News System
   // =========================================================================
-  getNewsFeed: (params?: { category?: string; search?: string; date?: string; gs_paper?: string; page?: number; limit?: number; featured?: boolean }) => {
+  getNewsFeed: (params?: { category?: string; search?: string; date?: string; gs_paper?: string; source?: string; page?: number; limit?: number; featured?: boolean }) => {
     const q = new URLSearchParams();
     if (params?.category && params.category !== "All" && params.category !== "all") q.append("category", params.category);
+    if (params?.source && params.source !== "All" && params.source !== "all" && params.source !== "All Sources") q.append("source", params.source);
     if (params?.search) q.append("search", params.search);
     if (params?.date) q.append("date", params.date);
     if (params?.gs_paper && params.gs_paper !== "All") q.append("gs_paper", params.gs_paper);

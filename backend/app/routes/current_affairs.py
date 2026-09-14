@@ -37,6 +37,7 @@ def get_news_feed():
     search_query = request.args.get("search")
     date_filter = request.args.get("date")
     gs_paper = request.args.get("gs_paper")
+    source = request.args.get("source")
     page = int(request.args.get("page", 1))
     limit = min(int(request.args.get("limit", 12)), 30)
     only_featured = request.args.get("featured", "").lower() in ("true", "1")
@@ -46,6 +47,7 @@ def get_news_feed():
         search_query=search_query,
         date_filter=date_filter,
         gs_paper=gs_paper,
+        source=source,
         page=page,
         limit=limit,
         only_featured=only_featured

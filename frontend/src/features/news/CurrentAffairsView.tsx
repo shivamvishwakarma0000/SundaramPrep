@@ -41,10 +41,20 @@ const CATEGORIES = [
   { id: 'Other Important News', label: 'Other News' },
 ];
 
+const SOURCES = [
+  { id: 'all', label: 'All Sources' },
+  { id: 'India Today', label: '⚡ India Today' },
+  { id: 'PIB', label: '🏛️ PIB Official' },
+  { id: 'The Hindu', label: '📰 The Hindu' },
+  { id: 'Indian Express', label: '🗞️ Indian Express' },
+  { id: 'LiveMint', label: '📈 LiveMint' },
+];
+
 export const CurrentAffairsView: React.FC = () => {
   // Navigation subtabs: 'feed' | 'digest' | 'saved'
   const [activeSubTab, setActiveSubTab] = useState<'feed' | 'digest' | 'saved'>('feed');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSource, setSelectedSource] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Articles state
@@ -69,12 +79,13 @@ export const CurrentAffairsView: React.FC = () => {
   const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false);
 
   // Fetch articles from backend
-  const fetchNews = useCallback(async (pageNum: number, category: string, search: string = '', append = false) => {
+  const fetchNews = useCallback(async (pageNum: number, category: string, search: string = '', source: string = 'all', append = false) => {
     try {
       if (!append) setLoading(true);
       const catParam = category === 'all' ? undefined : category;
+      const srcParam = source === 'all' ? undefined : source;
       const searchParam = search.trim() ? search.trim() : undefined;
-      const res = await api.getNewsFeed({ page: pageNum, limit: 12, category: catParam, search: searchParam });
+      const res = await api.getNewsFeed({ page: pageNum, limit: 12, category: catParam, source: srcParam, search: searchParam });
       
       if (res && res.articles) {
         if (append) {
@@ -127,14 +138,14 @@ export const CurrentAffairsView: React.FC = () => {
     }
   }, []);
 
-  // Live search and category change listener with debounce
+  // Live search, source and category change listener with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
-      fetchNews(1, selectedCategory, searchQuery, false);
+      fetchNews(1, selectedCategory, searchQuery, selectedSource, false);
     }, 250);
     return () => clearTimeout(timer);
-  }, [fetchNews, selectedCategory, searchQuery]);
+  }, [fetchNews, selectedCategory, searchQuery, selectedSource]);
 
   // Initial load for digest and bookmarks
   useEffect(() => {
@@ -147,7 +158,7 @@ export const CurrentAffairsView: React.FC = () => {
     if (loading || !hasMore) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchNews(nextPage, selectedCategory, searchQuery, true);
+    fetchNews(nextPage, selectedCategory, searchQuery, selectedSource, true);
   };
 
   // Handle Refresh
@@ -160,7 +171,7 @@ export const CurrentAffairsView: React.FC = () => {
       setRefreshMessage(res.message || `Fetched ${res.new_articles_count} new articles.`);
       setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setPage(1);
-      await fetchNews(1, selectedCategory, searchQuery, false);
+      await fetchNews(1, selectedCategory, searchQuery, selectedSource, false);
       await fetchTodayDigest();
     } catch (err) {
       console.error('Failed to refresh news:', err);
@@ -177,16 +188,18 @@ export const CurrentAffairsView: React.FC = () => {
     try {
       const isCurrentlyBookmarked = bookmarkedIds.has(articleId);
       const res = await api.toggleNewsBookmark(articleId, isCurrentlyBookmarked ? 'DELETE' : 'POST');
-      if (res.is_bookmarked) {
-        setBookmarkedIds(prev => new Set([...prev, articleId]));
-      } else {
+      if (res && res.is_bookmarked !== undefined) {
         setBookmarkedIds(prev => {
           const next = new Set(prev);
-          next.delete(articleId);
+          if (res.is_bookmarked) {
+            next.add(articleId);
+          } else {
+            next.delete(articleId);
+          }
           return next;
         });
+        fetchSavedNews();
       }
-      fetchSavedNews();
     } catch (err) {
       console.error('Failed to toggle bookmark:', err);
     }
@@ -206,26 +219,27 @@ export const CurrentAffairsView: React.FC = () => {
     );
   });
 
-  // Formatted today date string
-  const todayFormatted = new Date().toLocaleDateString('en-IN', {
+  // Today Date formatted
+  const todayFormatted = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   });
 
-  const topNewsList: NewsArticleItem[] = digestData?.top_5 || digestData?.top_stories || [];
+  // Top news from digest if available
+  const topNewsList = digestData?.top_5 || digestData?.top_stories || [];
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-5">
-      {/* 1. HEADER SECTION */}
-      <section className="bg-gradient-to-br from-[#0B2545] via-[#133E68] to-[#1E4E79] text-white rounded-3xl p-5 sm:p-7 shadow-lg relative overflow-hidden">
-        {/* Background decorative shapes */}
-        <div className="absolute right-0 top-0 bottom-0 w-80 pointer-events-none opacity-10 select-none">
-          <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" stroke="currentColor">
-            <circle cx="150" cy="100" r="80" strokeWidth="4" strokeDasharray="8 8" />
-            <circle cx="150" cy="100" r="50" strokeWidth="3" />
-            <circle cx="150" cy="100" r="20" strokeWidth="2" fill="currentColor" fillOpacity="0.2" />
-          </svg>
+    <div className="space-y-6 animate-fade-in pb-12">
+      {/* 1. HERO BANNER */}
+      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-blue-900 via-sky-900 to-indigo-950 p-6 sm:p-8 text-white shadow-xl border border-blue-800/40">
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-sky-400/20 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Pulse ring decoration */}
+        <div className="absolute right-12 top-1/2 -translate-y-1/2 hidden lg:flex items-center justify-center pointer-events-none opacity-20">
+          <div className="w-48 h-48 rounded-full border border-sky-300 animate-ping" />
+          <div className="w-32 h-32 rounded-full border border-blue-400 absolute" />
         </div>
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -249,7 +263,7 @@ export const CurrentAffairsView: React.FC = () => {
               Daily UPSC News & Analysis
             </h1>
             <p className="text-xs sm:text-sm text-slate-200 font-medium mt-1 max-w-2xl leading-relaxed">
-              PIB, The Hindu & Indian Express news structured with Gemini AI into Prelims facts, Mains frameworks, and practice MCQs.
+              PIB, India Today, The Hindu & Indian Express news structured with Gemini AI into Prelims facts, Mains frameworks, and practice MCQs.
             </p>
           </div>
 
@@ -358,33 +372,66 @@ export const CurrentAffairsView: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. CATEGORY CHIPS (Visible in 'feed' tab) */}
+      {/* 3. SOURCE & CATEGORY CHIPS (Visible in 'feed' tab) */}
       {activeSubTab === 'feed' && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <div className="flex items-center gap-1.5 shrink-0 pr-2 text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Category:</span>
+        <div className="space-y-2">
+          {/* Source filters */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex items-center gap-1.5 shrink-0 pr-1 text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <Newspaper className="w-3.5 h-3.5 text-red-500" />
+              <span>Source:</span>
+            </div>
+            {SOURCES.map(src => {
+              const isSelected = selectedSource === src.id;
+              return (
+                <button
+                  key={src.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedSource(src.id);
+                    setPage(1);
+                  }}
+                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer ${
+                    isSelected
+                      ? src.id === 'India Today'
+                        ? 'bg-red-600 text-white shadow-xs scale-105 ring-2 ring-red-400/40'
+                        : 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs scale-105'
+                      : 'bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-600 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {src.label}
+                </button>
+              );
+            })}
           </div>
-          {CATEGORIES.map(cat => {
-            const isSelected = selectedCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(cat.id);
-                  setPage(1);
-                }}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-blue-600 text-white shadow-xs scale-105'
-                    : 'bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-blue-300 dark:hover:border-blue-700 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
+
+          {/* Category filters */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex items-center gap-1.5 shrink-0 pr-1 text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <Filter className="w-3.5 h-3.5" />
+              <span>Category:</span>
+            </div>
+            {CATEGORIES.map(cat => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    setPage(1);
+                  }}
+                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-blue-600 text-white shadow-xs scale-105'
+                      : 'bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-blue-300 dark:hover:border-blue-700 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
