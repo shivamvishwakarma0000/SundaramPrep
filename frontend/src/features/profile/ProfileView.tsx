@@ -9,7 +9,8 @@ import {
   Bell, 
   Moon, 
   Sun,
-  Save
+  Save,
+  Camera
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useTheme } from '../../context/ThemeContext';
@@ -81,12 +82,54 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     }
   };
 
+  // Custom Home Poster Upload State (Synced with Home View)
+  const [customPoster, setCustomPoster] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('sundaram_custom_motivation_card_image');
+    } catch {
+      return null;
+    }
+  });
+  const posterInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handlePosterUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setCustomPoster(base64);
+      try {
+        localStorage.setItem('sundaram_custom_motivation_card_image', base64);
+        window.dispatchEvent(new CustomEvent('sundaram_custom_motivation_card_image_updated', { detail: base64 }));
+      } catch (err) {
+        console.warn('Failed to save poster locally:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetPoster = () => {
+    setCustomPoster(null);
+    try {
+      localStorage.removeItem('sundaram_custom_motivation_card_image');
+      window.dispatchEvent(new CustomEvent('sundaram_custom_motivation_card_image_updated', { detail: null }));
+    } catch (err) {
+      console.warn('Failed to reset poster locally:', err);
+    }
+  };
+
   useEffect(() => {
     async function loadProfile() {
       try {
         const data = await api.getProfile();
         setProfile(data);
-        setEditingGoal(data.user.daily_goal || 30);
+        const storedGoal = localStorage.getItem('sundaram_user_daily_goal');
+        if (storedGoal) {
+          setEditingGoal(parseInt(storedGoal, 10));
+        } else if (data.user.daily_goal) {
+          setEditingGoal(data.user.daily_goal);
+        }
       } catch (e) {
         console.error('Failed to load profile:', e);
       } finally {
@@ -100,7 +143,27 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     setIsSaving(true);
     setSaveError(null);
     try {
-      await api.updateProfile({ daily_goal: editingGoal });
+      // 1. Sync to backend profile and today's daily goal record
+      await Promise.allSettled([
+        api.updateProfile({ daily_goal: editingGoal }),
+        api.updateDailyGoal(editingGoal)
+      ]);
+
+      // 2. Real-time client-side persistence and cache update
+      try {
+        localStorage.setItem('sundaram_user_daily_goal', editingGoal.toString());
+        const cached = localStorage.getItem('sundaram_home_summary_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.daily_goal) {
+            parsed.daily_goal.target_questions = editingGoal;
+          }
+          localStorage.setItem('sundaram_home_summary_cache', JSON.stringify(parsed));
+        }
+        // 3. Dispatch real-time cross-view event
+        window.dispatchEvent(new CustomEvent('sundaram_daily_goal_updated', { detail: editingGoal }));
+      } catch {}
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
     } catch (e: any) {
@@ -375,6 +438,46 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                       remindersEnabled ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Motivation Card Poster Upload (Right side of Daily Reminders) */}
+            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Camera className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
+                <div className="min-w-0">
+                  <div className="font-bold text-slate-900 dark:text-white">Home Poster Image</div>
+                  <div className="text-slate-500 dark:text-dark-muted text-[11px] truncate">
+                    {customPoster ? 'Custom IAS wallpaper active' : 'Upload custom motivation poster'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <input
+                  type="file"
+                  ref={posterInputRef}
+                  onChange={handlePosterUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+                {customPoster && (
+                  <button
+                    type="button"
+                    onClick={handleResetPoster}
+                    className="text-[10px] font-bold text-slate-500 hover:text-red-600 bg-white dark:bg-dark-card px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-dark-border transition-colors cursor-pointer"
+                    title="Reset to default poster"
+                  >
+                    Reset
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => posterInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5 text-amber-300" />
+                  <span>{customPoster ? 'Change' : 'Upload Image'}</span>
                 </button>
               </div>
             </div>

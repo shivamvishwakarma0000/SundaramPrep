@@ -66,6 +66,9 @@ def get_user_actual_metrics(user, is_guest=False):
         db.session.add(goal)
     else:
         goal.solved_today = actual_solved_today
+        if user.daily_goal and user.daily_goal > 0:
+            goal.target_questions = user.daily_goal
+            goal.is_achieved = (goal.solved_today >= user.daily_goal)
         
     # 2. Daily consecutive streak tracking:
     # Today = 1 day because user is using portal today.
@@ -414,7 +417,19 @@ def update_student_profile():
     if "language" in payload:
         user.language = payload["language"]
     if "daily_goal" in payload:
-        user.daily_goal = int(payload["daily_goal"])
+        try:
+            val = int(payload["daily_goal"])
+            user.daily_goal = max(5, min(200, val))
+            today = date.today()
+            goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
+            if goal:
+                goal.target_questions = user.daily_goal
+                goal.is_achieved = (goal.solved_today >= user.daily_goal)
+            else:
+                goal = DailyGoal(user_id=user.id, target_questions=user.daily_goal, date=today)
+                db.session.add(goal)
+        except Exception:
+            pass
         
     db.session.commit()
     return api_success({"user": user.to_dict(), "message": "Profile updated successfully"})
@@ -660,8 +675,10 @@ def get_personal_bests():
 @student_bp.route("/daily-goal", methods=["PATCH"])
 def update_daily_goal():
     payload = request.get_json() or {}
-    target_questions = int(payload.get("target_questions", 30))
-    if target_questions not in [15, 20, 30, 50, 100]:
+    try:
+        val = int(payload.get("target_questions", 30))
+        target_questions = max(5, min(200, val))
+    except Exception:
         target_questions = 30
         
     user_id = get_current_user_id()

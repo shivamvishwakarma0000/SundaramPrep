@@ -9,9 +9,7 @@ import {
   ArrowRight, 
   AlertCircle,
   Zap,
-  Shield,
-  Camera,
-  RotateCcw
+  Shield
 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { StudentHomeSummary, PortalTab, ExamType } from '../../types';
@@ -94,7 +92,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Custom motivation card image (persisted in localStorage)
+  // Custom motivation card image (persisted in localStorage & synced from Profile)
   const [customMotivationImage, setCustomMotivationImage] = useState<string>(() => {
     try {
       return localStorage.getItem('sundaram_custom_motivation_card_image') || '/assets/mountain_ias_hiker.jpg';
@@ -102,34 +100,47 @@ export const HomeView: React.FC<HomeViewProps> = ({
       return '/assets/mountain_ias_hiker.jpg';
     }
   });
-  const motivationImageInputRef = useRef<HTMLInputElement>(null);
 
-  const handleMotivationImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      if (dataUrl) {
-        setCustomMotivationImage(dataUrl);
-        try {
-          localStorage.setItem('sundaram_custom_motivation_card_image', dataUrl);
-        } catch (err) {
-          console.warn('Image size too large for localStorage cache:', err);
-        }
+  // Real-time custom daily target (synced with Profile settings)
+  const [customDailyTarget, setCustomDailyTarget] = useState<number | null>(() => {
+    try {
+      const stored = localStorage.getItem('sundaram_user_daily_goal');
+      return stored ? parseInt(stored, 10) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // 1-Second Full-Screen Sparkles Celebration Pop-Out State
+  const [showSparkleCelebration, setShowSparkleCelebration] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handleGoalUpdated = (e: any) => {
+      const newGoal = e.detail || (typeof window !== 'undefined' ? parseInt(localStorage.getItem('sundaram_user_daily_goal') || '0', 10) : 0);
+      if (newGoal > 0) {
+        setCustomDailyTarget(newGoal);
+        setSummary((prev) => ({
+          ...prev,
+          daily_goal: {
+            ...prev.daily_goal,
+            target_questions: newGoal,
+          },
+        }));
       }
     };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
 
-  const handleResetMotivationImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCustomMotivationImage('/assets/mountain_ias_hiker.jpg');
-    try {
-      localStorage.removeItem('sundaram_custom_motivation_card_image');
-    } catch {}
-  };
+    const handlePosterUpdated = (e: any) => {
+      setCustomMotivationImage(e.detail || '/assets/mountain_ias_hiker.jpg');
+    };
+
+    window.addEventListener('sundaram_daily_goal_updated', handleGoalUpdated);
+    window.addEventListener('sundaram_custom_motivation_card_image_updated', handlePosterUpdated);
+
+    return () => {
+      window.removeEventListener('sundaram_daily_goal_updated', handleGoalUpdated);
+      window.removeEventListener('sundaram_custom_motivation_card_image_updated', handlePosterUpdated);
+    };
+  }, []);
 
   const loadHome = async () => {
     try {
@@ -137,6 +148,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
       if (data) {
         if (data.daily_goal && data.daily_goal.solved_today === 11) {
           data.daily_goal.solved_today = 0;
+        }
+        // If user has a locally configured daily target, preserve it
+        const storedGoal = localStorage.getItem('sundaram_user_daily_goal');
+        if (storedGoal && data.daily_goal) {
+          data.daily_goal.target_questions = parseInt(storedGoal, 10);
         }
         setSummary(data);
         localStorage.setItem("sundaram_home_summary_cache", JSON.stringify(data));
@@ -151,9 +167,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
   }, []);
 
   // Safe dynamic metrics calculation (Zero division prevention)
-  const targetQ = summary.daily_goal?.target_questions || 35;
+  const targetQ = customDailyTarget || summary.daily_goal?.target_questions || 40;
   const solvedQ = summary.daily_goal?.solved_today || 0;
   const targetProgress = Math.min(100, Math.round((solvedQ / Math.max(1, targetQ)) * 100));
+
+  // Trigger 1-second full-screen celebration sparkles when daily target questions are completed
+  useEffect(() => {
+    if (solvedQ >= targetQ && targetQ > 0 && solvedQ > 0) {
+      const todayKey = `sundaram_celebrated_${new Date().toDateString()}_${targetQ}`;
+      const alreadyCelebrated = sessionStorage.getItem(todayKey);
+      if (!alreadyCelebrated) {
+        sessionStorage.setItem(todayKey, 'true');
+        setShowSparkleCelebration(true);
+        const timer = setTimeout(() => {
+          setShowSparkleCelebration(false);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [solvedQ, targetQ]);
 
   const examMap: Record<string, string> = {
     UPSC_CSE: 'UPSC CSE',
@@ -233,15 +265,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="absolute -top-32 -left-32 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Study Desk Visual: Crisp on the right side, smoothly dissolving toward center */}
-        <div className="absolute top-0 right-0 bottom-0 w-full sm:w-[60%] lg:w-[65%] h-full pointer-events-none overflow-hidden select-none z-0">
+        {/* Study Desk Visual: Crisp on the right side, completely seamless gradient fade toward center & left */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none z-0">
           <img
             src="/assets/hero_upsc_study.jpg"
             alt="UPSC Preparation Study Desk"
-            className="w-full h-full object-cover object-right sm:object-center opacity-85 sm:opacity-95 contrast-[1.05]"
+            className="w-full h-full object-cover object-right opacity-90 contrast-[1.05]"
+            style={{
+              maskImage: 'linear-gradient(to right, transparent 0%, transparent 28%, rgba(0,0,0,0.2) 42%, rgba(0,0,0,0.7) 60%, black 100%)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, transparent 28%, rgba(0,0,0,0.2) 42%, rgba(0,0,0,0.7) 60%, black 100%)'
+            }}
           />
-          {/* Smooth left-to-center fade: navy on the left dissolving to transparent on the right */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071A35] via-[#071A35]/60 via-35% to-transparent" />
+          {/* Multi-stage harmonizing gradient eliminating any color difference or edge line */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071A35] via-[#071A35]/80 via-40% to-transparent" />
+          <div className="absolute inset-0 bg-[#071A35]/20 mix-blend-multiply" />
         </div>
 
         {/* Academic watermark emblem in hero */}
@@ -365,13 +402,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 2. MAIN CONTENT LAYOUT: Motivational Card (65% Width) + 4 Feature Cards (35%) */}
+      {/* 2. MAIN CONTENT LAYOUT: Motivational Card (Col 5) + 4 Feature Cards (Col 7) */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* LEFT COLUMN: Motivational Side Card (Expanded to 65% width on desktop/tablet) */}
-        <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
-          <div className="relative rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow min-h-[420px] sm:min-h-[460px] h-full flex flex-col justify-between p-6 sm:p-8 text-white border border-slate-200/80 dark:border-slate-800 group">
-            {/* Background Visual (Responsive fit for any uploaded dimension) */}
+        {/* LEFT COLUMN: Motivational Side Card (Balanced proportion) */}
+        <div className="lg:col-span-5 flex flex-col">
+          <div className="relative rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow min-h-[380px] sm:min-h-[420px] h-full flex flex-col justify-between p-6 sm:p-7 text-white border border-slate-200/80 dark:border-slate-800 group">
+            {/* Background Visual (Responsive fit for any custom uploaded dimension) */}
             <img
               src={customMotivationImage}
               alt="Inspirational UPSC study background"
@@ -380,38 +417,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* High-contrast gradient overlay ensuring text legibility on any image */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/40" />
 
-            {/* Top Bar: Quote mark + Custom Image Upload Action */}
+            {/* Top Bar: Quote mark */}
             <div className="relative z-10 flex items-center justify-between gap-3">
               <span className="text-4xl sm:text-5xl font-serif text-white/70 block leading-none select-none">“</span>
-              
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => motivationImageInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/70 backdrop-blur-md border border-white/25 text-white text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-105"
-                  title="Upload any image or study poster"
-                >
-                  <Camera className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Upload Poster</span>
-                </button>
-                {customMotivationImage !== '/assets/mountain_ias_hiker.jpg' && (
-                  <button
-                    type="button"
-                    onClick={handleResetMotivationImage}
-                    className="p-1.5 rounded-full bg-black/45 hover:bg-rose-900/70 backdrop-blur-md border border-white/25 text-white/80 hover:text-white transition-all cursor-pointer"
-                    title="Reset to default image"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                <input
-                  type="file"
-                  ref={motivationImageInputRef}
-                  accept="image/*"
-                  onChange={handleMotivationImageUpload}
-                  className="hidden"
-                />
-              </div>
             </div>
 
             {/* Motivational Content */}
@@ -439,8 +447,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: 4 Feature Cards (Arranged cleanly in responsive grid) */}
-        <div className="lg:col-span-5 xl:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4.5">
+        {/* RIGHT COLUMN: 4 Feature Cards (Arranged cleanly in 2x2 responsive grid) */}
+        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* ------------------------------------------------------------------- */}
           {/* CARD 1: Start Practice Arena (Blue Accent, Bullseye Watermark)       */}
           {/* ------------------------------------------------------------------- */}
@@ -720,6 +728,30 @@ export const HomeView: React.FC<HomeViewProps> = ({
           />
         </div>
       </section>
+
+      {/* Daily Goal Achieved - Full Screen 1 Second Sparkle Celebration Pop-Out */}
+      {showSparkleCelebration && (
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center animate-in zoom-in-75 fade-in duration-200">
+          <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity duration-200" />
+          <div className="relative z-10 flex flex-col items-center justify-center p-8 text-center animate-bounce">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center shadow-[0_0_60px_rgba(251,191,36,0.9)] border-4 border-white animate-pulse">
+                <Sparkles className="w-12 h-12 text-amber-950 fill-amber-400" />
+              </div>
+              <span className="absolute -top-3 -left-3 text-3xl animate-ping">✨</span>
+              <span className="absolute -top-4 -right-3 text-2xl animate-ping delay-100">🌟</span>
+              <span className="absolute -bottom-2 -left-4 text-2xl animate-ping delay-200">🎉</span>
+              <span className="absolute -bottom-3 -right-3 text-3xl animate-ping delay-150">✨</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-black text-white drop-shadow-lg mt-4">
+              Daily Goal Completed! 🎯
+            </h3>
+            <p className="text-sm font-bold text-amber-200 drop-shadow mt-1">
+              {solvedQ} / {targetQ} Questions Done for Today
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
