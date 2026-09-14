@@ -282,10 +282,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
-      {/* 1. Header Profile Card with Subtle Watermark */}
-      <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5 transition-colors group">
-        {/* Subtle Watermark SVG */}
-        <GraduationCap className="absolute -right-5 -bottom-5 w-32 h-32 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-105" />
+      {/* 1. Header Profile Card with Expanded Rich Watermark */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500/[0.12] via-sky-500/[0.04] to-white dark:from-indigo-950/40 dark:via-dark-card dark:to-slate-900 border-2 border-indigo-200/90 dark:border-indigo-800/60 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-5 transition-colors group">
+        {/* Expanded Rich Watermark SVG */}
+        <GraduationCap className="absolute -right-4 -bottom-6 w-48 h-48 pointer-events-none opacity-20 dark:opacity-25 select-none text-indigo-600 dark:text-indigo-400 transition-transform group-hover:scale-105 duration-300" />
         <div className="relative z-10 flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#0B2545] to-[#1E3A8A] text-white flex items-center justify-center font-black text-2xl shadow-xs shrink-0">
             {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
@@ -296,25 +296,25 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 {user.name || 'Sundaram Aspirant'}
               </h2>
               {(user as any).role === 'ADMIN' ? (
-                <span className="flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                <span className="flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-100/90 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 shadow-2xs">
                   <ShieldCheck className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                   <span>Admin & Aspirant</span>
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
+                <span className="flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100/90 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/80 shadow-2xs">
                   <ShieldCheck className="w-3 h-3" />
                   <span>Verified Aspirant</span>
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-0.5 truncate">
+            <p className="text-xs text-slate-600 dark:text-dark-muted mt-0.5 truncate font-medium">
               {(user as any).phone ? `📱 +91 ${(user as any).phone} · ` : ''}{user.email}
             </p>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className="text-[11px] font-bold bg-slate-100 dark:bg-dark-surface text-slate-700 dark:text-slate-300 px-2.5 py-0.5 rounded-lg border border-slate-200/80 dark:border-dark-border">
+              <span className="text-[11px] font-extrabold bg-indigo-100/80 dark:bg-indigo-950/70 text-indigo-900 dark:text-indigo-300 px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800/80 shadow-2xs">
                 Target: {user.target_exam || currentExam}
               </span>
-              <span className="text-[11px] text-slate-400 dark:text-dark-muted">
+              <span className="text-[11px] text-slate-500 dark:text-dark-muted font-medium">
                 Member since {user.created_at ? new Date(user.created_at).toLocaleDateString() : '2026'}
               </span>
             </div>
@@ -325,57 +325,65 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {/* 2. Key Exam Readiness Stats (4 Dynamic Metric Cards with Beautiful Watermarks) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Box 1: Questions Solved with CheckCircle Watermark */}
-        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
-          <CheckCircle2 className="absolute -right-3 -bottom-3 w-20 h-20 text-emerald-500/10 dark:text-emerald-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500/[0.14] via-emerald-500/[0.04] to-white dark:from-emerald-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-emerald-200/90 dark:border-emerald-800/60 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-400 dark:hover:border-emerald-500 transition-all group">
+          <CheckCircle2 className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-110 duration-300" />
           <div className="relative z-10">
-            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-              <span className="text-xs font-semibold">Questions Solved</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider">Questions Solved</span>
+              <div className="w-6 h-6 rounded-lg bg-emerald-100/80 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800/80 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
               {stats.questions_solved}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">Total attempts</div>
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1">Total attempts</div>
           </div>
         </div>
 
         {/* Box 2: Tests Taken with Award Watermark */}
-        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
-          <Award className="absolute -right-3 -bottom-3 w-20 h-20 text-brand-500/10 dark:text-sky-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/[0.14] via-blue-500/[0.04] to-white dark:from-blue-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-blue-200/90 dark:border-blue-800/60 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-blue-400 dark:hover:border-sky-400 transition-all group">
+          <Award className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-brand-600 dark:text-sky-400 transition-transform group-hover:scale-110 duration-300" />
           <div className="relative z-10">
-            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-              <span className="text-xs font-semibold">Tests Taken</span>
-              <Award className="w-4 h-4 text-brand-600 dark:text-sky-400" />
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider">Tests Taken</span>
+              <div className="w-6 h-6 rounded-lg bg-blue-100/80 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-800/80 flex items-center justify-center text-brand-700 dark:text-sky-400 shadow-2xs">
+                <Award className="w-3.5 h-3.5" />
+              </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
               {stats.tests_taken}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">Focus + Practice</div>
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1">Focus + Practice</div>
           </div>
         </div>
 
         {/* Box 3: Net Accuracy with Target Watermark */}
-        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
-          <Target className="absolute -right-3 -bottom-3 w-20 h-20 text-indigo-500/10 dark:text-indigo-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+        <div className="relative overflow-hidden bg-gradient-to-br from-purple-500/[0.14] via-violet-500/[0.04] to-white dark:from-purple-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-purple-200/90 dark:border-purple-800/60 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-400 dark:hover:border-purple-400 transition-all group">
+          <Target className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-purple-600 dark:text-purple-400 transition-transform group-hover:scale-110 duration-300" />
           <div className="relative z-10">
-            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-              <span className="text-xs font-semibold">Net Accuracy</span>
-              <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider">Net Accuracy</span>
+              <div className="w-6 h-6 rounded-lg bg-purple-100/80 dark:bg-purple-950/70 border border-purple-300 dark:border-purple-800/80 flex items-center justify-center text-purple-700 dark:text-purple-400 shadow-2xs">
+                <Target className="w-3.5 h-3.5" />
+              </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
               {stats.overall_accuracy}%
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">-0.66 penalty included</div>
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-1">-0.66 penalty included</div>
           </div>
         </div>
 
         {/* Box 4: Study Streak with Flame Watermark */}
-        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
-          <Flame className="absolute -right-3 -bottom-3 w-20 h-20 text-amber-500/10 dark:text-amber-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/[0.14] via-orange-500/[0.04] to-white dark:from-amber-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-amber-200/90 dark:border-amber-800/60 p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-400 dark:hover:border-amber-400 transition-all group">
+          <Flame className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-amber-500 dark:text-amber-400 transition-transform group-hover:scale-110 duration-300" />
           <div className="relative z-10">
-            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-              <span className="text-xs font-semibold">Study Streak</span>
-              <Flame className="w-4 h-4 text-amber-500" />
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider">Study Streak</span>
+              <div className="w-6 h-6 rounded-lg bg-amber-100/80 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/80 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-2xs">
+                <Flame className="w-3.5 h-3.5 fill-amber-500" />
+              </div>
             </div>
             <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
               {stats.streak}d
@@ -387,7 +395,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
       {/* 3. Account & Practice Preferences Card with Sliders Watermark */}
       <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5 text-slate-900 dark:text-white transition-colors group">
-        <Sliders className="absolute -right-6 -bottom-6 w-36 h-36 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-105" />
+        <Sliders className="absolute -right-6 -bottom-6 w-40 h-40 text-slate-400/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-105 duration-300" />
         <div className="relative z-10 flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
             Account & Practice Preferences
@@ -408,7 +416,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="space-y-3.5 text-xs">
           {/* Target Exam Switcher */}
           <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border group">
-            <BookOpen className="absolute -right-3 -bottom-3 w-16 h-16 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+            <BookOpen className="absolute -right-3 -bottom-3 w-20 h-20 text-slate-500/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
             <div className="relative z-10">
               <div className="font-bold text-slate-900 dark:text-white">Primary Exam Target</div>
               <div className="text-slate-500 dark:text-dark-muted mt-0.5">
@@ -430,7 +438,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
           {/* Daily Goal Target */}
           <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border group">
-            <Zap className="absolute -right-3 -bottom-3 w-16 h-16 text-amber-500/5 dark:text-amber-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+            <Zap className="absolute -right-3 -bottom-3 w-20 h-20 text-amber-500/15 dark:text-amber-400/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
             <div className="relative z-10">
               <div className="font-bold text-slate-900 dark:text-white">Daily Goal (Questions / Day)</div>
               <div className="text-slate-500 dark:text-dark-muted mt-0.5">
@@ -460,7 +468,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           {/* Linguistic & Theme Settings */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between group">
-              <Globe className="absolute -right-2 -bottom-2 w-14 h-14 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+              <Globe className="absolute -right-2 -bottom-2 w-18 h-18 text-slate-500/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
               <div className="relative z-10 flex items-center gap-2.5">
                 <Globe className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
                 <div>
@@ -477,7 +485,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             {/* Interactive Theme Switcher */}
             <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between group">
-              <Moon className="absolute -right-2 -bottom-2 w-14 h-14 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+              <Moon className="absolute -right-2 -bottom-2 w-18 h-18 text-slate-500/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
               <div className="relative z-10 flex items-center gap-2.5">
                 <Moon className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
                 <div>
@@ -517,7 +525,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             {/* Daily Reminders with Real Notification API toggle */}
             <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3 group">
-              <Bell className="absolute -right-2 -bottom-2 w-14 h-14 text-emerald-500/5 dark:text-emerald-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+              <Bell className="absolute -right-2 -bottom-2 w-18 h-18 text-emerald-500/15 dark:text-emerald-400/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
               <div className="relative z-10 flex items-center gap-2.5 min-w-0">
                 <Bell className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
                 <div className="min-w-0">

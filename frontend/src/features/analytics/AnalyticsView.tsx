@@ -156,10 +156,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
       {/* ========================================================================= */}
       {/* 1. TOP HERO / TITLE CARD                                                  */}
       {/* ========================================================================= */}
-      <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden transition-all">
+      <div className="bg-gradient-to-br from-blue-500/[0.12] via-sky-500/[0.04] to-white dark:from-blue-950/40 dark:via-dark-card dark:to-slate-900 border-2 border-blue-200/90 dark:border-blue-800/60 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden transition-all group">
         {/* Soft background ambient gradient & Diagnostics Watermark */}
-        <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-blue-50/50 via-sky-50/20 to-transparent dark:from-blue-950/20 dark:via-transparent pointer-events-none" />
-        <div className="absolute right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-blue-900 dark:text-blue-100">
+        <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-blue-100/40 via-sky-50/20 to-transparent dark:from-blue-950/30 dark:via-transparent pointer-events-none" />
+        <div className="absolute -right-4 -bottom-8 w-52 h-52 pointer-events-none opacity-20 dark:opacity-25 select-none text-blue-600 dark:text-sky-400 transition-transform group-hover:scale-105 duration-300">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
           </svg>
@@ -167,7 +167,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/40 text-[11px] font-extrabold mb-2 shadow-2xs">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800/80 text-[11px] font-extrabold mb-2 shadow-2xs">
               <span>📈 Real Exam Progress</span>
             </div>
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-black font-display text-slate-900 dark:text-white tracking-tight">
@@ -182,7 +182,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
             <button
               onClick={() => loadAnalytics(true)}
               disabled={refreshing}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-dark-surface dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold shadow-2xs transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 hover:bg-white dark:bg-dark-surface dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold shadow-2xs transition-all cursor-pointer ${
                 refreshing ? 'opacity-75 cursor-not-allowed' : ''
               }`}
               title="Refresh Analytics from server"
@@ -200,80 +200,104 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         {/* Metric 1: Accuracy */}
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all space-y-2 relative overflow-hidden group">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-emerald-500/[0.14] via-emerald-500/[0.04] to-white dark:from-emerald-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-emerald-200/90 dark:border-emerald-800/60 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-emerald-400 dark:hover:border-emerald-500 transition-all space-y-2 relative overflow-hidden group">
+          {/* Expanded Rich Watermark */}
+          <div className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-110 duration-300">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <div className="relative z-10 flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Accuracy
             </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100/80 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800/80 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shadow-2xs">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <div>
+          <div className="relative z-10">
             <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display tracking-tight">
               {hasAttempted ? `${data?.metrics?.accuracy || 0}%` : '0%'}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 truncate">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold mt-0.5 truncate">
               {hasAttempted ? `${totalQuestions} questions attempted` : 'No questions solved yet'}
             </div>
           </div>
         </div>
 
         {/* Metric 2: Speed Pace */}
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all space-y-2 relative overflow-hidden group">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-blue-500/[0.14] via-blue-500/[0.04] to-white dark:from-blue-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-blue-200/90 dark:border-blue-800/60 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-blue-400 dark:hover:border-sky-400 transition-all space-y-2 relative overflow-hidden group">
+          {/* Expanded Rich Watermark */}
+          <div className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-blue-600 dark:text-sky-400 transition-transform group-hover:scale-110 duration-300">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+            </svg>
+          </div>
+          <div className="relative z-10 flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Speed Pace
             </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/70 dark:border-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <div className="w-7 h-7 rounded-lg bg-blue-100/80 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-800/80 flex items-center justify-center text-blue-700 dark:text-blue-400 shadow-2xs">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div>
+          <div className="relative z-10">
             <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display tracking-tight">
               {formatSpeed(data?.metrics?.speed_seconds || 0)}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 truncate">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold mt-0.5 truncate">
               {hasAttempted && data?.metrics?.speed_seconds ? 'Avg seconds per question' : 'Awaiting first test'}
             </div>
           </div>
         </div>
 
         {/* Metric 3: Consistency */}
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all space-y-2 relative overflow-hidden group">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-amber-500/[0.14] via-orange-500/[0.04] to-white dark:from-amber-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-amber-200/90 dark:border-amber-800/60 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-amber-400 dark:hover:border-amber-400 transition-all space-y-2 relative overflow-hidden group">
+          {/* Expanded Rich Watermark */}
+          <div className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-amber-500 dark:text-amber-400 transition-transform group-hover:scale-110 duration-300">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/>
+            </svg>
+          </div>
+          <div className="relative z-10 flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Consistency
             </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200/70 dark:border-amber-900/50 flex items-center justify-center text-amber-500 dark:text-amber-400">
+            <div className="w-7 h-7 rounded-lg bg-amber-100/80 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/80 flex items-center justify-center text-amber-700 dark:text-amber-400 shadow-2xs">
               <Flame className="w-4 h-4 fill-amber-500" />
             </div>
           </div>
-          <div>
+          <div className="relative z-10">
             <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display tracking-tight">
               {hasAttempted && data?.metrics?.consistency_score ? `${data.metrics.consistency_score}%` : '0%'}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 truncate">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold mt-0.5 truncate">
               {data?.metrics?.streak_days ? `${data.metrics.streak_days}-day streak` : '0-day streak'}
             </div>
           </div>
         </div>
 
         {/* Metric 4: Coverage */}
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all space-y-2 relative overflow-hidden group">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-indigo-500/[0.14] via-violet-500/[0.04] to-white dark:from-indigo-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-indigo-200/90 dark:border-indigo-800/60 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-400 transition-all space-y-2 relative overflow-hidden group">
+          {/* Expanded Rich Watermark */}
+          <div className="absolute -right-3 -bottom-4 w-28 h-28 pointer-events-none opacity-20 dark:opacity-25 select-none text-indigo-500 dark:text-indigo-400 transition-transform group-hover:scale-110 duration-300">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z"/>
+            </svg>
+          </div>
+          <div className="relative z-10 flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Coverage
             </span>
-            <div className="w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-950/60 border border-yellow-200/70 dark:border-yellow-900/50 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+            <div className="w-7 h-7 rounded-lg bg-indigo-100/80 dark:bg-indigo-950/70 border border-indigo-300 dark:border-indigo-800/80 flex items-center justify-center text-indigo-700 dark:text-indigo-400 shadow-2xs">
               <Compass className="w-4 h-4" />
             </div>
           </div>
-          <div>
+          <div className="relative z-10">
             <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display tracking-tight">
               {hasAttempted && data?.metrics?.coverage_percentage ? `${data.metrics.coverage_percentage}%` : '0%'}
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5 truncate">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 font-semibold mt-0.5 truncate">
               {hasAttempted ? 'Modules attempted' : 'Solve tests to increase'}
             </div>
           </div>
@@ -289,9 +313,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
         {/* ======================================================================= */}
         {/* LEFT COLUMN: Subject Performance Index (7 cols on Desktop)              */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-7 bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden flex flex-col justify-between">
-          {/* Subtle Decorative Background Watermark: Analytics Bars */}
-          <div className="absolute right-3 bottom-2 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-slate-900 dark:text-white">
+        <div className="lg:col-span-7 bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden flex flex-col justify-between group">
+          {/* Expanded Rich Background Watermark: Analytics Bars */}
+          <div className="absolute right-3 bottom-2 w-48 h-48 pointer-events-none opacity-20 dark:opacity-25 select-none text-blue-500 dark:text-sky-400 transition-transform group-hover:scale-105 duration-300">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M4 19h16v2H4zm1-4h3v3H5zm5-6h3v9h-3zm5-5h3v14h-3z" />
             </svg>

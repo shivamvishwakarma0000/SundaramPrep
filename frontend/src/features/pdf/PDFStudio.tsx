@@ -244,9 +244,9 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice, user }) =
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
       {/* 1. Top Hero Card (20-24px rounded-3xl, SaaS style) */}
-      <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-xs transition-colors relative overflow-hidden">
-        {/* Subtle decorative watermark */}
-        <div className="absolute right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-brand-900 dark:text-brand-100">
+      <div className="bg-gradient-to-br from-indigo-500/[0.12] via-sky-500/[0.04] to-white dark:from-indigo-950/40 dark:via-dark-card dark:to-slate-900 border-2 border-indigo-200/90 dark:border-indigo-800/60 rounded-3xl p-5 sm:p-7 shadow-sm transition-colors relative overflow-hidden group">
+        {/* Expanded Rich decorative watermark */}
+        <div className="absolute -right-6 -bottom-10 w-52 h-52 pointer-events-none opacity-20 dark:opacity-25 select-none text-indigo-600 dark:text-indigo-400 transition-transform group-hover:scale-105 duration-300">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
           </svg>
@@ -255,11 +255,11 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice, user }) =
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/60">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-800/80 shadow-2xs">
                 PDF MCQ EXTRACTOR
               </span>
               <span className="text-xs font-bold text-slate-300 dark:text-dark-muted">•</span>
-              <span className="text-xs font-extrabold text-slate-600 dark:text-slate-300">
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
                 Bilingual & Auto-Evaluated
               </span>
             </div>
@@ -429,22 +429,29 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice, user }) =
 
           {/* Document Verification & Status Banner */}
           {selectedDoc && (
-            <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 transition-colors">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/[0.14] via-sky-500/[0.04] to-white dark:from-blue-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-blue-200/90 dark:border-blue-800/60 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 transition-colors group">
+              {/* Expanded Rich Watermark */}
+              <div className="absolute -right-6 -bottom-8 w-48 h-48 pointer-events-none opacity-20 dark:opacity-25 select-none text-brand-600 dark:text-sky-400 transition-transform group-hover:scale-105 duration-300">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+                </svg>
+              </div>
+
+              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start sm:items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/50 text-brand-700 dark:text-brand-400 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100/80 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-800/80 text-brand-700 dark:text-brand-300 flex items-center justify-center shrink-0 shadow-2xs">
                     <FileText className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100/90 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/80 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
                         <CheckCircle2 className="w-3 h-3" />
                         AUTO-ADDED TO QUESTION DATABASE
                       </span>
-                      <span className="text-[10px] font-extrabold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-dark-surface px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-dark-border">
+                      <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 bg-slate-100/90 dark:bg-dark-surface px-2.5 py-0.5 rounded-full border border-slate-300 dark:border-dark-border">
                         {selectedDoc.file_size_bytes ? `${(selectedDoc.file_size_bytes / (1024 * 1024)).toFixed(2)} MB` : 'PDF'}
                       </span>
-                      <span className="text-[10px] font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
+                      <span className="text-[10px] font-black text-brand-800 dark:text-brand-300 bg-brand-100/90 dark:bg-brand-950/70 px-2.5 py-0.5 rounded-full border border-brand-300 dark:border-brand-800/80 shadow-2xs">
                         {selectedDoc.page_count || 1} Pages
                       </span>
                     </div>

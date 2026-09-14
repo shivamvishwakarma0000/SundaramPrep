@@ -604,31 +604,31 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         {/* Mode 1: LEARN MODE */}
         <div
           onClick={() => onStartMode('LEARN')}
-          className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500/80 p-5 sm:p-6 rounded-3xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
+          className="bg-gradient-to-br from-amber-500/[0.14] via-amber-500/[0.04] to-white dark:from-amber-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-amber-200/90 dark:border-amber-800/60 hover:border-amber-400 dark:hover:border-amber-500 p-5 sm:p-6 rounded-3xl shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
         >
-          {/* Subtle Watermark: Lightbulb */}
-          <div className="absolute right-2 -bottom-4 w-28 h-28 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-amber-600">
+          {/* Expanded Rich Watermark: Lightbulb */}
+          <div className="absolute -right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-20 dark:opacity-25 select-none text-amber-500 dark:text-amber-400 transition-transform group-hover:scale-110 duration-300">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C7.03 2 3 6.03 3 11c0 2.76 1.25 5.23 3.22 6.88.54.45.88 1.11.88 1.82V20c0 .55.45 1 1 1h7.8c.55 0 1-.45 1-1v-.3c0-.71.34-1.37.88-1.82C19.75 16.23 21 13.76 21 11c0-4.97-4.03-9-9-9z"/>
             </svg>
           </div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100/80 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/80 text-amber-800 dark:text-amber-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-2xs">
                 <Lightbulb className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                 Instant Feedback
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
               Learn Mode
             </h3>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-dark-muted mt-1 leading-relaxed font-medium">
               Immediate answer breakdown, conceptual insights and high-yield key takeaways.
             </p>
           </div>
-          <div className="relative z-10 mt-5 pt-3 border-t border-slate-100 dark:border-dark-border flex items-center justify-between text-xs font-black text-amber-700 dark:text-amber-400">
+          <div className="relative z-10 mt-5 pt-3 border-t border-amber-200/60 dark:border-dark-border flex items-center justify-between text-xs font-black text-amber-700 dark:text-amber-400">
             <span>Start Learn Mode</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -637,31 +637,31 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         {/* Mode 2: STANDARD PRACTICE */}
         <div
           onClick={() => onStartMode('PRACTICE')}
-          className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500/80 p-5 sm:p-6 rounded-3xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
+          className="bg-gradient-to-br from-blue-500/[0.14] via-blue-500/[0.04] to-white dark:from-blue-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-blue-200/90 dark:border-blue-800/60 hover:border-brand-500 dark:hover:border-sky-400 p-5 sm:p-6 rounded-3xl shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
         >
-          {/* Subtle Watermark: Book */}
-          <div className="absolute right-2 -bottom-4 w-28 h-28 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-blue-900">
+          {/* Expanded Rich Watermark: Book */}
+          <div className="absolute -right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-20 dark:opacity-25 select-none text-brand-600 dark:text-sky-400 transition-transform group-hover:scale-110 duration-300">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
             </svg>
           </div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 text-brand-700 dark:text-sky-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-2xl bg-blue-100/80 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-800/80 text-brand-700 dark:text-sky-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-2xs">
                 <BookOpen className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-sky-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-800 dark:text-sky-300 bg-blue-100/90 dark:bg-blue-950/70 border border-blue-300 dark:border-blue-800/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                 Nav & Skips
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-brand-700 dark:group-hover:text-sky-400 transition-colors">
               Standard Practice
             </h3>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-dark-muted mt-1 leading-relaxed font-medium">
               Full navigation, review marking, question skipping and comprehensive test summary.
             </p>
           </div>
-          <div className="relative z-10 mt-5 pt-3 border-t border-slate-100 dark:border-dark-border flex items-center justify-between text-xs font-black text-brand-700 dark:text-sky-400">
+          <div className="relative z-10 mt-5 pt-3 border-t border-blue-200/60 dark:border-dark-border flex items-center justify-between text-xs font-black text-brand-700 dark:text-sky-400">
             <span>Start Practice</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -670,31 +670,31 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         {/* Mode 3: FOCUS MODE */}
         <div
           onClick={() => onStartMode('FOCUS_TEST')}
-          className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500/80 p-5 sm:p-6 rounded-3xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
+          className="bg-gradient-to-br from-emerald-500/[0.14] via-emerald-500/[0.04] to-white dark:from-emerald-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-emerald-200/90 dark:border-emerald-800/60 hover:border-emerald-500 dark:hover:border-emerald-400 p-5 sm:p-6 rounded-3xl shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
         >
-          {/* Subtle Watermark: Target / Timer */}
-          <div className="absolute right-2 -bottom-4 w-28 h-28 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-emerald-900">
+          {/* Expanded Rich Watermark: Target / Timer */}
+          <div className="absolute -right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-20 dark:opacity-25 select-none text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-110 duration-300">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3-8c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"/>
             </svg>
           </div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100/80 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-2xs">
                 <Target className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                 Proctor Sim
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
               Focus Mode
             </h3>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-dark-muted mt-1 leading-relaxed font-medium">
               Real exam pressure simulation with strict timing, negative marking, and proctoring.
             </p>
           </div>
-          <div className="relative z-10 mt-5 pt-3 border-t border-slate-100 dark:border-dark-border flex items-center justify-between text-xs font-black text-emerald-700 dark:text-emerald-400">
+          <div className="relative z-10 mt-5 pt-3 border-t border-emerald-200/60 dark:border-dark-border flex items-center justify-between text-xs font-black text-emerald-700 dark:text-emerald-400">
             <span>Enter Focus Test</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -703,31 +703,31 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         {/* Mode 4: QUICK 10 BLITZ */}
         <div
           onClick={() => onStartMode('QUICK_10')}
-          className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500/80 p-5 sm:p-6 rounded-3xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
+          className="bg-gradient-to-br from-orange-500/[0.14] via-amber-500/[0.04] to-white dark:from-orange-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-orange-200/90 dark:border-orange-800/60 hover:border-orange-400 dark:hover:border-orange-400 p-5 sm:p-6 rounded-3xl shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
         >
-          {/* Subtle Watermark: Zap */}
-          <div className="absolute right-2 -bottom-4 w-28 h-28 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-amber-600">
+          {/* Expanded Rich Watermark: Zap */}
+          <div className="absolute -right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-20 dark:opacity-25 select-none text-orange-500 dark:text-orange-400 transition-transform group-hover:scale-110 duration-300">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
             </svg>
           </div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-2xl bg-orange-100/80 dark:bg-orange-950/70 border border-orange-300 dark:border-orange-800/80 text-orange-800 dark:text-orange-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-2xs">
                 <Zap className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-orange-800 dark:text-orange-300 bg-orange-100/90 dark:bg-orange-950/70 border border-orange-300 dark:border-orange-800/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                 10 Rapid Qs
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
               Quick 10 Blitz
             </h3>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-dark-muted mt-1 leading-relaxed font-medium">
               Fast-paced rapid fire session designed for daily consistency and retention drills.
             </p>
           </div>
-          <div className="relative z-10 mt-5 pt-3 border-t border-slate-100 dark:border-dark-border flex items-center justify-between text-xs font-black text-amber-700 dark:text-amber-400">
+          <div className="relative z-10 mt-5 pt-3 border-t border-orange-200/60 dark:border-dark-border flex items-center justify-between text-xs font-black text-orange-700 dark:text-orange-400">
             <span>Launch Quick 10</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -736,31 +736,31 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         {/* Mode 5: MOCK TEST (10 Real Randomized Questions) */}
         <div
           onClick={() => onStartMode('MOCK_TEST')}
-          className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500/80 p-5 sm:p-6 rounded-3xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
+          className="bg-gradient-to-br from-teal-500/[0.14] via-emerald-500/[0.04] to-white dark:from-teal-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-teal-200/90 dark:border-teal-800/60 hover:border-teal-500 dark:hover:border-teal-400 p-5 sm:p-6 rounded-3xl shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
         >
-          {/* Subtle Watermark: Document */}
-          <div className="absolute right-2 -bottom-4 w-28 h-28 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-emerald-900">
+          {/* Expanded Rich Watermark: Document */}
+          <div className="absolute -right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-20 dark:opacity-25 select-none text-teal-600 dark:text-teal-400 transition-transform group-hover:scale-110 duration-300">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/>
             </svg>
           </div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-2xl bg-teal-100/80 dark:bg-teal-950/70 border border-teal-300 dark:border-teal-800/80 text-teal-800 dark:text-teal-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-2xs">
                 <FileCheck2 className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-teal-800 dark:text-teal-300 bg-teal-100/90 dark:bg-teal-950/70 border border-teal-300 dark:border-teal-800/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                 10 Qs Random
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
               Mock Test
             </h3>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-dark-muted mt-1 leading-relaxed font-medium">
               Randomized multi-subject paper testing overall syllabus readiness and speed.
             </p>
           </div>
-          <div className="relative z-10 mt-5 pt-3 border-t border-slate-100 dark:border-dark-border flex items-center justify-between text-xs font-black text-emerald-700 dark:text-emerald-400">
+          <div className="relative z-10 mt-5 pt-3 border-t border-teal-200/60 dark:border-dark-border flex items-center justify-between text-xs font-black text-teal-700 dark:text-teal-400">
             <span>Start Mock Test</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
@@ -769,31 +769,31 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         {/* Mode 6: SMART REVISION */}
         <div
           onClick={() => onStartMode('SMART_REVISION')}
-          className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-violet-500 dark:hover:border-violet-500/80 p-5 sm:p-6 rounded-3xl shadow-xs hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
+          className="bg-gradient-to-br from-purple-500/[0.14] via-violet-500/[0.04] to-white dark:from-purple-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-purple-200/90 dark:border-purple-800/60 hover:border-purple-500 dark:hover:border-purple-400 p-5 sm:p-6 rounded-3xl shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group relative overflow-hidden"
         >
-          {/* Subtle Watermark: Brain */}
-          <div className="absolute right-2 -bottom-4 w-28 h-28 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-violet-900">
+          {/* Expanded Rich Watermark: Brain */}
+          <div className="absolute -right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-20 dark:opacity-25 select-none text-purple-600 dark:text-purple-400 transition-transform group-hover:scale-110 duration-300">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.28 19.57 10.59 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/>
             </svg>
           </div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800/60 text-violet-700 dark:text-violet-400 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-2xl bg-purple-100/80 dark:bg-purple-950/70 border border-purple-300 dark:border-purple-800/80 text-purple-800 dark:text-purple-300 flex items-center justify-center group-hover:scale-105 transition-transform shadow-2xs">
                 <Brain className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-violet-800 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800/60 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-300 bg-purple-100/90 dark:bg-purple-950/70 border border-purple-300 dark:border-purple-800/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                 Cognitive Set
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">
               Smart Revision
             </h3>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-dark-muted mt-1 leading-relaxed font-medium">
               Targeted spaced repetition covering weak areas, bookmark tags, and tricky traps.
             </p>
           </div>
-          <div className="relative z-10 mt-5 pt-3 border-t border-slate-100 dark:border-dark-border flex items-center justify-between text-xs font-black text-violet-700 dark:text-violet-400">
+          <div className="relative z-10 mt-5 pt-3 border-t border-purple-200/60 dark:border-dark-border flex items-center justify-between text-xs font-black text-purple-700 dark:text-purple-400">
             <span>Launch Revision Set</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>

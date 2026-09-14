@@ -455,10 +455,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* CARD 1: Start Practice Arena */}
           <div
             onClick={() => onNavigate('practice')}
-            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-gradient-to-br from-blue-50/90 via-white to-sky-50/50 dark:from-blue-950/30 dark:via-dark-card dark:to-slate-900 border border-blue-200/90 dark:border-blue-800/50 hover:border-blue-500 dark:hover:border-blue-400 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Soft Fluid Background Curve Watermark */}
-            <div className="absolute right-0 top-0 bottom-0 w-48 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-blue-600 flex items-center justify-end pr-2">
+            {/* Rich Fluid Background Curve Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-56 pointer-events-none opacity-20 dark:opacity-25 select-none text-blue-600 dark:text-blue-400 flex items-center justify-end pr-1 transition-transform group-hover:scale-105 duration-300">
               <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" stroke="currentColor">
                 <circle cx="150" cy="100" r="80" strokeWidth="6" strokeDasharray="6 6" />
                 <circle cx="150" cy="100" r="50" strokeWidth="4" />
@@ -468,31 +468,31 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-[#EEF4FF] dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white dark:bg-blue-500 shadow-md shadow-blue-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Target className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-950/80 border border-emerald-300/80 dark:border-emerald-800 text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wide shadow-2xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Live Answers
                 </span>
               </div>
 
-              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
                 Start Practice Arena
               </h3>
-              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1 leading-relaxed">
                 Instant MCQs with real-time feedback & high-yield takeaways.
               </p>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-blue-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onLaunchQuick10();
                 }}
-                className="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1.5 rounded-xl bg-white dark:bg-blue-950/70 hover:bg-blue-100 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs transition-colors cursor-pointer"
               >
                 <Zap className="w-3 h-3 text-amber-500" />
                 <span>Quick 10</span>
@@ -507,39 +507,39 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* CARD 2: Upload PDF */}
           <div
             onClick={onOpenUploadModal}
-            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-gradient-to-br from-purple-50/90 via-white to-fuchsia-50/50 dark:from-purple-950/30 dark:via-dark-card dark:to-slate-900 border border-purple-200/90 dark:border-purple-800/50 hover:border-purple-500 dark:hover:border-purple-400 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Soft Document Watermark */}
-            <div className="absolute right-0 top-0 bottom-0 w-44 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-purple-600 flex items-center justify-end pr-3">
+            {/* Rich Document Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-52 pointer-events-none opacity-20 dark:opacity-25 select-none text-purple-600 dark:text-purple-400 flex items-center justify-end pr-2 transition-transform group-hover:scale-105 duration-300">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M28 15h32l16 16v54H28z" />
+                <path d="M28 15h32l16 16v54H28z" fill="currentColor" fillOpacity="0.08" />
                 <path d="M60 15v16h16" />
-                <line x1="38" y1="45" x2="66" y2="45" />
-                <line x1="38" y1="58" x2="66" y2="58" />
+                <line x1="38" y1="45" x2="66" y2="45" strokeWidth="3" />
+                <line x1="38" y1="58" x2="66" y2="58" strokeWidth="3" />
               </svg>
             </div>
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-[#F5F0FF] dark:bg-purple-950/60 border border-purple-100 dark:border-purple-900/60 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-purple-600 text-white dark:bg-purple-500 shadow-md shadow-purple-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <FileText className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200/70 text-[10px] font-black text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100/80 dark:bg-purple-950/80 border border-purple-300/80 dark:border-purple-800 text-[10px] font-black text-purple-800 dark:text-purple-300 uppercase tracking-wide shadow-2xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                   Auto-Extract
                 </span>
               </div>
 
-              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-purple-600 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
                 Upload PDF
               </h3>
-              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1 leading-relaxed">
                 Convert test paper PDFs into interactive MCQs with speed metrics.
               </p>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-purple-100 dark:border-slate-800">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                 <Zap className="w-3.5 h-3.5 text-purple-500" />
                 <span>Fast · Bilingual</span>
               </span>
@@ -553,39 +553,39 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* CARD 3: Time Focus Test */}
           <div
             onClick={onLaunchFocusTest}
-            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/50 dark:from-emerald-950/30 dark:via-dark-card dark:to-slate-900 border border-emerald-200/90 dark:border-emerald-800/50 hover:border-emerald-500 dark:hover:border-emerald-400 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Soft Clock Dial Watermark */}
-            <div className="absolute right-0 top-0 bottom-0 w-44 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-emerald-600 flex items-center justify-end pr-3">
+            {/* Rich Clock Dial Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-52 pointer-events-none opacity-20 dark:opacity-25 select-none text-emerald-600 dark:text-emerald-400 flex items-center justify-end pr-2 transition-transform group-hover:scale-105 duration-300">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <circle cx="50" cy="50" r="38" />
+                <circle cx="50" cy="50" r="38" fill="currentColor" fillOpacity="0.08" />
                 <path d="M50 20v-8m-10 0h20" />
-                <path d="M50 50l16-16" />
+                <path d="M50 50l16-16" strokeWidth="3" />
                 <circle cx="50" cy="50" r="4" fill="currentColor" />
               </svg>
             </div>
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-[#EAFBF3] dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white dark:bg-emerald-500 shadow-md shadow-emerald-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Clock className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 dark:bg-emerald-950/80 border border-emerald-300/80 dark:border-emerald-800 text-[10px] font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wide shadow-2xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   Proctor Sim
                 </span>
               </div>
 
-              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                 Time Focus Test
               </h3>
-              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1 leading-relaxed">
                 Timed simulation with negative marking and focus integrity tracking.
               </p>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-emerald-100 dark:border-slate-800">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                 <Shield className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Strict Countdown</span>
               </span>
@@ -599,43 +599,43 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* CARD 4: Progress & Mistake */}
           <div
             onClick={() => onNavigate('progress')}
-            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-gradient-to-br from-amber-50/90 via-white to-orange-50/50 dark:from-amber-950/30 dark:via-dark-card dark:to-slate-900 border border-amber-200/90 dark:border-amber-800/50 hover:border-amber-500 dark:hover:border-amber-400 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Soft Growth Chart Watermark */}
-            <div className="absolute right-0 top-0 bottom-0 w-48 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-amber-600 flex items-center justify-end pr-3">
+            {/* Rich Growth Chart Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-56 pointer-events-none opacity-20 dark:opacity-25 select-none text-amber-600 dark:text-amber-400 flex items-center justify-end pr-2 transition-transform group-hover:scale-105 duration-300">
               <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M15 85h70" />
-                <rect x="22" y="55" width="12" height="30" rx="2" />
-                <rect x="42" y="40" width="12" height="45" rx="2" />
-                <rect x="62" y="25" width="12" height="60" rx="2" />
-                <path d="M25 45l20-15 20 5 18-18" strokeWidth="2" strokeDasharray="3 3" />
+                <path d="M15 85h70" strokeWidth="3" />
+                <rect x="22" y="55" width="12" height="30" rx="2" fill="currentColor" fillOpacity="0.15" />
+                <rect x="42" y="40" width="12" height="45" rx="2" fill="currentColor" fillOpacity="0.2" />
+                <rect x="62" y="25" width="12" height="60" rx="2" fill="currentColor" fillOpacity="0.25" />
+                <path d="M25 45l20-15 20 5 18-18" strokeWidth="3" strokeDasharray="3 3" />
               </svg>
             </div>
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-[#FFF6E9] dark:bg-amber-950/60 border border-amber-100 dark:border-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform shadow-2xs">
+                <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white dark:bg-amber-500 shadow-md shadow-amber-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <TrendingUp className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200/70 text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100/80 dark:bg-amber-950/80 border border-amber-300/80 dark:border-amber-800 text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-wide shadow-2xs">
                   <span className="font-extrabold">+</span> Analytics
                 </span>
               </div>
 
-              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                 Progress & Mistake
               </h3>
-              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-1 leading-relaxed">
                 Accuracy, speed, consistency metrics, and error notebook drills.
               </p>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-amber-100 dark:border-slate-800">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                 <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
                 <span>Track • Improve • Excel</span>
               </span>
-              <div className="flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-500 group-hover:translate-x-1 transition-transform">
+              <div className="flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform">
                 <span>Review</span>
                 <ArrowRight className="w-4 h-4" />
               </div>
