@@ -232,7 +232,7 @@ export const CurrentAffairsView: React.FC = () => {
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       {/* 1. HERO BANNER */}
-      <section className="relative overflow-hidden rounded-3xl bg-linear-to-br from-blue-900 via-sky-900 to-indigo-950 p-6 sm:p-8 text-white shadow-xl border border-blue-800/40">
+      <section className="relative overflow-hidden rounded-3xl bg-[#0B2545] bg-gradient-to-br from-[#0B2545] via-[#133E68] to-[#1E4E79] p-6 sm:p-8 text-white shadow-xl border border-blue-800/40">
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-sky-400/20 rounded-full blur-2xl pointer-events-none" />
 
@@ -351,25 +351,46 @@ export const CurrentAffairsView: React.FC = () => {
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative flex-1 md:max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search news, topics, keywords (e.g. Supreme Court, AI, G20)..."
-            className="w-full pl-9.5 pr-4 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-          {searchQuery && (
+        {/* Modern Search Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+            fetchNews(1, selectedCategory, searchQuery, selectedSource, false);
+          }}
+          className="relative flex-1 md:max-w-md flex items-center"
+        >
+          <div className="relative w-full flex items-center">
+            <Search className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute left-3 pointer-events-none shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search news, topics, keywords (e.g. BRICS, Supreme Court)..."
+              className="w-full pl-9 pr-24 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setPage(1);
+                  fetchNews(1, selectedCategory, '', selectedSource, false);
+                }}
+                className="absolute right-16 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-0.5 rounded"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600"
+              type="submit"
+              className="absolute right-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer"
             >
-              Clear
+              Search
             </button>
-          )}
-        </div>
+          </div>
+        </form>
       </div>
 
       {/* 3. SOURCE & CATEGORY CHIPS (Visible in 'feed' tab) */}

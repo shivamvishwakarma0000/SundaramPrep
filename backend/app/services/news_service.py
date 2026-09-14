@@ -335,9 +335,9 @@ class NewsService:
         total_count = query.count()
         offset = (page - 1) * limit
         articles = query.order_by(
+            NewsArticle.published_at.desc(),
             NewsArticle.is_featured.desc(),
-            NewsArticle.relevance_score.desc(),
-            NewsArticle.published_at.desc()
+            NewsArticle.relevance_score.desc()
         ).offset(offset).limit(limit).all()
 
         return {
@@ -374,8 +374,8 @@ class NewsService:
         articles = NewsArticle.query.filter(
             NewsArticle.is_published == True
         ).order_by(
-            NewsArticle.relevance_score.desc(),
-            NewsArticle.published_at.desc()
+            NewsArticle.published_at.desc(),
+            NewsArticle.relevance_score.desc()
         ).limit(6).all()
 
         top_stories = [a.to_dict(include_full_analysis=False) for a in articles]
@@ -385,7 +385,7 @@ class NewsService:
             for a in top_stories[:3]
         ])
         if not summary_text:
-            summary_text = "Today's high-yield UPSC topics span G20 multilateral consensus, Constitutional jurisprudence, macroeconomic stability, green hydrogen transition, and indigenous space exploration."
+            summary_text = "Today's high-yield UPSC topics span BRICS multilateral financial architecture, G20 Global Biofuels & IMEEC, Constitutional jurisprudence, macroeconomic stability, and indigenous defense technology."
 
         return {
             "date": today.strftime("%d %B %Y"),
@@ -657,6 +657,56 @@ class NewsService:
         try:
             today = datetime.utcnow()
             seed_data = [
+                {
+                    "title": "BRICS Summit & Expansion: 10-Member Geopolitical Bloc, Cross-Border BRICS Pay Network & De-Dollarization Architecture",
+                    "original_url": "https://www.mea.gov.in/bilateral-documents.htm?dtl/38450/Kazan_Declaration",
+                    "source": "Ministry of External Affairs / India Today",
+                    "category": "International Relations",
+                    "gs_paper": "GS-II",
+                    "image_url": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80",
+                    "relevance_score": 100,
+                    "is_featured": True,
+                    "read_time_minutes": 4,
+                    "published_at": today,
+                    "short_summary": "The expanded BRICS bloc (now comprising 10 member nations) consolidated its strategic vision around reforming global financial institutions, establishing local currency trade settlement mechanisms (BRICS Pay / BRICS Bridge), and strengthening Global South multilateralism.",
+                    "detailed_summary": "With the formal admission of Saudi Arabia, Egypt, UAE, Iran, and Ethiopia, BRICS now represents over 45% of the world's population and ~37% of global purchasing power parity (PPP) GDP. The Kazan Declaration outlined actionable steps toward reducing dependency on western payment gateways (SWIFT alternatives), bolstering the New Development Bank (NDB), and institutionalizing the BRICS Contingent Reserve Arrangement (CRA).",
+                    "why_in_news": "High-stakes diplomatic summit addressing unilateral sanctions, trade imbalances, and non-Western financial interoperability.",
+                    "what_happened": "Adoption of the comprehensive Kazan Summit Declaration focusing on multipolarity, digital currencies for trade settlement, and partner country status.",
+                    "background": "Coined in 2001 by Jim O'Neill (BRIC), South Africa joined in 2010. The 15th Johannesburg Summit (2023) and subsequent Kazan Summit formalized the most extensive expansion in the bloc's history.",
+                    "upsc_relevance": "Directly tested in UPSC CSE GS-II (Important International Institutions, Regional & Global Groupings, Effect of Policies of Developed & Developing Nations).",
+                    "key_facts": [
+                        "Original 5 members: Brazil, Russia, India, China, South Africa.",
+                        "5 New Permanent Members: Egypt, Ethiopia, Iran, Saudi Arabia, and United Arab Emirates (UAE).",
+                        "New Development Bank (NDB) headquarters located in Shanghai, China.",
+                        "BRICS accounts for ~43% of global crude oil production and over 35% of global food grain output."
+                    ],
+                    "prelims_facts": [
+                        "Fortaleza Declaration (2014) established the New Development Bank and Contingent Reserve Arrangement.",
+                        "Unlike the IMF/World Bank, voting power in the NDB is not monopolized by Western veto powers; all founding members have equal initial capital shares."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Multipolar Global Order", "Alternative Financial Architecture (Local Currency Settlements)", "India's Strategic Autonomy between Quad and BRICS"],
+                        "challenges": ["Divergent geopolitical alignments among members (e.g., India-China border tensions)", "Balancing Western economic partnerships with Global South solidarity"],
+                        "way_forward": "Promote consensus-based decision making, leverage the NDB for sustainable infrastructure financing, and expand UPI cross-border interoperability within BRICS partners."
+                    },
+                    "important_terms": ["BRICS Pay", "Kazan Declaration", "Fortaleza Declaration", "New Development Bank (NDB)", "Contingent Reserve Arrangement", "De-Dollarization", "Strategic Autonomy"],
+                    "possible_mains_questions": [
+                        "'The expansion of BRICS reflects a fundamental structural shift in 21st-century global governance, yet internal ideological heterogeneity poses distinct challenges for India.' Critically analyze. (250 words / 15 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "Regarding the BRICS grouping and its financial institutions, consider the following statements:\n1. The New Development Bank (NDB) was formally established by the Fortaleza Declaration in 2014.\n2. In the New Development Bank (NDB), each founding member has equal voting rights, with no single country possessing veto power.\n3. Egypt, Ethiopia, Iran, Saudi Arabia, and the UAE are now permanent members of the expanded BRICS bloc.\nWhich of the statements given above are correct?",
+                            "options": [
+                                {"id": "A", "text": "1 and 2 only"},
+                                {"id": "B", "text": "2 and 3 only"},
+                                {"id": "C", "text": "1, 2 and 3"},
+                                {"id": "D", "text": "1 and 3 only"}
+                            ],
+                            "correct_answer": "C",
+                            "explanation": "All three statements are correct. The NDB was established under the 2014 Fortaleza Declaration with equal voting rights among founding members, and BRICS has expanded to include Egypt, Ethiopia, Iran, Saudi Arabia, and UAE."
+                        }
+                    ]
+                },
                 {
                     "title": "G20 New Delhi Leaders' Declaration: African Union Permanent Induction, Global Biofuels Alliance & IMEEC Corridor",
                     "original_url": "https://www.mea.gov.in/Images/CPV/G20-New-Delhi-Leaders-Declaration.pdf",
