@@ -12,6 +12,13 @@ const BASE_URL = RAW_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 const apiCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS = 25_000; // 25 seconds fast cache window
 
+// Immediate non-blocking warm-up ping to wake up free-tier Render backend
+if (typeof window !== "undefined") {
+  try {
+    fetch(`${BASE_URL}/api/health`, { mode: "no-cors", cache: "no-store" }).catch(() => {});
+  } catch {}
+}
+
 export function invalidateApiCache(pattern?: string) {
   if (!pattern) {
     apiCache.clear();

@@ -230,14 +230,17 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         time_taken_seconds: 15,
       });
 
+      const finalCorrect = res.correct_answer || currentQ.correct_answer || undefined;
+      const finalExplanation = res.explanation || currentQ.explanation || undefined;
+
       setSubmittedAnswers((prev) => ({
         ...prev,
         [currentQ.id]: {
           selected: isSkipped ? undefined : optId,
           isCorrect: res.is_correct || false,
           isSkipped: isSkipped,
-          explanation: res.explanation,
-          correct_answer: res.correct_answer || undefined,
+          explanation: finalExplanation,
+          correct_answer: finalCorrect,
         },
       }));
 
@@ -559,107 +562,128 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
             </div>
           )}
 
-          {/* Options List - Touch targets min 48px */}
-          <div className="space-y-3 pt-2">
-            {currentQ.options.map((opt) => {
-              const isSelected = selectedOption === opt.id;
-              
-              // Color styles depending on mode and submission
-              let optStyle = 'bg-slate-50 dark:bg-dark-card hover:bg-slate-100 dark:hover:bg-slate-700/60 border-slate-200 dark:border-dark-border text-slate-800 dark:text-dark-text';
-              
-              if (mode !== 'FOCUS_TEST' && currentSubmission) {
-                if (opt.id === currentSubmission.correct_answer) {
-                  optStyle = 'bg-flagGreen-50 dark:bg-flagGreen-950/50 border-flagGreen-500 dark:border-flagGreen-600 text-flagGreen-950 dark:text-flagGreen-200 font-bold ring-1 ring-flagGreen-500/30';
-                } else if (isSelected && !currentSubmission.isCorrect) {
-                  optStyle = 'bg-rose-50 dark:bg-rose-950/50 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-200 font-bold ring-1 ring-rose-500/30';
-                }
-              } else if (isSelected) {
-                optStyle = 'bg-brand-50/90 dark:bg-brand-950/60 border-brand-600 dark:border-brand-500 text-brand-950 dark:text-brand-200 font-bold ring-2 ring-brand-600/30';
-              }
+          {/* Options List & Feedback Section */}
+          {(() => {
+            const correctKey = currentSubmission?.correct_answer || currentQ.correct_answer;
+            const correctOptObj = currentQ.options.find((o) => o.id === correctKey);
+            const correctOptText = correctOptObj ? `: ${correctOptObj.text}` : '';
+            const effectiveExplanation = currentSubmission?.explanation || currentQ.explanation;
 
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() => handleSelectOption(opt.id)}
-                  disabled={Boolean(currentSubmission && mode === 'FOCUS_TEST')}
-                  className={`w-full min-h-[48px] p-3.5 sm:p-4 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-start gap-3.5 cursor-pointer overflow-hidden ${optStyle}`}
-                >
-                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                    isSelected ? 'bg-brand-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-dark-muted'
+            return (
+              <>
+                {/* Options List - Touch targets min 48px */}
+                <div className="space-y-3 pt-2">
+                  {currentQ.options.map((opt) => {
+                    const isSelected = selectedOption === opt.id;
+                    const isThisTheCorrectAnswer = Boolean(correctKey && opt.id === correctKey);
+                    
+                    // Color styles depending on mode and submission
+                    let optStyle = 'bg-slate-50 dark:bg-dark-card hover:bg-slate-100 dark:hover:bg-slate-700/60 border-slate-200 dark:border-dark-border text-slate-800 dark:text-dark-text';
+                    
+                    if (mode !== 'FOCUS_TEST' && currentSubmission) {
+                      if (isThisTheCorrectAnswer) {
+                        optStyle = 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 dark:border-emerald-500 text-emerald-950 dark:text-emerald-100 font-bold ring-2 ring-emerald-500/40 shadow-xs';
+                      } else if (isSelected && !currentSubmission.isCorrect) {
+                        optStyle = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 dark:border-rose-500 text-rose-950 dark:text-rose-100 font-bold ring-2 ring-rose-500/40 shadow-xs';
+                      }
+                    } else if (isSelected) {
+                      optStyle = 'bg-brand-50/90 dark:bg-brand-950/60 border-brand-600 dark:border-brand-500 text-brand-950 dark:text-brand-200 font-bold ring-2 ring-brand-600/30';
+                    }
+
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => handleSelectOption(opt.id)}
+                        disabled={Boolean(currentSubmission && mode === 'FOCUS_TEST')}
+                        className={`w-full min-h-[48px] p-3.5 sm:p-4 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-start gap-3.5 cursor-pointer overflow-hidden ${optStyle}`}
+                      >
+                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+                          mode !== 'FOCUS_TEST' && currentSubmission && isThisTheCorrectAnswer
+                            ? 'bg-emerald-600 text-white'
+                            : mode !== 'FOCUS_TEST' && currentSubmission && isSelected && !currentSubmission.isCorrect
+                            ? 'bg-rose-600 text-white'
+                            : isSelected
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-dark-muted'
+                        }`}>
+                          {opt.id}
+                        </span>
+                        <span className="flex-1 leading-relaxed break-words min-w-0">{opt.text}</span>
+
+                        {mode !== 'FOCUS_TEST' && currentSubmission && isThisTheCorrectAnswer && (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        )}
+                        {mode !== 'FOCUS_TEST' && currentSubmission && isSelected && !currentSubmission.isCorrect && (
+                          <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* INSTANT ANSWER & SOLUTION CARD (Directly below question) */}
+                {mode !== 'FOCUS_TEST' && currentSubmission && (
+                  <div className={`p-5 rounded-2xl border space-y-4 animate-in fade-in transition-colors box-3d ${
+                    currentSubmission.isCorrect 
+                      ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800/60 text-emerald-950 dark:text-emerald-200' 
+                      : 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800/60 text-rose-950 dark:text-rose-200'
                   }`}>
-                    {opt.id}
-                  </span>
-                  <span className="flex-1 leading-relaxed break-words min-w-0">{opt.text}</span>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 font-bold text-sm">
+                        {currentSubmission.isCorrect ? (
+                          <>
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>Correct! Option {correctKey}{correctOptText} is the right answer.</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                            <span>Incorrect. The correct answer is Option {correctKey}{correctOptText}.</span>
+                          </>
+                        )}
+                      </div>
 
-                  {mode !== 'FOCUS_TEST' && currentSubmission && opt.id === currentSubmission.correct_answer && (
-                    <CheckCircle2 className="w-5 h-5 text-flagGreen-600 dark:text-flagGreen-400 shrink-0 mt-0.5" />
-                  )}
-                  {mode !== 'FOCUS_TEST' && currentSubmission && isSelected && !currentSubmission.isCorrect && (
-                    <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                      <button
+                        onClick={() => setIsAITutorOpen(true)}
+                        className="px-3 py-1 bg-white dark:bg-dark-surface text-brand-600 dark:text-brand-400 font-bold text-xs rounded-lg shadow-xs hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200 dark:border-dark-border ml-auto"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                        Ask AI Tutor
+                      </button>
+                    </div>
 
-          {/* INSTANT ANSWER & SOLUTION CARD (Directly below question) */}
-          {mode !== 'FOCUS_TEST' && currentSubmission && (
-            <div className={`p-5 rounded-2xl border space-y-4 animate-in fade-in transition-colors box-3d ${
-              currentSubmission.isCorrect 
-                ? 'bg-flagGreen-50/60 dark:bg-flagGreen-950/30 border-flagGreen-300 dark:border-flagGreen-900/50 text-flagGreen-950 dark:text-flagGreen-200' 
-                : 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-300 dark:border-rose-900/50 text-rose-950 dark:text-rose-200'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 font-bold text-sm">
-                  {currentSubmission.isCorrect ? (
-                    <>
-                      <CheckCircle2 className="w-5 h-5 text-flagGreen-600 dark:text-flagGreen-400" />
-                      <span>Correct! Option {currentSubmission.correct_answer} is the right answer.</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-                      <span>Incorrect. The correct answer is Option {currentSubmission.correct_answer}.</span>
-                    </>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => setIsAITutorOpen(true)}
-                  className="px-3 py-1 bg-white dark:bg-dark-surface text-brand-600 dark:text-brand-400 font-bold text-xs rounded-lg shadow-xs hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200 dark:border-dark-border"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-saffron-500" />
-                  Ask AI Tutor
-                </button>
-              </div>
-
-              {/* Structured Pedagogical Explanations */}
-              {currentSubmission.explanation && (
-                <div className="bg-white/95 dark:bg-dark-surface/95 p-4 rounded-xl border border-slate-200 dark:border-dark-border space-y-3 text-xs text-slate-800 dark:text-dark-text shadow-xs">
-                  <div>
-                    <span className="font-bold text-brand-700 dark:text-brand-400 block mb-0.5">The "Why" & Verified Reason:</span>
-                    <p className="leading-relaxed text-slate-700 dark:text-dark-muted">{currentSubmission.explanation.why}</p>
+                    {/* Structured Pedagogical Explanations */}
+                    {effectiveExplanation && (
+                      <div className="bg-white/95 dark:bg-dark-surface/95 p-4 rounded-xl border border-slate-200 dark:border-dark-border space-y-3 text-xs text-slate-800 dark:text-dark-text shadow-xs">
+                        <div>
+                          <span className="font-bold text-brand-700 dark:text-brand-400 block mb-0.5">The "Why" & Verified Reason:</span>
+                          <p className="leading-relaxed text-slate-700 dark:text-dark-muted">
+                            {effectiveExplanation.why || 'Curriculum aligned explanation verified for competitive exam benchmarks.'}
+                          </p>
+                        </div>
+                        {effectiveExplanation.quick_fact && (
+                          <div className="bg-amber-50/80 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-200 dark:border-amber-900/40">
+                            <span className="font-bold text-amber-900 dark:text-amber-300 block mb-0.5 flex items-center gap-1">
+                              <Lightbulb className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Quick Fact
+                            </span>
+                            <p className="text-amber-950 dark:text-amber-200">{effectiveExplanation.quick_fact}</p>
+                          </div>
+                        )}
+                        {effectiveExplanation.memory_trick && (
+                          <div className="bg-indigo-50/80 dark:bg-indigo-950/30 p-2.5 rounded-lg border border-indigo-200 dark:border-indigo-900/40">
+                            <span className="font-bold text-indigo-900 dark:text-indigo-300 block mb-0.5 flex items-center gap-1">
+                              <Brain className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> Memory Trick (Mnemonic)
+                            </span>
+                            <p className="text-indigo-950 dark:text-indigo-200 font-medium">{effectiveExplanation.memory_trick}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {currentSubmission.explanation.quick_fact && (
-                    <div className="bg-amber-50/80 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-200 dark:border-amber-900/40">
-                      <span className="font-bold text-amber-900 dark:text-amber-300 block mb-0.5 flex items-center gap-1">
-                        <Lightbulb className="w-3.5 h-3.5 text-saffron-600 dark:text-saffron-400" /> Quick Fact
-                      </span>
-                      <p className="text-amber-950 dark:text-amber-200">{currentSubmission.explanation.quick_fact}</p>
-                    </div>
-                  )}
-                  {currentSubmission.explanation.memory_trick && (
-                    <div className="bg-brand-50/80 dark:bg-brand-950/30 p-2.5 rounded-lg border border-brand-200 dark:border-brand-900/40">
-                      <span className="font-bold text-brand-900 dark:text-brand-300 block mb-0.5 flex items-center gap-1">
-                        <Brain className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" /> Memory Trick (Mnemonic)
-                      </span>
-                      <p className="text-brand-950 dark:text-brand-200 font-medium">{currentSubmission.explanation.memory_trick}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </>
+            );
+          })()}
 
           {/* Action Button Controls */}
           <div className="flex flex-wrap items-center justify-between gap-2.5 pt-4 border-t border-cool-200 dark:border-dark-border">

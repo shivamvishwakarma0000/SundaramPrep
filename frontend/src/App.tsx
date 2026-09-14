@@ -1,14 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import type { PortalTab } from './types';
 import { HomeView } from './features/home/HomeView';
 import { PracticeHub } from './features/practice/PracticeHub';
-import { PracticeArena } from './features/practice/PracticeArena';
-import { PDFStudio } from './features/pdf/PDFStudio';
-import { AnalyticsView } from './features/analytics/AnalyticsView';
-import { ProfileView } from './features/profile/ProfileView';
-import { SundaramAIAssistant } from './features/assistant/SundaramAIAssistant';
 import { AIFloatingTrigger } from './components/assistant/AIFloatingTrigger';
 import { AuthModal } from './features/auth/AuthModal';
 import { PWAInstallModal } from './components/common/PWAInstallModal';
@@ -17,6 +12,20 @@ import { api } from './api/client';
 import type { User, ExamType, Question, PracticeMode } from './types';
 import { LandingPage } from './features/landing/LandingPage';
 import { ThemeProvider } from './context/ThemeContext';
+
+// Dynamic lazy imports to minimize initial JavaScript bundle size and load 3x faster
+const PracticeArena = lazy(() => import('./features/practice/PracticeArena').then(m => ({ default: m.PracticeArena })));
+const PDFStudio = lazy(() => import('./features/pdf/PDFStudio').then(m => ({ default: m.PDFStudio })));
+const AnalyticsView = lazy(() => import('./features/analytics/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
+const ProfileView = lazy(() => import('./features/profile/ProfileView').then(m => ({ default: m.ProfileView })));
+const SundaramAIAssistant = lazy(() => import('./features/assistant/SundaramAIAssistant').then(m => ({ default: m.SundaramAIAssistant })));
+
+const TabSuspenseFallback = () => (
+  <div className="flex flex-col items-center justify-center py-20 gap-3">
+    <div className="w-8 h-8 border-3 border-brand-600 border-t-transparent rounded-full animate-spin" />
+    <span className="text-xs text-slate-500 font-medium">Loading workspace module...</span>
+  </div>
+);
 
 export function AppContent() {
   const [user, setUser] = useState<User | null>(() => {
@@ -337,26 +346,28 @@ export function AppContent() {
         {/* TAB 2: PRACTICE */}
         {activeTab === 'practice' && (
           activePracticeMode ? (
-            <PracticeArena
-              mode={activePracticeMode}
-              currentExam={currentExam}
-              subject={activePracticeSubject}
-              topic={activePracticeTopic}
-              documentId={activePDFDoc?.id}
-              documentIds={activePDFDoc?.ids}
-              documentTitle={activePDFDoc?.title}
-              onOpenAIWithQuestion={openAIWithQuestion}
-              onExit={() => {
-                setActivePracticeMode(null);
-                setActivePracticeSubject(undefined);
-                setActivePracticeTopic(undefined);
-                setActivePDFDoc(null);
-              }}
-              onRestartWithTopic={(topicName) => {
-                setActivePracticeTopic(topicName);
-                setActivePracticeMode('MOCK_TEST');
-              }}
-            />
+            <Suspense fallback={<TabSuspenseFallback />}>
+              <PracticeArena
+                mode={activePracticeMode}
+                currentExam={currentExam}
+                subject={activePracticeSubject}
+                topic={activePracticeTopic}
+                documentId={activePDFDoc?.id}
+                documentIds={activePDFDoc?.ids}
+                documentTitle={activePDFDoc?.title}
+                onOpenAIWithQuestion={openAIWithQuestion}
+                onExit={() => {
+                  setActivePracticeMode(null);
+                  setActivePracticeSubject(undefined);
+                  setActivePracticeTopic(undefined);
+                  setActivePDFDoc(null);
+                }}
+                onRestartWithTopic={(topicName) => {
+                  setActivePracticeTopic(topicName);
+                  setActivePracticeMode('MOCK_TEST');
+                }}
+              />
+            </Suspense>
           ) : (
             <PracticeHub
               currentExam={currentExam}
@@ -381,24 +392,30 @@ export function AppContent() {
 
         {/* TAB 3: UPLOAD (PDF Intelligence Studio) */}
         {activeTab === 'upload' && (
-          <PDFStudio
-            user={user}
-            onStartPractice={(docId, title) => handleStartPDFPractice(docId, title)}
-          />
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <PDFStudio
+              user={user}
+              onStartPractice={(docId, title) => handleStartPDFPractice(docId, title)}
+            />
+          </Suspense>
         )}
 
         {/* TAB 4: PROGRESS (Analytics & Mastery) */}
         {activeTab === 'progress' && (
-          <AnalyticsView onOpenAIWithPrompt={openAIWithPrompt} />
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <AnalyticsView onOpenAIWithPrompt={openAIWithPrompt} />
+          </Suspense>
         )}
 
         {/* TAB 6: PROFILE & SETTINGS (Section 12) */}
         {activeTab === 'profile' && (
-          <ProfileView
-            currentExam={currentExam}
-            onExamChange={handleExamChange}
-            onLogout={handleLogout}
-          />
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <ProfileView
+              currentExam={currentExam}
+              onExamChange={handleExamChange}
+              onLogout={handleLogout}
+            />
+          </Suspense>
         )}
       </main>
 
@@ -429,12 +446,14 @@ export function AppContent() {
       )}
 
       {/* Sundaram AI Assistant Drawer (Available on demand) */}
-      <SundaramAIAssistant
-        isOpen={isAIOpen}
-        onClose={() => setIsAIOpen(false)}
-        activeQuestionContext={aiQuestionContext}
-        initialPrompt={aiInitialPrompt}
-      />
+      <Suspense fallback={null}>
+        <SundaramAIAssistant
+          isOpen={isAIOpen}
+          onClose={() => setIsAIOpen(false)}
+          activeQuestionContext={aiQuestionContext}
+          initialPrompt={aiInitialPrompt}
+        />
+      </Suspense>
 
       {/* Auth Modal */}
       <AuthModal

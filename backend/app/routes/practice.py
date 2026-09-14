@@ -269,8 +269,8 @@ def submit_practice_response():
         return api_success({
             "is_skipped": True,
             "is_correct": False,
-            "correct_answer": question.correct_answer if session.session_type == "LEARN" else None,
-            "explanation": question.explanation if session.session_type == "LEARN" else None,
+            "correct_answer": question.correct_answer,
+            "explanation": question.explanation,
             "session_summary": session.to_dict()
         })
 
@@ -367,13 +367,10 @@ def submit_practice_response():
 
     db.session.commit()
     
-    # In FOCUS_TEST & MOCK_TEST, hide explanations to preserve proctored exam conditions
-    hide_explanation = (session.session_type in ["FOCUS_TEST", "MOCK_TEST"])
-    
     return api_success({
         "is_correct": is_correct,
-        "correct_answer": None if hide_explanation else question.correct_answer,
-        "explanation": None if hide_explanation else question.explanation,
+        "correct_answer": question.correct_answer,
+        "explanation": question.explanation,
         "session_summary": session.to_dict()
     })
 
