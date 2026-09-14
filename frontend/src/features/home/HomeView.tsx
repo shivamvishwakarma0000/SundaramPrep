@@ -195,17 +195,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="absolute -top-32 -left-32 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Seamless Blended Study Desk Visual: Covers right half with smooth gradient mask (no harsh borders) */}
-        <div className="absolute top-0 right-0 bottom-0 w-full sm:w-[55%] lg:w-[48%] h-full pointer-events-none overflow-hidden select-none z-0">
+        {/* Study Desk Visual: Crisp on the right side, smoothly dissolving toward center */}
+        <div className="absolute top-0 right-0 bottom-0 w-full sm:w-[52%] lg:w-[46%] h-full pointer-events-none overflow-hidden select-none z-0">
           <img
             src="/assets/hero_upsc_study.jpg"
             alt="UPSC Preparation Study Desk"
-            className="w-full h-full object-cover object-center opacity-30 lg:opacity-40"
+            className="w-full h-full object-cover object-right sm:object-center opacity-85 sm:opacity-95 contrast-[1.05]"
           />
-          {/* Multi-directional soft gradient dissolves */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071A35] via-[#0B2A55]/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#071A35]/95 via-transparent to-[#071A35]/50" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#071A35]/60 via-transparent to-[#071A35]/90" />
+          {/* Smooth left-to-center fade: navy on the left dissolving to transparent on the right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071A35] via-[#071A35]/60 via-35% to-transparent" />
         </div>
 
         {/* Academic watermark emblem in hero */}

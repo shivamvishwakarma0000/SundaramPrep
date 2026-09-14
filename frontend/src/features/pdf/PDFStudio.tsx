@@ -241,30 +241,37 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      {/* 1. Thin PDF Upload Bar (No Floating Button) */}
-      <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3 transition-colors">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 1. Top Hero Card (20-24px rounded-3xl, SaaS style) */}
+      <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-xs transition-colors relative overflow-hidden">
+        {/* Subtle decorative watermark */}
+        <div className="absolute right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-brand-900 dark:text-brand-100">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+          </svg>
+        </div>
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-saffron-600 dark:text-saffron-400 bg-saffron-50 dark:bg-saffron-950/60 px-2 py-0.5 rounded border border-saffron-200 dark:border-saffron-800">
-                PDF MCQ Extractor
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/60">
+                PDF MCQ EXTRACTOR
               </span>
-              <span className="text-xs font-bold text-slate-400 dark:text-dark-muted">•</span>
-              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-bold text-slate-300 dark:text-dark-muted">•</span>
+              <span className="text-xs font-extrabold text-slate-600 dark:text-slate-300">
                 Bilingual & Auto-Evaluated
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white tracking-tight">
               Exam PDF Practice Studio
             </h2>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-dark-muted mt-1 max-w-xl leading-relaxed">
               Upload test papers, select options to instantly get answers, or practice all in exam mode.
             </p>
           </div>
 
-          {/* Thin Upload Action */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <label className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-3.5 sm:px-4 py-2.5 rounded-xl font-extrabold text-xs shadow-xs transition-all cursor-pointer">
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <label className="flex items-center gap-2 bg-[#0B2545] hover:bg-[#133A6B] text-white px-4 py-2.5 rounded-xl font-black text-xs shadow-xs transition-all cursor-pointer">
               <UploadCloud className="w-4 h-4" />
               <span>{uploading ? 'Processing PDF...' : 'Upload Exam PDF'}</span>
               <input
@@ -278,7 +285,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
             {selectedDoc && onStartPractice && (
               <button
                 onClick={() => onStartPractice(selectedDoc.id, selectedDoc.file_name)}
-                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer"
               >
                 <Play className="w-4 h-4" />
                 <span>Practice in Arena</span>
@@ -289,22 +296,22 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
 
         {/* Upload Timing & Throughput Graph */}
         {uploadMetrics && (
-          <div className="pt-3 border-t border-slate-100 dark:border-dark-border grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+          <div className="relative z-10 pt-4 mt-4 border-t border-slate-100 dark:border-dark-border grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-border">
               <span className="text-[10px] text-slate-400 font-bold block">Uploaded At</span>
-              <span className="font-extrabold text-slate-900 dark:text-white">{uploadMetrics.uploadedAt}</span>
+              <span className="font-black text-slate-900 dark:text-white">{uploadMetrics.uploadedAt}</span>
             </div>
-            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-border">
               <span className="text-[10px] text-slate-400 font-bold block">Processing Time</span>
               <span className="font-black text-brand-600 dark:text-brand-400">{uploadMetrics.durationSec}s</span>
             </div>
-            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-border">
               <span className="text-[10px] text-slate-400 font-bold block">Questions Extracted</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400">{uploadMetrics.questionCount} MCQs</span>
             </div>
-            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200 dark:border-dark-border">
+            <div className="bg-slate-50 dark:bg-dark-surface p-2.5 rounded-xl border border-slate-200/80 dark:border-dark-border">
               <span className="text-[10px] text-slate-400 font-bold block">Speed Rate</span>
-              <span className="font-black text-saffron-600 dark:text-saffron-400">
+              <span className="font-black text-amber-600 dark:text-amber-400">
                 {uploadMetrics.questionCount > 0 ? (uploadMetrics.questionCount / uploadMetrics.durationSec).toFixed(1) : 0} Qs/sec
               </span>
             </div>
@@ -314,36 +321,36 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
 
       {/* Feedback Alerts */}
       {successMsg && (
-        <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+        <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
       {errorMsg && (
-        <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+        <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-800 dark:text-rose-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
           <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {/* Main Studio Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3 border-b-2 border-slate-200 pb-2">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 border-b border-slate-200 dark:border-dark-border pb-2">
         <button
           onClick={() => setActiveTab('review')}
-          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'review'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'text-slate-900 hover:bg-slate-100'
+              ? 'bg-[#0B2545] dark:bg-brand-600 text-white shadow-xs'
+              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-surface'
           }`}
         >
           Review & Extraction Studio
         </button>
         <button
           onClick={() => setActiveTab('library')}
-          className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'library'
-              ? 'bg-brand-600 text-white shadow-xs'
-              : 'text-slate-900 hover:bg-slate-100'
+              ? 'bg-[#0B2545] dark:bg-brand-600 text-white shadow-xs'
+              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-surface'
           }`}
         >
           My PDFs Library ({documents.length})
@@ -357,26 +364,28 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
         <div className="space-y-5">
           {/* Active Document Selector Pill Bar */}
           {documents.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              <span className="text-xs font-black text-slate-700 uppercase tracking-wider mr-1">Active File:</span>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <span className="text-xs font-black text-slate-500 dark:text-dark-muted uppercase tracking-wider mr-1 shrink-0">
+                ACTIVE FILE:
+              </span>
               {documents.map((doc) => {
                 const isSelected = selectedDoc?.id === doc.id;
                 return (
                   <button
                     key={doc.id}
                     onClick={() => handleSelectDoc(doc)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-black border-2 flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black border flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-brand-600 text-white border-brand-700 shadow-xs'
-                        : 'bg-white border-slate-300 text-slate-900 hover:border-brand-500 hover:bg-slate-50'
+                        ? 'bg-[#0B2545] dark:bg-brand-600 text-white border-[#0B2545] dark:border-brand-500 shadow-xs'
+                        : 'bg-white dark:bg-dark-card border-slate-200 dark:border-dark-border text-slate-800 dark:text-slate-200 hover:border-brand-400 hover:bg-slate-50 dark:hover:bg-dark-surface'
                     }`}
                   >
-                    <FileText className="w-4 h-4 shrink-0" />
-                    <span className="truncate max-w-xs">{doc.file_name}</span>
+                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate max-w-[180px] sm:max-w-xs">{doc.file_name}</span>
                     <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
                       isSelected
                         ? 'bg-white/20 text-white'
-                        : 'bg-slate-100 text-slate-900 border border-slate-200'
+                        : 'bg-slate-100 dark:bg-dark-surface text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-dark-border'
                     }`}>
                       {doc.extracted_questions_count}Q
                     </span>
@@ -386,32 +395,60 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
             </div>
           )}
 
+          {/* Empty State when no document uploaded */}
+          {documents.length === 0 && (
+            <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-8 sm:p-12 text-center space-y-4 shadow-xs">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto border border-blue-200/60 dark:border-blue-900/50">
+                <FileText className="w-7 h-7" />
+              </div>
+              <div className="space-y-1 max-w-md mx-auto">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  No PDFs uploaded yet
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-dark-muted">
+                  Upload your first exam PDF to automatically extract practice questions.
+                </p>
+              </div>
+              <label className="inline-flex items-center gap-2 bg-[#0B2545] hover:bg-[#133A6B] text-white px-5 py-2.5 rounded-xl font-black text-xs shadow-xs transition-all cursor-pointer">
+                <UploadCloud className="w-4 h-4" />
+                <span>Upload Exam PDF</span>
+                <input
+                  type="file"
+                  accept=".pdf,.txt"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
+
           {/* Document Verification & Status Banner */}
           {selectedDoc && (
-            <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+            <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start sm:items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-brand-50 border-2 border-brand-200 text-brand-700 flex items-center justify-center shrink-0">
+                <div className="flex items-start sm:items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/50 text-brand-700 dark:text-brand-400 flex items-center justify-center shrink-0">
                     <FileText className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" />
-                        Auto-Added to Question Database
+                        AUTO-ADDED TO QUESTION DATABASE
                       </span>
-                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                      <span className="text-[10px] font-extrabold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-dark-surface px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-dark-border">
                         {selectedDoc.file_size_bytes ? `${(selectedDoc.file_size_bytes / (1024 * 1024)).toFixed(2)} MB` : 'PDF'}
                       </span>
-                      <span className="text-[10px] font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200">
+                      <span className="text-[10px] font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800">
                         {selectedDoc.page_count || 1} Pages
                       </span>
                     </div>
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                      This is your PDF: <span className="text-brand-700">{selectedDoc.file_name}</span>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
+                      This is your PDF: <span className="text-brand-600 dark:text-sky-400">{selectedDoc.file_name}</span>
                     </h3>
-                    <p className="text-xs text-slate-600 font-medium mt-0.5">
-                      AI has analyzed and extracted <strong className="text-slate-900 font-black">{drafts.length || selectedDoc.extracted_questions_count} MCQs</strong> with auto-selected verified answers. All questions are permanently stored in your question bank.
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5 max-w-2xl leading-relaxed">
+                      AI has analyzed and extracted <strong className="text-slate-900 dark:text-white font-black">{drafts.length || selectedDoc.extracted_questions_count} MCQs</strong> with auto-selected verified answers. All questions are permanently stored in your question bank.
                     </p>
                   </div>
                 </div>
@@ -419,23 +456,23 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                 {onStartPractice && (
                   <button
                     onClick={() => onStartPractice(selectedDoc.id, selectedDoc.file_name)}
-                    className="w-full sm:w-auto shrink-0 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-black rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
+                    className="w-full sm:w-auto shrink-0 px-5 py-2.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-black rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
                   >
-                    <Play className="w-4 h-4" />
+                    <Play className="w-4 h-4 text-emerald-400" />
                     <span>Practice Entire PDF ({drafts.length || selectedDoc.extracted_questions_count} Qs)</span>
                   </button>
                 )}
               </div>
 
-              {/* Status Tabs Bar */}
-              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              {/* Status & Filter Tabs Bar */}
+              <div className="pt-3 border-t border-slate-100 dark:border-dark-border flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs font-black">
                   <button
                     onClick={() => setFilterMode('ALL')}
                     className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                       filterMode === 'ALL'
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-dark-surface text-slate-700 dark:text-slate-300 border-slate-200 dark:border-dark-border hover:bg-slate-200'
                     }`}
                   >
                     All ({drafts.length} Questions)
@@ -444,19 +481,19 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                     onClick={() => setFilterMode('READY')}
                     className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                       filterMode === 'READY'
-                        ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'
                     }`}
                   >
-                    ✓ AI Auto-Verified ({drafts.length})
+                    ✓ AI Auto-Verified ({summary.ready_count || drafts.length})
                   </button>
                   {summary.duplicate_count > 0 && (
                     <button
                       onClick={() => setFilterMode('DUPLICATE')}
                       className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                         filterMode === 'DUPLICATE'
-                          ? 'bg-rose-600 text-white border-rose-600'
-                          : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
+                          ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                          : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800 hover:bg-rose-100'
                       }`}
                     >
                       ✕ {summary.duplicate_count} Duplicate
@@ -468,17 +505,17 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                   <button
                     onClick={() => handleGenerateAI('SIMILAR')}
                     disabled={generatingAI}
-                    className="px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-royal-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-royal-600" />
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>Generate Similar</span>
                   </button>
                   <button
                     onClick={() => handleGenerateAI('REVISION')}
                     disabled={generatingAI}
-                    className="px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100 text-royal-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Layers className="w-3.5 h-3.5 text-royal-600" />
+                    <Layers className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>Generate Revision</span>
                   </button>
                 </div>
@@ -486,29 +523,29 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
             </div>
           )}
 
-          {/* Collapsible Questions Toggle Header */}
+          {/* Collapsible Questions Toggle Header (Section 18) */}
           {selectedDoc && (
-            <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-4 sm:p-5 shadow-xs transition-all">
+            <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-xs transition-all">
               <button
                 type="button"
                 onClick={() => setShowQuestionList((prev) => !prev)}
-                className="w-full flex items-center justify-between cursor-pointer text-left"
+                className="w-full flex items-center justify-between cursor-pointer text-left gap-3"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 font-black flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/50 text-brand-700 dark:text-brand-300 font-black flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  <div className="min-w-0">
+                    <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
                       Extracted Questions ({filteredDrafts.length} Questions)
                     </h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate sm:whitespace-normal">
                       Click "Practice Entire PDF" above to start the test, or expand here to view individual questions.
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-brand-700 bg-brand-50 border border-brand-200 px-3 py-1 rounded-lg">
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-black text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 px-3 py-1 rounded-xl">
                     {showQuestionList ? 'Hide Questions' : 'Click to View Questions'}
                   </span>
                   <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${showQuestionList ? 'rotate-180' : ''}`} />
@@ -540,7 +577,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
                 return (
                   <div
                     key={draft.id}
-                    className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-4 sm:p-5 shadow-xs transition-all"
+                    className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs transition-all"
                   >
                     {!isExpanded ? (
                       /* Compact Intact Question Row */
