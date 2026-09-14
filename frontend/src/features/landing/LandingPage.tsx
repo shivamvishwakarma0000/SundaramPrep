@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, 
-  FileText, 
-  Flame, 
   ArrowRight, 
   Lock, 
   Phone, 
   User as UserIcon, 
-  X, 
-  BrainCircuit,
+  Eye, 
+  EyeOff, 
+  BookOpen, 
+  Target, 
+  Award, 
+  FileText, 
+  BrainCircuit, 
+  TrendingUp, 
+  Sun, 
+  Moon, 
+  Edit3, 
+  Sparkles,
+  Users,
   Compass
 } from 'lucide-react';
 import { api } from '../../api/client';
+import { useTheme } from '../../context/ThemeContext';
 import type { User, ExamType } from '../../types';
 
 interface LandingPageProps {
@@ -19,52 +29,51 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
-  // Modal states
-  const [modalMode, setModalMode] = useState<'LOGIN' | 'REGISTER' | null>(null);
+  const { theme, setTheme } = useTheme();
 
-  // Form states
+  // Active form mode: 'SIGN_IN' or 'REGISTER'
+  const [formMode, setFormMode] = useState<'SIGN_IN' | 'REGISTER'>('SIGN_IN');
+
+  // Input states
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('sundaram');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [targetExam, setTargetExam] = useState<ExamType>('UPSC_CSE');
-  
-  // UI states
+  const [rememberMe, setRememberMe] = useState(true);
+
+  // Status states
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleOpenLogin = (prefillPhone?: string) => {
-    setErrorMsg(null);
-    if (prefillPhone) {
-      setPhone(prefillPhone);
-      setPassword('sundaram');
-    }
-    setModalMode('LOGIN');
-  };
-
-  const handleOpenRegister = () => {
-    setErrorMsg(null);
-    setModalMode('REGISTER');
-  };
+  // Forgot password modal state
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMsg, setForgotMsg] = useState<string | null>(null);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone) {
-      setErrorMsg('Please enter your phone number.');
+    if (!phone.trim()) {
+      setErrorMsg('Please enter your mobile phone number.');
+      return;
+    }
+    if (!password) {
+      setErrorMsg('Please enter your password.');
       return;
     }
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await api.phoneLogin(phone.trim(), password.trim() || 'sundaram');
+      const res = await api.phoneLogin(phone.trim(), password.trim());
       if (res?.user && res?.token) {
         localStorage.setItem('sundaram_token', res.token);
         localStorage.setItem('sundaram_user_cache', JSON.stringify(res.user));
         onLoginSuccess(res.user);
       } else {
-        throw new Error('Login failed. Please verify credentials.');
+        throw new Error('Login failed. Please check credentials.');
       }
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Login failed. Please check your phone number and password.');
+      setErrorMsg(err?.message || 'Invalid credentials. Please verify your phone number and password.');
     } finally {
       setLoading(false);
     }
@@ -74,11 +83,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     const digits = phone.replace(/\D/g, '');
     if (digits.length < 10) {
-      setErrorMsg('Please enter a valid 10-digit phone number.');
+      setErrorMsg('Please enter a valid 10-digit mobile phone number.');
       return;
     }
     if (!fullName.trim()) {
       setErrorMsg('Please enter your full name.');
+      return;
+    }
+    if (!password || password.length < 4) {
+      setErrorMsg('Password must be at least 4 characters long.');
       return;
     }
     setLoading(true);
@@ -87,7 +100,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
       const res = await api.registerStudent({
         name: fullName.trim(),
         phone: digits,
-        password: password.trim() || 'sundaram',
+        password: password.trim(),
         target_exam: targetExam,
       });
       if (res?.user && res?.token) {
@@ -104,372 +117,641 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#071426] text-white flex flex-col selection:bg-brand-500 selection:text-white relative overflow-hidden">
-      {/* Ambient background lighting glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-brand-600/15 via-indigo-600/10 to-transparent blur-3xl pointer-events-none -z-10" />
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-1/2 -left-32 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotMsg('If an account exists with this email, reset instructions have been sent.');
+  };
 
-      {/* 1. Header Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-[#071426]/80 backdrop-blur-xl border-b border-slate-800/80">
+  const scrollToForm = (mode: 'SIGN_IN' | 'REGISTER') => {
+    setFormMode(mode);
+    setErrorMsg(null);
+    const element = document.getElementById('auth-card');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#071426] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-brand-500 selection:text-white transition-colors">
+      {/* Subtle Ambient Background Gradient */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-sky-200/40 dark:bg-brand-900/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-blue-100/50 dark:bg-sky-950/20 rounded-full blur-3xl" />
+      </div>
+
+      {/* 1. Header Navigation Bar (No Home/Features/About/Contact per user instructions) */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#071426]/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          {/* Logo Section */}
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-sky-400 p-0.5 shadow-lg shadow-brand-500/20">
-              <div className="w-full h-full bg-[#071426] rounded-[14px] flex items-center justify-center font-display font-black text-xl text-sky-400">
-                S
-              </div>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#0B2545] to-[#1E3A8A] text-white flex items-center justify-center font-display font-black text-xl shadow-md shadow-brand-900/20 shrink-0">
+              <BookOpen className="w-6 h-6 text-sky-400" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-display font-black text-lg tracking-tight text-white">SUNDARAM</span>
-                <span className="font-display font-black text-lg tracking-tight text-sky-400">PREP</span>
+              <div className="flex items-center gap-2">
+                <span className="font-display font-black text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
+                  SUNDARAM PREP
+                </span>
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
+                  PRO
+                </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">UPSC & Competitive Exams Hub</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
+                Practice. Focus. Improve.
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Right Controls: Theme Toggle, Sign In, Join as Aspirant */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Theme Switcher Button */}
             <button
-              onClick={() => handleOpenLogin()}
-              className="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-xl transition-all cursor-pointer border border-transparent hover:border-slate-700"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            </button>
+
+            {/* Sign In Header Button */}
+            <button
+              onClick={() => scrollToForm('SIGN_IN')}
+              className="px-4 sm:px-5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
             >
               Sign In
             </button>
+
+            {/* Join as Aspirant Header Button */}
             <button
-              onClick={handleOpenRegister}
-              className="flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-brand-600 to-sky-500 hover:from-brand-500 hover:to-sky-400 text-white text-xs font-bold rounded-xl shadow-md shadow-brand-600/30 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              onClick={() => scrollToForm('REGISTER')}
+              className="flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
             >
+              <UserIcon className="w-3.5 h-3.5" />
               <span>Join as Aspirant</span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* 2. Hero Section */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 flex flex-col items-center text-center relative z-10">
-        {/* Top Pulsing Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-950/80 border border-brand-700/60 text-sky-300 text-xs font-bold mb-6 shadow-xs animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span>Civil Services & State PSC Prelims 2026</span>
-          <span className="text-[10px] text-brand-300 px-1.5 py-0.5 rounded-md bg-brand-900/60 font-semibold">AI Powered</span>
-        </div>
-
-        {/* Hero Title */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white max-w-4xl leading-[1.15] mb-6">
-          Smart Practice, AI Verification & <span className="bg-gradient-to-r from-sky-400 via-brand-300 to-amber-300 bg-clip-text text-transparent">Exam Consistency</span>
-        </h1>
-
-        {/* Hero Subtitle */}
-        <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl mx-auto font-normal leading-relaxed mb-8">
-          Practice authentic UPSC questions, attempt tests from PDFs curated by Sundaram Vishwakarma, understand conceptual traps with AI explanations, and build a lasting daily study streak.
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full max-w-md justify-center mb-14">
-          <button
-            onClick={handleOpenRegister}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3.5 bg-gradient-to-r from-sky-400 to-brand-500 hover:from-sky-300 hover:to-brand-400 text-slate-950 font-black text-sm rounded-2xl shadow-xl shadow-sky-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-          >
-            <span>Register in 5 Seconds</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+      {/* 2. Hero Section (3 Columns: Left Content | Center Artwork | Right Card Form) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
           
-          <button
-            onClick={() => handleOpenLogin('9794529611')}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900/80 hover:bg-slate-800 text-white font-bold text-sm rounded-2xl border border-slate-700/80 transition-all cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>Login as Sundaram (Admin)</span>
-          </button>
+          {/* LEFT COLUMN: Hero Copy & Feature Pills (5 Cols) */}
+          <div className="lg:col-span-4 space-y-6 text-left">
+            {/* Top Pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-xs font-bold shadow-2xs">
+              <Compass className="w-3.5 h-3.5 text-[#1D63FF]" />
+              <span>Your Dream | Our Mission</span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black font-display tracking-tight text-slate-900 dark:text-white leading-[1.12]">
+              Crack Your Dreams with{' '}
+              <span className="text-[#1D63FF]">Sundaram</span>{' '}
+              <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 bg-clip-text text-transparent">
+                Prep
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              AI-powered learning platform for UPSC CSE and other competitive exams. Practice smart, learn faster, and achieve your goals with expert guidance and personalized support.
+            </p>
+
+            {/* 4 Feature Icons Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
+                <Target className="w-4 h-4 text-sky-500 mx-auto mb-1" />
+                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Expert Content</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
+                <BrainCircuit className="w-4 h-4 text-purple-500 mx-auto mb-1" />
+                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">AI Learning</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
+                <TrendingUp className="w-4 h-4 text-amber-500 mx-auto mb-1" />
+                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Track Progress</div>
+              </div>
+              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
+                <Award className="w-4 h-4 text-emerald-500 mx-auto mb-1" />
+                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Build Success</div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => scrollToForm('REGISTER')}
+                className="flex items-center gap-2 px-5 py-3 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                <span>Join as Aspirant</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => scrollToForm('SIGN_IN')}
+                className="px-5 py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
+              >
+                Sign In
+              </button>
+            </div>
+
+            {/* Social Proof */}
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+              <ShieldCheck className="w-4 h-4 text-[#1D63FF]" />
+              <span>Trusted by 10,000+ aspirants across India</span>
+            </div>
+          </div>
+
+          {/* CENTER COLUMN: UPSC Student Artwork (4 Cols) */}
+          <div className="lg:col-span-4 flex flex-col items-center justify-center relative">
+            {/* Soft Radial Backlight */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-sky-200/40 via-blue-100/30 to-purple-100/20 dark:from-sky-900/20 dark:to-purple-900/10 rounded-full blur-2xl -z-10 transform scale-95" />
+
+            {/* Floating Cursive Note on Top */}
+            <div className="self-end mr-4 mb-2 rotate-6 text-sky-600 dark:text-sky-300 font-serif italic text-xs tracking-wider font-bold">
+              Better Preparation<br />Brighter Future
+            </div>
+
+            {/* Image Container with Floating Badge */}
+            <div className="relative w-full max-w-sm">
+              <img
+                src="/hero-student-upsc.png"
+                alt="UPSC Aspirant studying with books and AI"
+                className="w-full h-auto object-contain rounded-3xl drop-shadow-xl"
+              />
+
+              {/* Floating UPSC Pill Badge */}
+              <div className="absolute top-4 left-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-lg px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <Target className="w-4 h-4 text-[#1D63FF]" />
+                <div className="text-left leading-none">
+                  <div className="text-[11px] font-black text-slate-900 dark:text-white">UPSC CSE</div>
+                  <div className="text-[9px] text-slate-400 font-semibold">& More Exams</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Interactive Welcome Back Card (4 Cols) */}
+          <div className="lg:col-span-4" id="auth-card">
+            <div className="bg-white dark:bg-[#0B1E36] border border-slate-200/90 dark:border-slate-700/80 rounded-3xl p-6 sm:p-7 shadow-xl transition-all relative">
+              {/* Card Header */}
+              <div className="mb-5 text-left">
+                <h2 className="text-xl font-black font-display text-slate-900 dark:text-white">
+                  {formMode === 'SIGN_IN' ? 'Welcome Back' : 'Join as Aspirant'}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {formMode === 'SIGN_IN'
+                    ? 'Sign in to continue your learning journey'
+                    : 'Create your account to access curated tests & AI tutor'}
+                </p>
+              </div>
+
+              {/* Segmented Mode Switcher */}
+              <div className="flex p-1 bg-slate-100 dark:bg-slate-900/70 rounded-2xl mb-5 border border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormMode('SIGN_IN');
+                    setErrorMsg(null);
+                  }}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    formMode === 'SIGN_IN'
+                      ? 'bg-[#1D63FF] text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormMode('REGISTER');
+                    setErrorMsg(null);
+                  }}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                    formMode === 'REGISTER'
+                      ? 'bg-[#1D63FF] text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Join as Aspirant
+                </button>
+              </div>
+
+              {/* Error Message Display */}
+              {errorMsg && (
+                <div className="p-3 mb-4 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300">
+                  {errorMsg}
+                </div>
+              )}
+
+              {/* Form 1: SIGN IN */}
+              {formMode === 'SIGN_IN' ? (
+                <form onSubmit={handleLoginSubmit} className="space-y-4 text-left">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Mobile Number or Email
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter mobile number (e.g. 9794529611)"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember me & Forgot password */}
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded text-[#1D63FF] focus:ring-[#1D63FF]"
+                      />
+                      <span>Remember me</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotModalOpen(true)}
+                      className="text-xs text-[#1D63FF] hover:underline font-semibold cursor-pointer"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-[#1D63FF] hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+                  >
+                    {loading ? 'Signing in...' : 'Sign In'}
+                  </button>
+
+                  {/* Switch to Register link */}
+                  <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-1">
+                    Don't have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setFormMode('REGISTER')}
+                      className="text-[#1D63FF] font-bold hover:underline cursor-pointer"
+                    >
+                      Join as Aspirant
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* Form 2: JOIN AS ASPIRANT (REGISTER) */
+                <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-left">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter your name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Mobile Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="tel"
+                        required
+                        placeholder="10-digit mobile number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Create Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        placeholder="Choose a password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Target Exam
+                    </label>
+                    <select
+                      value={targetExam}
+                      onChange={(e) => setTargetExam(e.target.value as ExamType)}
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
+                    >
+                      <option value="UPSC_CSE">UPSC Civil Services Examination (CSE)</option>
+                      <option value="STATE_PSC">State PSC Prelims</option>
+                      <option value="SSC_CGL">SSC CGL</option>
+                      <option value="BANK_PO">Bank PO</option>
+                    </select>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 bg-[#1D63FF] hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+                  >
+                    {loading ? 'Creating Account...' : 'Join as Aspirant'}
+                  </button>
+
+                  {/* Switch to Sign in link */}
+                  <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-1">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setFormMode('SIGN_IN')}
+                      className="text-[#1D63FF] font-bold hover:underline cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Trust Badges */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 w-full max-w-3xl mb-16">
-          <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur">
-            <div className="font-display font-black text-2xl text-sky-400">100+</div>
-            <div className="text-xs text-slate-400 font-semibold mt-0.5">Verified GS MCQs</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur">
-            <div className="font-display font-black text-2xl text-emerald-400">0ms</div>
-            <div className="text-xs text-slate-400 font-semibold mt-0.5">Instant UI Cache</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur">
-            <div className="font-display font-black text-2xl text-amber-400">Deep AI</div>
-            <div className="text-xs text-slate-400 font-semibold mt-0.5">Why & Memory Tricks</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/80 backdrop-blur">
-            <div className="font-display font-black text-2xl text-indigo-400">100%</div>
-            <div className="text-xs text-slate-400 font-semibold mt-0.5">Student Data Isolation</div>
-          </div>
-        </div>
+        {/* 3. Bottom Feature Cards Section ("Everything You Need to Succeed") */}
+        <div className="mt-16 sm:mt-24 pt-10 border-t border-slate-200/80 dark:border-slate-800/80 text-center">
+          <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white mb-2">
+            Everything You Need to Succeed
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto mb-10">
+            Comprehensive tools and resources to help you prepare better, practice smarter and stay ahead.
+          </p>
 
-        {/* 3. 4 Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-4xl text-left">
-          {/* Feature 1 */}
-          <div className="relative overflow-hidden p-6 rounded-3xl bg-slate-900/50 border border-slate-800/80 backdrop-blur hover:border-slate-700 transition-all group">
-            <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center mb-4">
-              <FileText className="w-6 h-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Card 1: MCQs Practice */}
+            <div 
+              onClick={() => scrollToForm('SIGN_IN')}
+              className="p-5 rounded-3xl bg-white dark:bg-[#0B1E36] border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-sky-300 dark:hover:border-sky-700 transition-all text-left flex flex-col justify-between cursor-pointer group"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-[#1D63FF] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <Target className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-black text-sm text-slate-900 dark:text-white mb-1">
+                  MCQs Practice
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  High-quality questions with instant feedback.
+                </p>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center group-hover:bg-[#1D63FF] group-hover:text-white transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
             </div>
-            <h3 className="font-display font-black text-lg text-white mb-2">Curated PDF Test Papers</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Attempt interactive mock tests extracted directly from authentic UPSC PDFs. Features countdown timers, negative marking, and complete answer keys.
-            </p>
-          </div>
 
-          {/* Feature 2 */}
-          <div className="relative overflow-hidden p-6 rounded-3xl bg-slate-900/50 border border-slate-800/80 backdrop-blur hover:border-slate-700 transition-all group">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mb-4">
-              <BrainCircuit className="w-6 h-6" />
+            {/* Card 2: Answer Writing */}
+            <div 
+              onClick={() => scrollToForm('SIGN_IN')}
+              className="p-5 rounded-3xl bg-white dark:bg-[#0B1E36] border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-purple-300 dark:hover:border-purple-700 transition-all text-left flex flex-col justify-between cursor-pointer group"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-black text-sm text-slate-900 dark:text-white mb-1">
+                  Answer Writing
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Improve your writing skills with expert evaluation.
+                </p>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
             </div>
-            <h3 className="font-display font-black text-lg text-white mb-2">Sundaram AI Tutor</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Never get stuck on ambiguous options. Our factual AI explains why an answer is correct, highlights the conceptual trap, and provides high-retention mnemonics.
-            </p>
-          </div>
 
-          {/* Feature 3 */}
-          <div className="relative overflow-hidden p-6 rounded-3xl bg-slate-900/50 border border-slate-800/80 backdrop-blur hover:border-slate-700 transition-all group">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
-              <Flame className="w-6 h-6" />
+            {/* Card 3: PDF Upload */}
+            <div 
+              onClick={() => scrollToForm('SIGN_IN')}
+              className="p-5 rounded-3xl bg-white dark:bg-[#0B1E36] border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left flex flex-col justify-between cursor-pointer group"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-black text-sm text-slate-900 dark:text-white mb-1">
+                  PDF Upload
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Convert test PDFs into interactive MCQs.
+                </p>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
             </div>
-            <h3 className="font-display font-black text-lg text-white mb-2">Day-Wise Streak & Goals</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Every new student starts with a clean slate: 0 streak, 0 questions solved. Build consistency step-by-step with real-time daily targets and streak celebrations.
-            </p>
-          </div>
 
-          {/* Feature 4 */}
-          <div className="relative overflow-hidden p-6 rounded-3xl bg-slate-900/50 border border-slate-800/80 backdrop-blur hover:border-slate-700 transition-all group">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4">
-              <Compass className="w-6 h-6" />
+            {/* Card 4: Progress Tracking */}
+            <div 
+              onClick={() => scrollToForm('SIGN_IN')}
+              className="p-5 rounded-3xl bg-white dark:bg-[#0B1E36] border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-amber-300 dark:hover:border-amber-700 transition-all text-left flex flex-col justify-between cursor-pointer group"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-black text-sm text-slate-900 dark:text-white mb-1">
+                  Progress Tracking
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Monitor your performance and identify weak areas.
+                </p>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
             </div>
-            <h3 className="font-display font-black text-lg text-white mb-2">Daily Current Affairs News</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              High-yield daily news summaries aligned with GS-II and GS-III prelims and mains questions. Stay ahead with concise legal and policy takeaways.
-            </p>
+
+            {/* Card 5: AI Tutor */}
+            <div 
+              onClick={() => scrollToForm('SIGN_IN')}
+              className="p-5 rounded-3xl bg-white dark:bg-[#0B1E36] border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 transition-all text-left flex flex-col justify-between cursor-pointer group"
+            >
+              <div>
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <h3 className="font-display font-black text-sm text-slate-900 dark:text-white mb-1">
+                  AI Tutor
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Get instant help, clear concepts and personalized guidance.
+                </p>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/60 py-6 text-center text-xs text-slate-500">
-        <p>© 2026 Sundaram Prep. Curated with dedication by Sundaram Vishwakarma.</p>
+      {/* 4. Footer Dark Navy Ribbon */}
+      <footer className="mt-auto bg-[#071A35] text-white py-6 sm:py-8 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* 4 Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-10 text-left">
+            <div className="flex items-center gap-2.5">
+              <Users className="w-5 h-5 text-sky-400 shrink-0" />
+              <div>
+                <div className="font-black text-sm sm:text-base text-white">10,000+</div>
+                <div className="text-[10px] text-slate-400 font-semibold">Happy Aspirants</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <Award className="w-5 h-5 text-amber-400 shrink-0" />
+              <div>
+                <div className="font-black text-sm sm:text-base text-white">95%</div>
+                <div className="text-[10px] text-slate-400 font-semibold">Success Rate</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <BookOpen className="w-5 h-5 text-emerald-400 shrink-0" />
+              <div>
+                <div className="font-black text-sm sm:text-base text-white">50+</div>
+                <div className="text-[10px] text-slate-400 font-semibold">Subjects & Topics</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <BrainCircuit className="w-5 h-5 text-purple-400 shrink-0" />
+              <div>
+                <div className="font-black text-sm sm:text-base text-white">24/7</div>
+                <div className="text-[10px] text-slate-400 font-semibold">AI Support</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Cursive Callout */}
+          <div className="text-right">
+            <span className="font-serif italic text-sm sm:text-base text-sky-300 tracking-wider font-bold">
+              Learn Today Lead Tomorrow
+            </span>
+          </div>
+        </div>
       </footer>
 
-      {/* 4. Login Modal */}
-      {modalMode === 'LOGIN' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-[#0B1E36] border border-slate-700/80 w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl relative text-left">
-            <button
-              onClick={() => setModalMode(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-xl bg-slate-800/60 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 rounded-xl bg-brand-500/20 text-sky-400 flex items-center justify-center font-bold">
-                <Lock className="w-4 h-4" />
-              </div>
-              <h2 className="text-xl font-display font-black text-white">Sign In to Portal</h2>
-            </div>
-            <p className="text-xs text-slate-400 mb-5">
-              Enter your mobile number and password to access your dashboard.
+      {/* Forgot Password Modal */}
+      {isForgotModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-left">
+            <h3 className="font-display font-black text-base text-slate-900 dark:text-white mb-1">
+              Reset Password
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Enter your registered mobile or email to recover access.
             </p>
-
-            {/* Quick Demo Admin Button */}
-            <div className="mb-4 p-3 rounded-2xl bg-slate-900/60 border border-slate-700/60 flex items-center justify-between">
-              <div>
-                <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Sundaram Admin Account</span>
-                </div>
-                <div className="text-[10px] text-slate-400">9794529611 · Pass: sundaram</div>
+            {forgotMsg ? (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl text-xs font-semibold mb-4">
+                {forgotMsg}
               </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-3">
+                <input
+                  type="text"
+                  required
+                  placeholder="Mobile number or email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer"
+                >
+                  Send Reset Link
+                </button>
+              </form>
+            )}
+            <div className="mt-3 text-right">
               <button
                 type="button"
                 onClick={() => {
-                  setPhone('9794529611');
-                  setPassword('sundaram');
+                  setIsForgotModalOpen(false);
+                  setForgotMsg(null);
                 }}
-                className="text-[11px] font-bold px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 rounded-lg border border-amber-500/30 transition-colors cursor-pointer"
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
               >
-                Auto-fill
-              </button>
-            </div>
-
-            {errorMsg && (
-              <div className="p-3 mb-4 rounded-xl text-xs font-bold bg-red-950/60 border border-red-800 text-red-300">
-                {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleLoginSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Mobile Phone Number</label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="Enter 10-digit phone (e.g. 9794529611)"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-300">Password</label>
-                  <span className="text-[10px] text-slate-400">Default: sundaram</span>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="password"
-                    required
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 mt-2 bg-gradient-to-r from-sky-400 to-brand-500 hover:from-sky-300 hover:to-brand-400 disabled:opacity-50 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-all cursor-pointer"
-              >
-                {loading ? 'Authenticating...' : 'Sign In Now'}
-              </button>
-            </form>
-
-            <div className="mt-4 pt-4 border-t border-slate-800 text-center text-xs text-slate-400">
-              New student?{' '}
-              <button
-                type="button"
-                onClick={() => setModalMode('REGISTER')}
-                className="text-sky-400 font-bold hover:underline cursor-pointer"
-              >
-                Register an account in 5s
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Register Modal */}
-      {modalMode === 'REGISTER' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-[#0B1E36] border border-slate-700/80 w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl relative text-left">
-            <button
-              onClick={() => setModalMode(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-xl bg-slate-800/60 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                <UserIcon className="w-4 h-4" />
-              </div>
-              <h2 className="text-xl font-display font-black text-white">Create Aspirant Account</h2>
-            </div>
-            <p className="text-xs text-slate-400 mb-5">
-              Start with 0 streak and build your consistency with full access to study materials.
-            </p>
-
-            {errorMsg && (
-              <div className="p-3 mb-4 rounded-xl text-xs font-bold bg-red-950/60 border border-red-800 text-red-300">
-                {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Full Name</label>
-                <div className="relative">
-                  <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter your name (e.g. Ramesh Kumar)"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Mobile Phone Number</label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="10-digit mobile number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-300">Password</label>
-                  <span className="text-[10px] text-slate-400">Default: sundaram</span>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="password"
-                    required
-                    placeholder="Create a password (or keep sundaram)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Target Exam</label>
-                <select
-                  value={targetExam}
-                  onChange={(e) => setTargetExam(e.target.value as ExamType)}
-                  className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-xs text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                >
-                  <option value="UPSC_CSE">UPSC Civil Services Examination (CSE)</option>
-                  <option value="STATE_PSC">State PSC Prelims</option>
-                  <option value="SSC_CGL">SSC CGL</option>
-                  <option value="BANK_PO">Bank PO</option>
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 mt-2 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-300 hover:to-teal-400 disabled:opacity-50 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-all cursor-pointer"
-              >
-                {loading ? 'Creating Account...' : 'Complete Free Registration'}
-              </button>
-            </form>
-
-            <div className="mt-4 pt-4 border-t border-slate-800 text-center text-xs text-slate-400">
-              Already have an account?{' '}
-              <button
-                type="button"
-                onClick={() => setModalMode('LOGIN')}
-                className="text-sky-400 font-bold hover:underline cursor-pointer"
-              >
-                Sign in directly
+                Close
               </button>
             </div>
           </div>
