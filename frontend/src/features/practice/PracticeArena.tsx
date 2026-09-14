@@ -66,6 +66,11 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   const [focusScore, setFocusScore] = useState<number>(100);
   const [warningModal, setWarningModal] = useState<{ show: boolean; title: string; message: string } | null>(null);
 
+  // Submitting Running Progress Bar State (0% to 100%)
+  const [isSubmittingTest, setIsSubmittingTest] = useState<boolean>(false);
+  const [submitProgress, setSubmitProgress] = useState<number>(0);
+  const [submitStageText, setSubmitStageText] = useState<string>('Locking test responses...');
+
   // Question Navigator Drawer State
   const [isNavigatorOpen, setIsNavigatorOpen] = useState<boolean>(false);
 
@@ -84,139 +89,135 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         if (documentIds && documentIds.length > 0 && mode !== 'MOCK_TEST') count = 200; // Load all questions if direct PDF practice
         else if (documentId && mode !== 'MOCK_TEST') count = 200; // Load all questions from uploaded PDF
         else if (mode === 'FOCUS_TEST') count = 25; // Standard focus block
-        else if (mode === 'MOCK_TEST') count = 10; // Exactly 10 questions for topic/PDF mock test as requested
-        else if (mode === 'QUICK_10') count = 10;
+        else if (mode === 'MOCK_TEST') count = 25;
 
         const res = await api.startPractice({
           exam: currentExam,
           session_type: mode,
-          count: count,
-          subject: subject,
-          topic: topic,
+          subject,
+          topic,
           document_id: documentId,
           document_ids: documentIds,
+          count,
         });
 
         if (mounted) {
-          setSession(res.session);
           setQuestions(res.questions);
+          setSession(res.session);
+          setTimerSeconds(res.session.time_limit_seconds || 0);
           setFocusScore(res.session.focus_score ?? 100);
           setFocusViolations(res.session.focus_violations_count ?? 0);
-          
-          if (res.session.time_limit_seconds) {
-            setTimerSeconds(res.session.time_limit_seconds);
-          } else {
-            setTimerSeconds(0);
-          }
-          setLoading(false);
         }
       } catch (err) {
-        console.error('Failed to start practice session:', err);
-        setLoading(false);
+        console.error(err);
+      } finally {
+        if (mounted) setLoading(false);
       }
     }
     init();
     return () => {
       mounted = false;
     };
-  }, [mode, currentExam, subject, topic, documentId, JSON.stringify(documentIds)]);
+  }, [mode, currentExam, subject, topic, documentId, documentIds]);
 
-  // Focus Mode Violations Listener (visibilitychange, fullscreenchange, blur)
+  // Tab switch / Window blur violation monitor for FOCUS_TEST mode
   useEffect(() => {
     if (mode !== 'FOCUS_TEST' || isCompleted || loading || !session) return;
 
-    const handleViolation = async (violationType: string, details: string) => {
-      try {
-        const res = await api.recordFocusViolation({
-          session_id: session.id,
-          violation_type: violationType,
-          details: details,
-        });
-        setFocusScore(res.focus_score);
-        setFocusViolations(res.focus_violations_count);
-        setWarningModal({
-          show: true,
-          title: res.warning_title,
-          message: res.warning_message,
-        });
-
-        if (res.is_terminated) {
-          handleCompleteSession();
-        }
-      } catch (e) {
-        console.error('Failed to record focus violation:', e);
-      }
-    };
-
-    const onVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (document.hidden) {
-        handleViolation('VISIBILITY_HIDDEN', 'Student tab switched or browser minimized');
+        try {
+          const res = await api.recordFocusViolation({
+            session_id: session.id,
+            violation_type: 'TAB_SWITCH',
+            details: 'User navigated away from active test tab.',
+          });
+          setFocusViolations(res.focus_violations_count);
+          setFocusScore(res.focus_score);
+
+          if (res.is_terminated) {
+            setWarningModal({
+              show: true,
+              title: res.warning_title || 'Test Auto-Submitted',
+              message: res.warning_message || 'Maximum focus violations (3/3) exceeded. Your test has been automatically locked and submitted.',
+            });
+            handleCompleteSession();
+          } else {
+            setWarningModal({
+              show: true,
+              title: res.warning_title || `Focus Violation Warning (${res.focus_violations_count}/3)`,
+              message: res.warning_message || `Tab switching is strictly monitored in Focus Test Mode. 3 violations will trigger instant test termination.`,
+            });
+          }
+        } catch (e) {
+          console.error('Focus event logging failed:', e);
+        }
       }
     };
 
-    const onFullscreenChange = () => {
-      const inFullscreen = Boolean(document.fullscreenElement);
-      setIsFullscreen(inFullscreen);
-      if (!inFullscreen && !isCompleted) {
-        handleViolation('FULLSCREEN_EXIT', 'Student exited fullscreen mode');
-      }
-    };
-
-    const onBlur = () => {
+    const handleWindowBlur = async () => {
       if (!document.hidden) {
-        handleViolation('WINDOW_BLUR', 'Browser window lost focus');
+        try {
+          const res = await api.recordFocusViolation({
+            session_id: session.id,
+            violation_type: 'WINDOW_BLUR',
+            details: 'Application window lost active focus.',
+          });
+          setFocusViolations(res.focus_violations_count);
+          setFocusScore(res.focus_score);
+        } catch (e) {
+          console.error(e);
+        }
       }
     };
 
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    window.addEventListener('blur', onBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
 
     return () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      document.removeEventListener('fullscreenchange', onFullscreenChange);
-      window.removeEventListener('blur', onBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
     };
   }, [mode, isCompleted, loading, session]);
 
+  // Fullscreen change listener
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
   // Timer Tick
   useEffect(() => {
-    if (isCompleted || loading || !isTimerRunning) return;
-
+    if (!isTimerRunning || isCompleted || loading) return;
     const interval = setInterval(() => {
-      if (session?.time_limit_seconds) {
-        // Countdown timer
-        setTimerSeconds((prev) => {
+      setTimerSeconds((prev) => {
+        if (mode === 'FOCUS_TEST' || mode === 'MOCK_TEST' || mode === 'QUICK_10') {
           if (prev <= 1) {
             clearInterval(interval);
             handleCompleteSession();
             return 0;
           }
           return prev - 1;
-        });
-      } else {
-        // Count-up timer
-        setTimerSeconds((prev) => prev + 1);
-      }
+        }
+        return prev + 1; // Count up for untimed practice
+      });
     }, 1000);
-
     return () => clearInterval(interval);
-  }, [isCompleted, loading, isTimerRunning, session]);
+  }, [isTimerRunning, isCompleted, loading, mode]);
 
   const currentQ = questions[currentIndex];
   const currentSubmission = currentQ ? submittedAnswers[currentQ.id] : null;
 
-  // Option selection
   const handleSelectOption = (optId: string) => {
     // In FOCUS_TEST, once submitted answer is locked
     if (currentSubmission && mode === 'FOCUS_TEST') return;
+    
     setSelectedOption(optId);
 
-    // Only in LEARN mode do we give instant feedback on option click
     // In MOCK_TEST, PRACTICE, FOCUS_TEST, PDF_PRACTICE, etc. answers are shown after submit
-    if (mode === 'LEARN') {
-      submitAnswerDirect(optId, false);
-    }
   };
 
   const submitAnswerDirect = async (optId: string, isSkipped: boolean = false) => {
@@ -225,38 +226,32 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
       const res = await api.submitResponse({
         session_id: session.id,
         question_id: currentQ.id,
-        selected_option: isSkipped ? undefined : optId,
+        selected_option: optId || undefined,
         is_skipped: isSkipped,
-        time_taken_seconds: 15,
+        time_taken_seconds: 10,
       });
-
-      const finalCorrect = res.correct_answer || currentQ.correct_answer || undefined;
-      const finalExplanation = res.explanation || currentQ.explanation || undefined;
 
       setSubmittedAnswers((prev) => ({
         ...prev,
         [currentQ.id]: {
-          selected: isSkipped ? undefined : optId,
-          isCorrect: res.is_correct || false,
-          isSkipped: isSkipped,
-          explanation: finalExplanation,
-          correct_answer: finalCorrect,
+          selected: optId,
+          isCorrect: Boolean(res.is_correct),
+          isSkipped: Boolean(res.is_skipped),
+          explanation: res.explanation || currentQ.explanation,
+          correct_answer: res.correct_answer || currentQ.correct_answer,
         },
       }));
-
-      setSession((prev) => prev ? { ...prev, ...res.session_summary } : null);
     } catch (err) {
-      console.error('Failed to submit answer:', err);
+      console.error(err);
     }
   };
 
   const handleSubmit = () => {
-    if (!selectedOption || !currentQ || !session || currentSubmission) return;
+    if (!selectedOption) return;
     submitAnswerDirect(selectedOption, false);
   };
 
   const handleSkip = () => {
-    if (!currentQ || !session || currentSubmission) return;
     submitAnswerDirect('', true);
     handleNext();
   };
@@ -301,19 +296,49 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   };
 
   const handleCompleteSession = async () => {
+    setIsSubmittingTest(true);
+    setSubmitProgress(12);
+    setSubmitStageText('Locking test responses & evaluating answers...');
+
+    // Smooth running progress animation (0% -> 100%)
+    const progressTimer = setInterval(() => {
+      setSubmitProgress((prev) => {
+        if (prev < 35) {
+          setSubmitStageText('Evaluating accuracy & calculating negative marks...');
+          return prev + 12;
+        } else if (prev < 70) {
+          setSubmitStageText('Computing Focus Integrity & Sectional Time Analytics...');
+          return prev + 10;
+        } else if (prev < 92) {
+          setSubmitStageText('Updating Mistake Engine & Syncing Daily Targets...');
+          return prev + 6;
+        }
+        return prev;
+      });
+    }, 160);
+
+    let compData = null;
     if (session) {
       try {
-        const data = await api.completeSession(session.id);
-        setCompletionData(data);
+        compData = await api.completeSession(session.id);
+        setCompletionData(compData);
       } catch (e) {
         console.error(e);
       }
     }
-    // Exit fullscreen if active
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    }
-    setIsCompleted(true);
+
+    clearInterval(progressTimer);
+    setSubmitProgress(100);
+    setSubmitStageText('Test Evaluated Successfully! Loading Scorecard...');
+
+    setTimeout(() => {
+      // Exit fullscreen if active
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsSubmittingTest(false);
+      setIsCompleted(true);
+    }, 450);
   };
 
   const requestFullscreenMode = async () => {
@@ -869,6 +894,49 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
         question={currentQ}
         userSelectedOption={selectedOption}
       />
+
+      {/* Submitting Running Progress Bar Modal (0% - 100%) */}
+      {isSubmittingTest && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-6 shadow-2xl animate-in zoom-in-95">
+            {/* Animated Pulsing Icon */}
+            <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 bg-brand-500/20 rounded-full animate-ping" />
+              <div className="w-20 h-20 bg-gradient-to-tr from-brand-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg border border-brand-400/30">
+                <Sparkles className="w-10 h-10 text-white animate-pulse" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-xl font-bold text-white font-display">
+                Submitting Your Test...
+              </h3>
+              <p className="text-xs text-slate-300 font-medium min-h-[20px] transition-all">
+                {submitStageText}
+              </p>
+            </div>
+
+            {/* Running Progress Bar (0% -> 100%) */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-mono font-bold text-slate-300 px-1">
+                <span>Evaluation Progress</span>
+                <span className="text-brand-400 font-bold">{Math.round(submitProgress)}%</span>
+              </div>
+              <div className="w-full h-3.5 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div 
+                  className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-emerald-400 rounded-full transition-all duration-300 ease-out shadow-xs"
+                  style={{ width: `${Math.min(100, Math.max(0, submitProgress))}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400 pt-1">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>Analyzing performance against exam benchmarks</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

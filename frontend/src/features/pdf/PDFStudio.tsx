@@ -275,10 +275,10 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice, user }) =
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <label className="flex items-center gap-2 bg-[#0B2545] hover:bg-[#133A6B] text-white px-4 py-2.5 rounded-xl font-black text-xs shadow-xs transition-all cursor-pointer">
               <UploadCloud className="w-4 h-4" />
-              <span>{uploading ? 'Processing PDF...' : 'Upload Exam PDF'}</span>
+              <span>{uploading ? 'Processing File...' : 'Upload PDF / Image'}</span>
               <input
                 type="file"
-                accept=".pdf,.txt"
+                accept=".pdf,.txt,.png,.jpg,.jpeg,.webp"
                 onChange={handleFileUpload}
                 disabled={uploading}
                 className="hidden"
@@ -415,10 +415,10 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice, user }) =
               </div>
               <label className="inline-flex items-center gap-2 bg-[#0B2545] hover:bg-[#133A6B] text-white px-5 py-2.5 rounded-xl font-black text-xs shadow-xs transition-all cursor-pointer">
                 <UploadCloud className="w-4 h-4" />
-                <span>Upload Exam PDF</span>
+                <span>Upload PDF / Image</span>
                 <input
                   type="file"
-                  accept=".pdf,.txt"
+                  accept=".pdf,.txt,.png,.jpg,.jpeg,.webp"
                   onChange={handleFileUpload}
                   disabled={uploading}
                   className="hidden"
@@ -457,15 +457,25 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice, user }) =
                   </div>
                 </div>
 
-                {onStartPractice && (
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+                  {onStartPractice && (
+                    <button
+                      onClick={() => onStartPractice(selectedDoc.id, selectedDoc.file_name)}
+                      className="w-full sm:w-auto px-5 py-2.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-black rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
+                    >
+                      <Play className="w-4 h-4 text-emerald-400" />
+                      <span>Practice Entire PDF ({drafts.length || selectedDoc.extracted_questions_count} Qs)</span>
+                    </button>
+                  )}
                   <button
-                    onClick={() => onStartPractice(selectedDoc.id, selectedDoc.file_name)}
-                    className="w-full sm:w-auto shrink-0 px-5 py-2.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-black rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
+                    onClick={() => handleDeleteDoc(selectedDoc.id)}
+                    className="w-full sm:w-auto px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 text-xs font-black rounded-xl shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                    title="Delete this PDF and its questions"
                   >
-                    <Play className="w-4 h-4 text-emerald-400" />
-                    <span>Practice Entire PDF ({drafts.length || selectedDoc.extracted_questions_count} Qs)</span>
+                    <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                    <span>Delete PDF</span>
                   </button>
-                )}
+                </div>
               </div>
 
               {/* Status & Filter Tabs Bar */}

@@ -41,8 +41,10 @@ def upload_pdf():
         return api_error("No file provided", status_code=400)
         
     filename = secure_filename(file.filename)
-    if not (filename.lower().endswith(".pdf") or filename.lower().endswith(".txt")):
-        return api_error("Only PDF or text test papers are supported (.pdf, .txt)", status_code=400)
+    allowed_exts = {".pdf", ".txt", ".png", ".jpg", ".jpeg", ".webp"}
+    ext = os.path.splitext(filename.lower())[1]
+    if ext not in allowed_exts:
+        return api_error("Supported test paper formats: PDF (.pdf), Text (.txt), and Images (.png, .jpg, .jpeg, .webp)", status_code=400)
         
     save_path = os.path.join(config.UPLOAD_FOLDER, filename)
     file.save(save_path)
@@ -375,7 +377,7 @@ def generate_ai_questions(doc_id):
 
 @pdf_bp.route("/documents/<doc_id>", methods=["DELETE"])
 def delete_document(doc_id):
-    """Section 9: Delete PDF document and associated drafts."""
+    """Section 9: Delete PDF document and associated questions and drafts."""
     doc = PDFDocument.query.get(doc_id)
     if not doc:
         return api_error("Document not found", status_code=404)
@@ -383,19 +385,39 @@ def delete_document(doc_id):
     user_id = get_optional_user_id()
     from app.models.user import User
     user = User.query.get(user_id) if user_id else None
-    if not user or user.role != "ADMIN":
-        return api_error("Access restricted: Only Sundaram (Admin) can delete documents.", code="FORBIDDEN", status_code=403)
+    
+    # Allow deletion if Admin OR Sundaram user OR if doc was uploaded by current user
+    is_admin = user and (user.role == "ADMIN" or getattr(user, 'phone', '') == "9794529611")
+    is_owner = user and doc.user_id == user.id
+    if not is_admin and not is_owner and user_id is not None:
+        return api_error("Access restricted: Only Sundaram (Admin) or the document uploader can delete test papers.", code="FORBIDDEN", status_code=403)
         
     # Remove file from disk if present
-    if os.path.exists(doc.file_path):
+    if doc.file_path and os.path.exists(doc.file_path):
         try:
             os.remove(doc.file_path)
         except OSError:
             pass
             
+    # Clean up associated questions and drafts from database
+    try:
+        from app.models.question import Question, QuestionOption
+        from app.models.pdf_document import PDFQuestionDraft, DocumentProcessingJob
+        
+        # Delete question options first for any extracted questions
+        extracted_q_ids = [q.id for q in Question.query.filter_by(source_document_id=doc.id).all()]
+        if extracted_q_ids:
+            QuestionOption.query.filter(QuestionOption.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            Question.query.filter_by(source_document_id=doc.id).delete(synchronize_session=False)
+            
+        PDFQuestionDraft.query.filter_by(document_id=doc.id).delete(synchronize_session=False)
+        DocumentProcessingJob.query.filter_by(document_id=doc.id).delete(synchronize_session=False)
+    except Exception as e:
+        logger.warning(f"Associated questions cleanup warning for doc {doc.id}: {e}")
+
     db.session.delete(doc)
     db.session.commit()
-    return api_success({"message": "Document and all associated drafts deleted successfully."})
+    return api_success({"message": "Document and all associated questions deleted successfully."})
 
 @pdf_bp.route("/files/<filename>", methods=["GET"])
 def serve_pdf_file(filename):
