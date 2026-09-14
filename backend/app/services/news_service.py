@@ -36,26 +36,31 @@ def get_category_default_image(category: str = "", gs_paper: str = "GS-II") -> s
     cat_lower = (category or "").lower()
     paper = (gs_paper or "").upper()
     
-    if "polity" in cat_lower or "governance" in cat_lower or "constitution" in cat_lower or paper == "GS-II":
-        return "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80"
+    if "polity" in cat_lower or "governance" in cat_lower or "constitution" in cat_lower or "law" in cat_lower:
+        return "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80"
     elif "economy" in cat_lower or "finance" in cat_lower or "banking" in cat_lower or "trade" in cat_lower:
-        return "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"
+        return "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
     elif "environment" in cat_lower or "ecology" in cat_lower or "wetland" in cat_lower or "climate" in cat_lower:
-        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80"
+        return "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80"
     elif "science" in cat_lower or "space" in cat_lower or "isro" in cat_lower or "tech" in cat_lower:
-        return "https://images.unsplash.com/photo-1517976487588-4c91cb10f011?auto=format&fit=crop&w=800&q=80"
+        return "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1200&q=80"
     elif "international" in cat_lower or "diplomacy" in cat_lower or "treaty" in cat_lower or "g20" in cat_lower:
-        return "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80"
-    elif "defence" in cat_lower or "security" in cat_lower or "military" in cat_lower:
-        return "https://images.unsplash.com/photo-1579965342575-16428a7c8881?auto=format&fit=crop&w=800&q=80"
-    elif "geography" in cat_lower or "agriculture" in cat_lower or "farming" in cat_lower:
-        return "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80"
+        return "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?auto=format&fit=crop&w=1200&q=80"
+    elif "defence" in cat_lower or "security" in cat_lower or "military" in cat_lower or "missile" in cat_lower:
+        return "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80"
+    elif "geography" in cat_lower or "agriculture" in cat_lower or "farming" in cat_lower or "crops" in cat_lower:
+        return "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80"
     elif "history" in cat_lower or "culture" in cat_lower or "heritage" in cat_lower or paper == "GS-I":
-        return "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80"
+        return "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=80"
     elif "energy" in cat_lower or "hydrogen" in cat_lower or "solar" in cat_lower:
-        return "https://images.unsplash.com/photo-1497440001374-f26997328c1b?auto=format&fit=crop&w=800&q=80"
+        return "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80"
     
-    return "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80"
+    if paper == "GS-III":
+        return "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80"
+    elif paper == "GS-I":
+        return "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=80"
+    
+    return "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80"
 
 
 class NormalizedArticle:
@@ -635,11 +640,11 @@ class NewsService:
             seed_data = [
                 {
                     "title": "G20 New Delhi Leaders' Declaration: African Union Permanent Induction, Global Biofuels Alliance & IMEEC Corridor",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://www.mea.gov.in/Images/CPV/G20-New-Delhi-Leaders-Declaration.pdf",
                     "source": "Ministry of External Affairs / G20 India",
                     "category": "International Relations",
                     "gs_paper": "GS-II",
-                    "image_url": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 99,
                     "is_featured": True,
                     "read_time_minutes": 4,
@@ -684,11 +689,11 @@ class NewsService:
                 },
                 {
                     "title": "Supreme Court 9-Judge Bench Reaffirms Article 21 Privacy Proportionality Limits",
-                    "original_url": "https://pib.gov.in",
-                    "source": "PIB / Supreme Court Landmark Cases",
+                    "original_url": "https://main.sci.gov.in/supremecourt/2012/35071/35071_2012_Judgement_24-Aug-2017.pdf",
+                    "source": "Supreme Court Landmark Rulings",
                     "category": "Polity & Governance",
                     "gs_paper": "GS-II",
-                    "image_url": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 98,
                     "is_featured": True,
                     "read_time_minutes": 4,
@@ -732,11 +737,11 @@ class NewsService:
                 },
                 {
                     "title": "106th Constitutional Amendment Act: Nari Shakti Vandan Adhiniyam Mandates 33% Reservation for Women in Lok Sabha and State Assemblies",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://pib.gov.in/PressReleasePage.aspx?PRID=1958983",
                     "source": "Ministry of Law & Justice / PIB",
                     "category": "Polity & Governance",
                     "gs_paper": "GS-II",
-                    "image_url": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1575517111478-7f6afd0973db?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 97,
                     "is_featured": True,
                     "read_time_minutes": 4,
@@ -780,11 +785,11 @@ class NewsService:
                 },
                 {
                     "title": "RBI Monetary Policy Committee Maintains Repo Rate at 6.5%, Focuses on Disinflation Glide Path",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=57271",
                     "source": "Reserve Bank of India / Ministry of Finance",
                     "category": "Economy & Development",
                     "gs_paper": "GS-III",
-                    "image_url": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 94,
                     "is_featured": True,
                     "read_time_minutes": 3,
@@ -828,11 +833,11 @@ class NewsService:
                 },
                 {
                     "title": "DRDO Successfully Flight-Tests Agni-5 Ballistic Missile with MIRV Technology under Mission Divyastra",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://pib.gov.in/PressReleasePage.aspx?PRID=2013589",
                     "source": "DRDO / Ministry of Defence",
                     "category": "Defence & Security",
                     "gs_paper": "GS-III",
-                    "image_url": "https://images.unsplash.com/photo-1579965342575-16428a7c8881?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 96,
                     "is_featured": True,
                     "read_time_minutes": 3,
@@ -877,11 +882,11 @@ class NewsService:
                 },
                 {
                     "title": "India Adds 5 New Wetlands to Ramsar List, Total Tally Reaches Milestone 85",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://pib.gov.in/PressReleasePage.aspx?PRID=2001150",
                     "source": "Ministry of Environment, Forest and Climate Change (MoEFCC)",
                     "category": "Environment & Ecology",
                     "gs_paper": "GS-III",
-                    "image_url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 92,
                     "is_featured": False,
                     "read_time_minutes": 3,
@@ -925,11 +930,11 @@ class NewsService:
                 },
                 {
                     "title": "ISRO Successfully Launches INSAT-3DS Meteorological Satellite via GSLV-F14",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://www.isro.gov.in/GSLV-F14_INSAT-3DS_Mission.html",
                     "source": "ISRO / Department of Space",
                     "category": "Science & Technology",
                     "gs_paper": "GS-III",
-                    "image_url": "https://images.unsplash.com/photo-1517976487588-4c91cb10f011?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 90,
                     "is_featured": False,
                     "read_time_minutes": 3,
@@ -973,11 +978,11 @@ class NewsService:
                 },
                 {
                     "title": "National Green Hydrogen Mission: SIGHT Program Allocates Electrolyser Manufacturing Incentives",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://pib.gov.in/PressReleasePage.aspx?PRID=1888547",
                     "source": "Ministry of New and Renewable Energy (MNRE)",
                     "category": "Science & Technology",
                     "gs_paper": "GS-III",
-                    "image_url": "https://images.unsplash.com/photo-1497440001374-f26997328c1b?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1497440001374-f26997328c1b?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 93,
                     "is_featured": True,
                     "read_time_minutes": 3,
@@ -1021,11 +1026,11 @@ class NewsService:
                 },
                 {
                     "title": "PM Surya Ghar Muft Bijli Yojana: Cabinet Approves ₹75,000 Crore Rooftop Solar Scheme for 1 Crore Households",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://pib.gov.in/PressReleasePage.aspx?PRID=2009088",
                     "source": "Ministry of New and Renewable Energy / PIB",
                     "category": "Government Schemes",
                     "gs_paper": "GS-II",
-                    "image_url": "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 95,
                     "is_featured": True,
                     "read_time_minutes": 3,
@@ -1069,11 +1074,11 @@ class NewsService:
                 },
                 {
                     "title": "Minimum Support Price (MSP) and CACP Formula: Swaminathan Commission 50% Profit Margin Principles Explained",
-                    "original_url": "https://pib.gov.in",
+                    "original_url": "https://cacp.dacnet.nic.in/ViewContent.aspx?Itemid=1073",
                     "source": "Commission for Agricultural Costs and Prices (CACP) / Ministry of Agriculture",
                     "category": "Geography & Agriculture",
                     "gs_paper": "GS-III",
-                    "image_url": "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80",
+                    "image_url": "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1200&q=80",
                     "relevance_score": 95,
                     "is_featured": False,
                     "read_time_minutes": 4,
@@ -1118,7 +1123,7 @@ class NewsService:
                 }
             ]
 
-            # Upsert each seed article if not already existing by title
+            # Upsert each seed article and always synchronize authentic URLs & verified images
             for s in seed_data:
                 existing = NewsArticle.query.filter(NewsArticle.title == s["title"]).first()
                 if not existing:
@@ -1148,12 +1153,29 @@ class NewsService:
                     )
                     db.session.add(art)
                 else:
-                    # Update image and category if missing
-                    if not existing.image_url or "photo-" not in existing.image_url:
-                        existing.image_url = s.get("image_url") or get_category_default_image(s["category"], s["gs_paper"])
+                    # Synchronize updated verified URLs, curated images, and details
+                    existing.original_url = s["original_url"]
+                    existing.image_url = s.get("image_url") or get_category_default_image(s["category"], s["gs_paper"])
+                    existing.source = s["source"]
+                    existing.short_summary = s["short_summary"]
+                    existing.detailed_summary = s["detailed_summary"]
+                    existing.why_in_news = s["why_in_news"]
+                    existing.what_happened = s["what_happened"]
+                    existing.background = s["background"]
+                    existing.key_facts = s["key_facts"]
+                    existing.prelims_facts = s["prelims_facts"]
+                    existing.mains_perspective = s["mains_perspective"]
+                    existing.important_terms = s["important_terms"]
+                    existing.possible_mains_questions = s["possible_mains_questions"]
+                    existing.practice_mcqs = s["practice_mcqs"]
             
+            # Clean any legacy generic pib links in the database
+            generic_pib_articles = NewsArticle.query.filter(NewsArticle.original_url == "https://pib.gov.in").all()
+            for pib_art in generic_pib_articles:
+                pib_art.original_url = "https://pib.gov.in/allRel.aspx"
+
             db.session.commit()
-            logger.info("Successfully verified and seeded high-yield UPSC Current Affairs articles.")
+            logger.info("Successfully verified, synchronized and seeded high-yield UPSC Current Affairs articles.")
         except Exception as e:
             logger.warning(f"Seed articles check error: {e}")
             try:

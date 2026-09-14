@@ -55,6 +55,8 @@ def create_app(config_class=config):
                     pass
             from seed_data import seed_normalized_database
             seed_normalized_database()
+            from app.services.news_service import news_service
+            news_service._ensure_seed_articles_exist()
         except Exception as e:
             app.logger.warning(f"Auto-seed check: {e}")
     
