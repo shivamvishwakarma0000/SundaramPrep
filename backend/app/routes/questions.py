@@ -54,8 +54,8 @@ def get_available_filters():
     exams = [r[0] for r in db.session.query(Question.exam).distinct().all() if r[0]]
     subjects = [r[0] for r in db.session.query(Question.subject).distinct().all() if r[0]]
     topics = [r[0] for r in db.session.query(Question.topic).distinct().all() if r[0]]
-    source_types = [s.value for s in QuestionSourceType]
-    answer_statuses = [a.value for a in QuestionAnswerStatus]
+    source_types = [v for k, v in QuestionSourceType.__dict__.items() if not k.startswith('_')]
+    answer_statuses = [v for k, v in QuestionAnswerStatus.__dict__.items() if not k.startswith('_')]
     
     return api_success({
         "exams": exams or ["UPSC_CSE", "SSC_CGL", "BANK_PO", "RAILWAY_RRB", "STATE_PSC"],

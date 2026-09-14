@@ -24,6 +24,10 @@ services:
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_REASONING_MODEL
@@ -34,6 +38,14 @@ services:
         sync: false
       - key: MAIL_FROM
         value: Sundaram Prep <no-reply@sundaramprep.com>
+      - key: VAPID_PUBLIC_KEY
+        value: BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkdtO_jlJzpRhTOmcjvmKeAhBpFiY6WuYwc9vpSoN2
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_CLAIM_EMAIL
+        value: admin@sundaramprep.com
+      - key: NEWS_API_KEY
+        sync: false
       - key: COOKIE_SECURE
         value: "true"
       - key: COOKIE_SAMESITE

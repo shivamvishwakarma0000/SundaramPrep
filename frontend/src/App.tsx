@@ -19,6 +19,7 @@ const PDFStudio = lazy(() => import('./features/pdf/PDFStudio').then(m => ({ def
 const AnalyticsView = lazy(() => import('./features/analytics/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
 const ProfileView = lazy(() => import('./features/profile/ProfileView').then(m => ({ default: m.ProfileView })));
 const SundaramAIAssistant = lazy(() => import('./features/assistant/SundaramAIAssistant').then(m => ({ default: m.SundaramAIAssistant })));
+const CurrentAffairsView = lazy(() => import('./features/news/CurrentAffairsView').then(m => ({ default: m.CurrentAffairsView })));
 
 const TabSuspenseFallback = () => (
   <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -319,10 +320,10 @@ export function AppContent() {
 
       {/* Main Single-Feature View Area (Section 11 Compliance: SHOW ONLY THAT FEATURE) */}
       <main className={`flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 ${isFocusTest ? 'pb-6' : 'pb-28 md:pb-8'} space-y-6`}>
-        {/* TAB 1: HOME (Section 10) */}
+        {/* TAB 1: HOME */}
         {activeTab === 'home' && (
           <HomeView
-            onNavigate={handleTabSelect}
+            onNavigate={(tab) => handleTabSelect(tab)}
             currentExam={currentExam}
             onLaunchQuick10={() => {
               setActivePracticeMode('QUICK_10');
@@ -343,7 +344,14 @@ export function AppContent() {
           />
         )}
 
-        {/* TAB 2: PRACTICE */}
+        {/* TAB 2: CURRENT AFFAIRS (Daily UPSC News & Gemini Analysis) */}
+        {activeTab === 'news' && (
+          <Suspense fallback={<TabSuspenseFallback />}>
+            <CurrentAffairsView />
+          </Suspense>
+        )}
+
+        {/* TAB 3: PRACTICE */}
         {activeTab === 'practice' && (
           activePracticeMode ? (
             <Suspense fallback={<TabSuspenseFallback />}>

@@ -5,6 +5,7 @@ from app.routes.practice import practice_bp
 from app.routes.ai_assistant import ai_bp
 from app.routes.pdf import pdf_bp
 from app.routes.student import student_bp
+from app.routes.current_affairs import news_bp
 
 __all__ = [
     "health_bp",
@@ -13,5 +14,6 @@ __all__ = [
     "practice_bp",
     "ai_bp",
     "pdf_bp",
-    "student_bp"
+    "student_bp",
+    "news_bp"
 ]

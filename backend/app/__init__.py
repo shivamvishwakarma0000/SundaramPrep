@@ -25,7 +25,7 @@ def create_app(config_class=config):
     migrate.init_app(app, db)
     
     # Register blueprints
-    from app.routes import health_bp, auth_bp, questions_bp, practice_bp, ai_bp, pdf_bp, student_bp
+    from app.routes import health_bp, auth_bp, questions_bp, practice_bp, ai_bp, pdf_bp, student_bp, news_bp
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(questions_bp)
@@ -33,6 +33,7 @@ def create_app(config_class=config):
     app.register_blueprint(ai_bp)
     app.register_blueprint(pdf_bp)
     app.register_blueprint(student_bp)
+    app.register_blueprint(news_bp)
 
     # Automatically ensure questions are seeded on startup
     with app.app_context():

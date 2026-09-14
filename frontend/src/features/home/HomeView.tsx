@@ -9,7 +9,8 @@ import {
   ArrowRight, 
   AlertCircle,
   Zap,
-  Shield
+  Shield,
+  Newspaper
 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { StudentHomeSummary, PortalTab, ExamType } from '../../types';
@@ -644,7 +645,52 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. POWERED BY AI BANNER (Section 18)                                      */}
+      {/* 3. DAILY CURRENT AFFAIRS HIGHLIGHT BANNER                                 */}
+      {/* ========================================================================= */}
+      <section 
+        onClick={() => onNavigate('news')}
+        className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-md border border-blue-800/60 hover:border-blue-500/80 transition-all cursor-pointer group relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
+        {/* Soft Background Watermark */}
+        <div className="absolute right-0 top-0 bottom-0 w-64 pointer-events-none opacity-10 select-none text-blue-400 flex items-center justify-end pr-4">
+          <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" stroke="currentColor">
+            <circle cx="150" cy="100" r="75" strokeWidth="4" strokeDasharray="6 6" />
+            <circle cx="150" cy="100" r="45" strokeWidth="3" />
+          </svg>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-3.5 min-w-0">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-sky-300 shrink-0 group-hover:scale-105 transition-transform shadow-2xs backdrop-blur-md">
+            <Newspaper className="w-6 h-6" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/30 text-blue-200 border border-blue-400/30">
+                UPSC Daily Pulse
+              </span>
+              <span className="text-[10px] text-sky-200 font-bold bg-white/10 px-2 py-0.5 rounded-full">
+                PIB • The Hindu • Indian Express
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black font-display text-white group-hover:text-sky-300 transition-colors truncate">
+              {summary.daily_current_affairs?.title || "Today's UPSC Current Affairs & Gemini Analysis"}
+            </h3>
+            <p className="text-xs text-slate-300 font-medium mt-0.5 line-clamp-1">
+              {summary.daily_current_affairs?.key_takeaway || "Read structured Prelims facts, Mains frameworks, and practice MCQs."}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-2 self-end sm:self-center shrink-0">
+          <span className="bg-sky-400 text-slate-950 font-black text-xs px-4 py-2 rounded-full shadow-sm group-hover:bg-sky-300 transition-colors flex items-center gap-1.5">
+            <span>Read Today's News</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </span>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 4. POWERED BY AI BANNER (Section 18)                                      */}
       {/* ========================================================================= */}
       <section className="bg-gradient-to-r from-blue-50/80 via-purple-50/80 to-indigo-50/80 dark:from-slate-900/90 dark:via-purple-950/30 dark:to-indigo-950/30 border border-blue-100 dark:border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
         {/* Subtle Decorative Background Watermark: AI Sparkle */}

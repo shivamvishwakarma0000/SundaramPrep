@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Zap, UploadCloud, TrendingUp, Sparkles, User } from 'lucide-react';
+import { Home, Zap, UploadCloud, TrendingUp, Newspaper, User } from 'lucide-react';
 import type { PortalTab } from '../types';
 
 interface BottomNavProps {
@@ -10,10 +10,10 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) => {
   const tabs: { id: PortalTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'home', label: 'Home', icon: Home },
+    { id: 'news', label: 'News', icon: Newspaper },
     { id: 'practice', label: 'Practice', icon: Zap },
     { id: 'upload', label: 'Upload', icon: UploadCloud },
     { id: 'progress', label: 'Progress', icon: TrendingUp },
-    { id: 'ai', label: 'AI', icon: Sparkles },
     { id: 'profile', label: 'Profile', icon: User },
   ];
 

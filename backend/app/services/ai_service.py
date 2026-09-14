@@ -57,22 +57,26 @@ class AIService:
     
     def __init__(self):
         self.gemini_key = config.GEMINI_API_KEY
+        self.gemini_model = getattr(config, "GEMINI_MODEL", "gemini-1.5-flash")
         self.api_key = config.OPENAI_API_KEY
         self.reasoning_model = config.OPENAI_REASONING_MODEL
         self.fast_model = config.OPENAI_FAST_MODEL
         self._client = None
         
+        if self.gemini_key:
+            logger.info(f"Google Gemini AI initialized as primary provider (model: {self.gemini_model}).")
+        
         if self.api_key:
             try:
                 from openai import OpenAI
                 self._client = OpenAI(api_key=self.api_key)
-                logger.info("OpenAI client initialized successfully.")
+                logger.info("OpenAI client initialized.")
             except Exception as e:
                 logger.warning(f"Could not initialize OpenAI client: {e}")
 
     @property
     def is_configured(self) -> bool:
-        return bool((self._client and self.api_key) or self.gemini_key)
+        return bool(self.gemini_key or (self._client and self.api_key))
 
     def _build_system_prompt(self, language_mode: str = "EN") -> str:
         prompt = (
@@ -117,7 +121,17 @@ class AIService:
                 f"Student Query: {query}"
             )
 
-        # Tier 1: Try OpenAI
+        # Tier 1: Try Google Gemini API
+        if self.gemini_key:
+            reply = self._call_gemini_text(user_content, system_prompt)
+            if reply:
+                return {
+                    "reply": reply,
+                    "model_used": self.gemini_model,
+                    "sources": ["Sundaram Prep AI Mentor (Gemini)"]
+                }
+
+        # Tier 2: Try OpenAI if configured
         if self._client and self.api_key:
             try:
                 response = self._client.chat.completions.create(
@@ -133,31 +147,10 @@ class AIService:
                 return {
                     "reply": reply,
                     "model_used": self.fast_model,
-                    "sources": ["Sundaram Prep AI Mentor"]
+                    "sources": ["Sundaram Prep AI Mentor (OpenAI)"]
                 }
             except Exception as e:
                 logger.warning(f"OpenAI error in ask_assistant: {e}")
-
-        # Tier 2: Try Gemini if key available
-        if self.gemini_key:
-            try:
-                import requests
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_key}"
-                payload = {
-                    "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_content}"}]}],
-                    "generationConfig": {"temperature": 0.3}
-                }
-                res = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=12)
-                if res.status_code == 200:
-                    data = res.json()
-                    reply = data["candidates"][0]["content"]["parts"][0]["text"]
-                    return {
-                        "reply": reply,
-                        "model_used": "gemini-1.5-flash",
-                        "sources": ["Sundaram Prep AI Mentor"]
-                    }
-            except Exception as e:
-                logger.warning(f"Gemini error in ask_assistant: {e}")
 
         return self._simulate_assistant_response(query, context, language_mode)
 
@@ -198,29 +191,11 @@ class AIService:
 
         messages.append({"role": "user", "content": user_content})
 
-        # 1. Try OpenAI Streaming
-        if self._client and self.api_key:
-            try:
-                response = self._client.chat.completions.create(
-                    model=self.fast_model,
-                    messages=messages,
-                    stream=True,
-                    max_tokens=900,
-                    temperature=0.3
-                )
-                for chunk in response:
-                    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
-                        yield {"type": "token", "content": chunk.choices[0].delta.content}
-                yield {"type": "done", "model_used": self.fast_model, "sources": ["Sundaram Prep AI Mentor"]}
-                return
-            except Exception as e:
-                logger.warning(f"OpenAI streaming error: {e}. Falling back to progressive intelligence generator.")
-
-        # 2. Try Gemini Streaming if key configured
+        # 1. Try Gemini Streaming (Tier 1)
         if self.gemini_key:
             try:
                 import requests
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key={self.gemini_key}&alt=sse"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:streamGenerateContent?key={self.gemini_key}&alt=sse"
                 payload = {
                     "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_content}"}]}],
                     "generationConfig": {"temperature": 0.3}
@@ -238,10 +213,30 @@ class AIService:
                                     yield {"type": "token", "content": text_chunk}
                                 except Exception:
                                     continue
-                    yield {"type": "done", "model_used": "gemini-1.5-flash", "sources": ["Sundaram AI Mentor"]}
+                    yield {"type": "done", "model_used": self.gemini_model, "sources": ["Sundaram AI Mentor (Gemini)"]}
                     return
+                else:
+                    logger.warning(f"Gemini streaming status {res.status_code}: {res.text[:200]}")
             except Exception as e:
-                logger.warning(f"Gemini streaming error: {e}. Falling back to progressive intelligence generator.")
+                logger.warning(f"Gemini streaming error: {e}. Falling back to secondary provider.")
+
+        # 2. Try OpenAI Streaming (Tier 2)
+        if self._client and self.api_key:
+            try:
+                response = self._client.chat.completions.create(
+                    model=self.fast_model,
+                    messages=messages,
+                    stream=True,
+                    max_tokens=900,
+                    temperature=0.3
+                )
+                for chunk in response:
+                    if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                        yield {"type": "token", "content": chunk.choices[0].delta.content}
+                yield {"type": "done", "model_used": self.fast_model, "sources": ["Sundaram Prep AI Mentor (OpenAI)"]}
+                return
+            except Exception as e:
+                logger.warning(f"OpenAI streaming error: {e}. Falling back to progressive intelligence generator.")
 
         # 3. Progressive Study Mentor Generator (Offline / Quota-Exhausted Fallback)
         simulated = self._simulate_assistant_response(query, context, language_mode)
@@ -259,31 +254,63 @@ class AIService:
             "notice": simulated.get("notice")
         }
 
-    def _call_gemini_json(self, prompt: str, system_instruction: str) -> Optional[Dict[str, Any]]:
-        """Invokes Google Gemini API with JSON output mode."""
+    def _get_gemini_candidate_models(self) -> List[str]:
+        """Returns ordered list of Gemini model candidates for auto-failover."""
+        candidates = [self.gemini_model, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro", "gemini-flash-latest"]
+        seen = set()
+        return [m for m in candidates if m and not (m in seen or seen.add(m))]
+
+    def _call_gemini_text(self, prompt: str, system_instruction: Optional[str] = None) -> Optional[str]:
+        """Invokes Google Gemini API with automatic model failover."""
         if not self.gemini_key:
             return None
-        try:
-            import requests
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_key}"
-            headers = {"Content-Type": "application/json"}
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "systemInstruction": {"parts": [{"text": system_instruction}]},
-                "generationConfig": {
-                    "responseMimeType": "application/json",
-                    "temperature": 0.2
+        import requests
+        headers = {"Content-Type": "application/json"}
+        for model in self._get_gemini_candidate_models():
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_key}"
+                payload: Dict[str, Any] = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": 0.3}
                 }
-            }
-            res = requests.post(url, headers=headers, json=payload, timeout=12)
-            if res.status_code == 200:
-                data = res.json()
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                return json.loads(text)
-            else:
-                logger.warning(f"Gemini API returned status {res.status_code}: {res.text[:200]}")
-        except Exception as e:
-            logger.warning(f"Gemini API invocation error: {e}")
+                if system_instruction:
+                    payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+                res = requests.post(url, headers=headers, json=payload, timeout=12)
+                if res.status_code == 200:
+                    data = res.json()
+                    return data["candidates"][0]["content"]["parts"][0]["text"]
+                else:
+                    logger.warning(f"Gemini model {model} returned status {res.status_code}, trying next model.")
+            except Exception as e:
+                logger.warning(f"Gemini invocation error on {model}: {e}")
+        return None
+
+    def _call_gemini_json(self, prompt: str, system_instruction: str) -> Optional[Dict[str, Any]]:
+        """Invokes Google Gemini API with JSON output mode and automatic model failover."""
+        if not self.gemini_key:
+            return None
+        import requests
+        headers = {"Content-Type": "application/json"}
+        for model in self._get_gemini_candidate_models():
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_key}"
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "systemInstruction": {"parts": [{"text": system_instruction}]},
+                    "generationConfig": {
+                        "responseMimeType": "application/json",
+                        "temperature": 0.2
+                    }
+                }
+                res = requests.post(url, headers=headers, json=payload, timeout=12)
+                if res.status_code == 200:
+                    data = res.json()
+                    text = data["candidates"][0]["content"]["parts"][0]["text"]
+                    return json.loads(text)
+                else:
+                    logger.warning(f"Gemini JSON model {model} returned status {res.status_code}, trying next model.")
+            except Exception as e:
+                logger.warning(f"Gemini JSON error on {model}: {e}")
         return None
 
     def verify_question_answer(
@@ -1286,7 +1313,35 @@ class AIService:
         prev_acc = (previous_stats or {}).get("overall_accuracy", max(50.0, accuracy - 6.0))
         delta = round(accuracy - prev_acc, 1)
         
-        if self.is_configured:
+        if self.gemini_key:
+            condensed_metrics = {
+                "test_accuracy": accuracy,
+                "previous_accuracy": prev_acc,
+                "delta": delta,
+                "correct": correct,
+                "incorrect": incorrect,
+                "total": total,
+                "subject": subject,
+                "focus_score": focus_score
+            }
+            prompt = (
+                f"You are the Sundaram Prep AI Coach. Analyze this student's latest test performance metrics:\n"
+                f"{json.dumps(condensed_metrics)}\n\n"
+                f"Generate a strict, structured JSON output ONLY with these keys:\n"
+                f"{{\n"
+                f'  "what_improved": "1 sentence on improvement or pace delta",\n'
+                f'  "biggest_weakness": "1 sentence on primary weak area or error category",\n'
+                f'  "what_to_practice_next": "Specific target topics or mistakes to review",\n'
+                f'  "short_recommendation": "Prescriptive formula (e.g. 10 Geography, 10 previous mistakes, 10 Current Affairs)",\n'
+                f'  "strong_areas": ["Top Subject 1 (>70%)"],\n'
+                f'  "weak_areas": ["Attention Subject (<50%)"]\n'
+                f"}}"
+            )
+            gemini_coach = self._call_gemini_json(prompt, "You are a concise, high-rigor competitive exam coach. Output JSON only.")
+            if gemini_coach and gemini_coach.get("what_improved"):
+                return gemini_coach
+
+        if self._client and self.api_key:
             condensed_metrics = {
                 "test_accuracy": accuracy,
                 "previous_accuracy": prev_acc,
@@ -1416,7 +1471,38 @@ class AIService:
         """
         clean_topic = topic.strip()
 
-        # 1. Try OpenAI if key available
+        # 1. Try Gemini (Tier 1)
+        if self.gemini_key:
+            try:
+                import requests
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.gemini_model}:generateContent?key={self.gemini_key}"
+                prompt = (
+                    f"Generate {count} multiple choice questions strictly on the topic: '{clean_topic}' for competitive exam '{exam}' (Subject: {subject}). "
+                    f"Return a strict JSON array of objects with fields: "
+                    f"- question_text (string): clear question stem\n"
+                    f"- options (array of 4 objects with 'id': 'A'/'B'/'C'/'D' and 'text': string)\n"
+                    f"- correct_answer (string: 'A'|'B'|'C'|'D')\n"
+                    f"- difficulty (string: 'EASY'|'MEDIUM'|'HARD')\n"
+                    f"- explanation (object: {{'why': string, 'quick_fact': string, 'memory_trick': string}})\n"
+                    f"Return ONLY valid JSON array."
+                )
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": 0.3, "responseMimeType": "application/json"}
+                }
+                res = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=15)
+                if res.status_code == 200:
+                    gdata = res.json()
+                    text = gdata["candidates"][0]["content"]["parts"][0]["text"]
+                    parsed = json.loads(text)
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        return parsed[:count]
+                else:
+                    logger.warning(f"Gemini error in generate_topic_mcqs (status {res.status_code}): {res.text[:200]}")
+            except Exception as e:
+                logger.warning(f"Gemini error in generate_topic_mcqs: {e}")
+
+        # 2. Try OpenAI if available (Tier 2)
         if self._client and self.api_key:
             try:
                 prompt = (
@@ -1449,27 +1535,6 @@ class AIService:
                     return data[:count]
             except Exception as e:
                 logger.warning(f"OpenAI error in generate_topic_mcqs: {e}")
-
-        # 2. Try Gemini if available
-        if self.gemini_key:
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_key}"
-                prompt = (
-                    f"Generate {count} multiple choice questions strictly on the topic: '{clean_topic}' for {exam}. "
-                    f"Return a strict JSON array of objects with fields: question_text, options ([{{'id': 'A', 'text': '...'}}]), "
-                    f"correct_answer ('A'/'B'/'C'/'D'), difficulty ('MEDIUM'), explanation ({{'why': '...', 'quick_fact': '...', 'memory_trick': '...'}})."
-                )
-                payload = {
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"temperature": 0.3, "responseMimeType": "application/json"}
-                }
-                res = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=12)
-                if res.status_code == 200:
-                    gdata = res.json()
-                    text = gdata["candidates"][0]["content"]["parts"][0]["text"]
-                    parsed = json.loads(text)
-                    if isinstance(parsed, list) and len(parsed) > 0:
-                        return parsed[:count]
             except Exception as e:
                 logger.warning(f"Gemini error in generate_topic_mcqs: {e}")
 

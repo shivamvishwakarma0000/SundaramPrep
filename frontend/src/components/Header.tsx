@@ -7,7 +7,8 @@ import {
   Home, 
   FileEdit, 
   UploadCloud, 
-  TrendingUp 
+  TrendingUp,
+  Newspaper 
 } from 'lucide-react';
 import type { ExamType, User, PortalTab } from '../types';
 import { useTheme } from '../context/ThemeContext';
@@ -48,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navItems: { id: PortalTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'home', label: 'Home', icon: Home },
+    { id: 'news', label: 'Current Affairs', icon: Newspaper },
     { id: 'practice', label: 'Practice', icon: FileEdit },
     { id: 'upload', label: 'Upload PDF', icon: UploadCloud },
     { id: 'progress', label: 'Progress', icon: TrendingUp },

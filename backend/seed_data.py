@@ -444,7 +444,10 @@ SAMPLE_QUESTIONS = [
 ]
 
 def seed_normalized_database():
-    print("Seeding normalized exams, subjects, topics, and many-to-many questions...")
+    """Idempotently seed the normalized relational database with rich questions, exams, subjects, and topics."""
+    # Fast exit if database is already seeded with questions
+    if Question.query.first() is not None:
+        return
 
     # 1. Seed Demo User
     demo_user = User.query.filter_by(email="aspirant@sundaramprep.com").first()

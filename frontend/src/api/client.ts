@@ -394,5 +394,71 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  // =========================================================================
+  // UPSC Current Affairs & News System
+  // =========================================================================
+  getNewsFeed: (params?: { category?: string; search?: string; date?: string; gs_paper?: string; page?: number; limit?: number; featured?: boolean }) => {
+    const q = new URLSearchParams();
+    if (params?.category && params.category !== "All" && params.category !== "all") q.append("category", params.category);
+    if (params?.search) q.append("search", params.search);
+    if (params?.date) q.append("date", params.date);
+    if (params?.gs_paper && params.gs_paper !== "All") q.append("gs_paper", params.gs_paper);
+    if (params?.page) q.append("page", params.page.toString());
+    if (params?.limit) q.append("limit", params.limit.toString());
+    if (params?.featured) q.append("featured", "true");
+    const queryStr = q.toString() ? `?${q.toString()}` : "";
+    return apiRequest<any>(`/api/news${queryStr}`);
+  },
+  getTodaysNews: () => apiRequest<any>("/api/news/today"),
+  getTodaysDigest: () => apiRequest<any>("/api/news/today"),
+  getNewsDetail: (articleId: string) => apiRequest<any>(`/api/news/${articleId}`),
+  executeNewsAIAction: (articleId: string, actionType: string) =>
+    apiRequest<{ result: string; cached: boolean }>(`/api/news/${articleId}/ai-action`, {
+      method: "POST",
+      body: JSON.stringify({ action_type: actionType }),
+    }),
+  chatAboutNews: (articleId: string, query: string, conversationHistory?: Array<{ role: string; content: string }>) =>
+    apiRequest<any>(`/api/news/${articleId}/ai-chat`, {
+      method: "POST",
+      body: JSON.stringify({ query, conversation_history: conversationHistory || [] }),
+    }),
+  refreshNews: () => apiRequest<{ status: string; message: string; new_articles_count: number; last_updated: string }>("/api/news/refresh", { method: "POST" }),
+  toggleNewsBookmark: (articleId: string, method: "POST" | "DELETE" = "POST") =>
+    apiRequest<{ is_bookmarked: boolean; message: string }>(`/api/news/${articleId}/bookmark`, { method }),
+  getSavedNews: async (page: number = 1, limit: number = 20) => {
+    const res = await apiRequest<{ total: number; page: number; limit: number; saved_articles: any[] }>(`/api/news/saved?page=${page}&limit=${limit}`);
+    return {
+      total: res.total || 0,
+      page: res.page || 1,
+      limit: res.limit || limit,
+      articles: res.saved_articles || [],
+      saved_articles: res.saved_articles || []
+    };
+  },
+
+  // Web Push Notifications
+  getVapidKey: () => apiRequest<{ public_key: string }>("/api/push/vapid-key"),
+  subscribePush: (data: { endpoint: string; keys?: { p256dh: string; auth: string }; p256dh_key?: string; auth_key?: string }) =>
+    apiRequest<{ success: boolean; subscription_id?: string; status?: string }>("/api/push/subscribe", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  unsubscribePush: (endpoint: string) =>
+    apiRequest<{ success: boolean; message: string }>("/api/push/unsubscribe", {
+      method: "POST",
+      body: JSON.stringify({ endpoint }),
+    }),
+  getPushPreferences: () => apiRequest<any>("/api/push/preferences"),
+  updatePushPreferences: (data: any) =>
+    apiRequest<any>("/api/push/preferences", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  sendTestPush: (endpoint: string) =>
+    apiRequest<{ success: boolean; message: string }>("/api/push/test", {
+      method: "POST",
+      body: JSON.stringify({ endpoint }),
+    }),
 };
 

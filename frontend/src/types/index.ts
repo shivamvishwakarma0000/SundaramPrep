@@ -19,9 +19,91 @@ export type AnswerStatus =
   | "NEEDS_REVIEW" 
   | "UNVERIFIED";
 
-export type Difficulty = "EASY" | "MEDIUM" | "HARD";
+export type PortalTab = "home" | "news" | "practice" | "upload" | "progress" | "ai" | "profile";
 
-export type PortalTab = "home" | "practice" | "upload" | "progress" | "ai" | "profile";
+export interface NewsArticleItem {
+  id: string;
+  title: string;
+  original_url: string;
+  source: string;
+  source_logo?: string | null;
+  published_at: string;
+  category: string;
+  gs_paper: string;
+  relevance_score: number;
+  is_featured: boolean;
+  read_time_minutes: number;
+  short_summary: string;
+  detailed_summary?: string;
+  why_in_news?: string;
+  what_happened?: string;
+  background?: string;
+  upsc_relevance?: string;
+  key_facts?: string[];
+  prelims_facts?: string[];
+  mains_perspective?: {
+    dimensions?: string[];
+    challenges?: string[];
+    way_forward?: string;
+  };
+  important_terms?: string[];
+  possible_mains_questions?: string[];
+  practice_mcqs?: Array<{
+    question: string;
+    options: Array<{ id: string; text: string }>;
+    correct_answer: string;
+    explanation: string;
+  }>;
+  simple_explanation?: string;
+  hindi_explanation?: string;
+  hinglish_explanation?: string;
+  prelims_notes?: string;
+  mains_notes?: string;
+  views_count?: number;
+  bookmarks_count?: number;
+  is_bookmarked?: boolean;
+  created_at?: string;
+}
+
+export interface NewsFeedResponse {
+  total: number;
+  page: number;
+  limit: number;
+  has_more: boolean;
+  articles: NewsArticleItem[];
+  categories: string[];
+  last_updated: string;
+}
+
+export interface NewsTodaysDigestResponse {
+  date: string;
+  formatted_date?: string;
+  total_today: number;
+  total_news_today?: number;
+  top_5: NewsArticleItem[];
+  top_stories?: NewsArticleItem[];
+  summary_bullet_points?: string[];
+  digest?: {
+    date: string;
+    summary: string;
+    key_themes: string[];
+  };
+}
+
+export interface PushNotificationPreferences {
+  id?: string;
+  user_id?: string;
+  enabled: boolean;
+  frequency: "HOURLY" | "EVERY_2_HOURS" | "THRICE_DAILY" | "DAILY_DIGEST" | "OFF";
+  preferred_morning_time: string;
+  preferred_afternoon_time: string;
+  preferred_evening_time: string;
+  categories_filter: string[];
+  last_notified_at?: string;
+}
+
+export type Difficulty = "EASY" | "MEDIUM" | "HARD";
+export type DifficultyLevel = Difficulty;
 
 export interface QuestionOption {
   id: string; // "A", "B", "C", "D"

@@ -49,8 +49,14 @@ from app.models.engagement import (
     AdminAction
 )
 
-# Current Affairs
-from app.models.current_affairs import DailyCurrentAffair
+# Current Affairs & News
+from app.models.current_affairs import (
+    DailyCurrentAffair,
+    NewsArticle,
+    NewsBookmark,
+    PushSubscription,
+    NotificationPreference
+)
 
 # AI
 from app.models.ai import (
@@ -96,6 +102,10 @@ __all__ = [
     "PDFQuestionDraft",
     "PDFDocument",
     "DailyCurrentAffair",
+    "NewsArticle",
+    "NewsBookmark",
+    "PushSubscription",
+    "NotificationPreference",
     "Notification",
     "Achievement",
     "Report",

@@ -24,6 +24,7 @@ class Config:
     
     # AI Keys (Gemini & OpenAI)
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     OPENAI_REASONING_MODEL = os.getenv("OPENAI_REASONING_MODEL", "o3-mini")
     OPENAI_FAST_MODEL = os.getenv("OPENAI_FAST_MODEL", "gpt-4o-mini")
