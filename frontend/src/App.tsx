@@ -15,6 +15,7 @@ import { PWAInstallModal } from './components/common/PWAInstallModal';
 import { PDFUploadModal } from './components/pdf/PDFUploadModal';
 import { api } from './api/client';
 import type { User, ExamType, Question, PracticeMode } from './types';
+import { LandingPage } from './features/landing/LandingPage';
 import { ThemeProvider } from './context/ThemeContext';
 
 export function AppContent() {
@@ -217,6 +218,32 @@ export function AppContent() {
     setActiveTab('practice');
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('sundaram_token');
+    localStorage.removeItem('sundaram_user_cache');
+    localStorage.removeItem('sundaram_profile_cache');
+    localStorage.removeItem('sundaram_home_summary_cache');
+    setUser(null);
+    setActiveTab('home');
+  };
+
+  if (!user) {
+    return (
+      <LandingPage
+        onLoginSuccess={(loggedInUser) => {
+          setUser(loggedInUser);
+          if (loggedInUser.target_exam) {
+            setCurrentExam(loggedInUser.target_exam);
+          }
+          if (loggedInUser.streak_count !== undefined) {
+            setSyncedStreak(loggedInUser.streak_count);
+          }
+          setActiveTab('home');
+        }}
+      />
+    );
+  }
+
   const isFocusTest = activePracticeMode === 'FOCUS_TEST';
   const canGoBack = activeTab !== 'home' || Boolean(activePracticeMode) || isPDFUploadOpen || isAIOpen;
 
@@ -297,7 +324,13 @@ export function AppContent() {
               setActiveTab('practice');
             }}
             onOpenAIWithPrompt={openAIWithPrompt}
-            onOpenUploadModal={() => setIsPDFUploadOpen(true)}
+            onOpenUploadModal={() => {
+              if (user?.role === 'ADMIN') {
+                setIsPDFUploadOpen(true);
+              } else {
+                setActiveTab('upload');
+              }
+            }}
           />
         )}
 
@@ -349,6 +382,7 @@ export function AppContent() {
         {/* TAB 3: UPLOAD (PDF Intelligence Studio) */}
         {activeTab === 'upload' && (
           <PDFStudio
+            user={user}
             onStartPractice={(docId, title) => handleStartPDFPractice(docId, title)}
           />
         )}
@@ -363,6 +397,7 @@ export function AppContent() {
           <ProfileView
             currentExam={currentExam}
             onExamChange={handleExamChange}
+            onLogout={handleLogout}
           />
         )}
       </main>

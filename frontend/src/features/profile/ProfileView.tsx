@@ -14,7 +14,9 @@ import {
   GraduationCap,
   Sliders,
   Zap,
-  BookOpen
+  BookOpen,
+  Lock,
+  LogOut
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useTheme } from '../../context/ThemeContext';
@@ -30,6 +32,7 @@ interface ProfileViewProps {
 export const ProfileView: React.FC<ProfileViewProps> = ({
   currentExam,
   onExamChange,
+  onLogout,
 }) => {
   const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<StudentProfileData | null>(() => {
@@ -46,6 +49,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       return true;
     }
   });
+
+  // Password change state
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{ text: string; success: boolean } | null>(null);
   const [editingGoal, setEditingGoal] = useState<number>(() => {
     try {
       const stored = localStorage.getItem('sundaram_user_daily_goal');
@@ -146,6 +156,48 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 4) {
+      setPasswordFeedback({ text: 'New password must be at least 4 characters long.', success: false });
+      return;
+    }
+    if (confirmPassword && newPassword !== confirmPassword) {
+      setPasswordFeedback({ text: 'New passwords do not match.', success: false });
+      return;
+    }
+    setPasswordLoading(true);
+    setPasswordFeedback(null);
+    try {
+      const res = await api.changePassword({
+        current_password: oldPassword,
+        new_password: newPassword,
+      });
+      setPasswordFeedback({ text: res.message || 'Password changed successfully!', success: true });
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setPasswordFeedback({ text: err?.message || 'Failed to update password.', success: false });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await api.logout();
+    } catch {}
+    localStorage.removeItem('sundaram_token');
+    localStorage.removeItem('sundaram_user_cache');
+    localStorage.removeItem('sundaram_profile_cache');
+    if (onLogout) {
+      onLogout();
+    } else {
+      window.location.reload();
+    }
+  };
+
   useEffect(() => {
     async function loadProfile() {
       try {
@@ -243,18 +295,21 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white truncate">
                 {user.name || 'Sundaram Aspirant'}
               </h2>
-              {user.email_verified ? (
-                <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
-                  <ShieldCheck className="w-3 h-3" />
-                  <span>Verified</span>
+              {(user as any).role === 'ADMIN' ? (
+                <span className="flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  <ShieldCheck className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>Admin & Aspirant</span>
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-dark-surface text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-dark-border">
-                  Standard Account
+                <span className="flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">
+                  <ShieldCheck className="w-3 h-3" />
+                  <span>Verified Aspirant</span>
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-dark-muted mt-0.5 truncate">{user.email}</p>
+            <p className="text-xs text-slate-500 dark:text-dark-muted mt-0.5 truncate">
+              {(user as any).phone ? `📱 +91 ${(user as any).phone} · ` : ''}{user.email}
+            </p>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <span className="text-[11px] font-bold bg-slate-100 dark:bg-dark-surface text-slate-700 dark:text-slate-300 px-2.5 py-0.5 rounded-lg border border-slate-200/80 dark:border-dark-border">
                 Target: {user.target_exam || currentExam}
@@ -503,46 +558,114 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </div>
             </div>
 
-            {/* Custom Motivation Card Poster Upload */}
-            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3 group">
-              <Camera className="absolute -right-2 -bottom-2 w-14 h-14 text-indigo-500/5 dark:text-indigo-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
-              <div className="relative z-10 flex items-center gap-2.5 min-w-0">
-                <Camera className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-bold text-slate-900 dark:text-white">Home Poster Image</div>
-                  <div className="text-slate-500 dark:text-dark-muted text-[11px] truncate">
-                    {customPoster ? 'Custom IAS wallpaper active' : 'Upload custom motivation poster'}
+            {/* Custom Motivation Card Poster Upload - Admin only */}
+            {(user as any).role === 'ADMIN' && (
+              <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3 group">
+                <Camera className="absolute -right-2 -bottom-2 w-14 h-14 text-indigo-500/5 dark:text-indigo-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+                <div className="relative z-10 flex items-center gap-2.5 min-w-0">
+                  <Camera className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
+                  <div className="min-w-0">
+                    <div className="font-bold text-slate-900 dark:text-white">Home Poster Image</div>
+                    <div className="text-slate-500 dark:text-dark-muted text-[11px] truncate">
+                      {customPoster ? 'Custom IAS wallpaper active' : 'Upload custom motivation poster'}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <input
-                  type="file"
-                  ref={posterInputRef}
-                  onChange={handlePosterUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-                {customPoster && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <input
+                    type="file"
+                    ref={posterInputRef}
+                    onChange={handlePosterUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  {customPoster && (
+                    <button
+                      type="button"
+                      onClick={handleResetPoster}
+                      className="text-[10px] font-bold text-slate-500 hover:text-red-600 bg-white dark:bg-dark-card px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-dark-border transition-colors cursor-pointer"
+                      title="Reset to default poster"
+                    >
+                      Reset
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={handleResetPoster}
-                    className="text-[10px] font-bold text-slate-500 hover:text-red-600 bg-white dark:bg-dark-card px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-dark-border transition-colors cursor-pointer"
-                    title="Reset to default poster"
+                    onClick={() => posterInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
                   >
-                    Reset
+                    <Camera className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{customPoster ? 'Change' : 'Upload Image'}</span>
                   </button>
-                )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Account Security & Change Password Section */}
+          <div className="pt-4 border-t border-slate-100 dark:border-dark-border">
+            <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
+              ACCOUNT SECURITY & PASSWORD
+            </h4>
+            <form onSubmit={handleUpdatePassword} className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-dark-border bg-slate-50/60 dark:bg-dark-surface space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Change Portal Password</div>
+                  <div className="text-[11px] text-slate-500 dark:text-dark-muted">
+                    {(user as any).role === 'ADMIN' ? 'Sundaram can update the default password "sundaram" anytime here.' : 'Update your personal access password.'}
+                  </div>
+                </div>
+                <Lock className="w-4 h-4 text-slate-400" />
+              </div>
+
+              {passwordFeedback && (
+                <div className={`p-3 rounded-xl text-xs font-bold border ${passwordFeedback.success ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' : 'bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800'}`}>
+                  {passwordFeedback.text}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter current password (default: sundaram)"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter new password (min 4 chars)"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <div className="text-[10px] text-slate-400 dark:text-dark-muted">
+                  Minimum 4 characters required
+                </div>
                 <button
-                  type="button"
-                  onClick={() => posterInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                  type="submit"
+                  disabled={passwordLoading || !newPassword}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#0B2545] hover:bg-[#133A6B] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
                 >
-                  <Camera className="w-3.5 h-3.5 text-amber-300" />
-                  <span>{customPoster ? 'Change' : 'Upload Image'}</span>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>{passwordLoading ? 'Updating...' : 'Update Password'}</span>
                 </button>
               </div>
-            </div>
+            </form>
           </div>
 
           {/* Email Change Section */}
@@ -564,6 +687,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 To update your email, enter a new address. A 6-digit OTP will be sent to the new address. Your current email remains trusted until the new address is verified.
               </p>
             </div>
+          </div>
+
+          {/* Sign Out Section */}
+          <div className="pt-4 border-t border-slate-100 dark:border-dark-border flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Session Management</div>
+              <div className="text-[11px] text-slate-400 dark:text-dark-muted">Sign out of your account on this device</div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-200 dark:border-red-900/40 shadow-2xs transition-all cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
           </div>
         </div>
       </div>

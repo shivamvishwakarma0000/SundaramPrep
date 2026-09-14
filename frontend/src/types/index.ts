@@ -223,6 +223,9 @@ export interface PDFQuestionDraft {
 export interface User {
   id: string;
   email: string;
+  phone?: string;
+  role?: 'ADMIN' | 'STUDENT' | string;
+  is_admin?: boolean;
   full_name?: string;
   name?: string;
   target_exam: ExamType;

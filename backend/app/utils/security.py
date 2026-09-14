@@ -97,3 +97,18 @@ def enforce_ownership(owner_id: str, current_user_id: str):
     if str(owner_id) != str(current_user_id):
         return False
     return True
+
+def admin_required(f):
+    """
+    Guarantees that only users with role='ADMIN' (Sundaram) can access the route.
+    """
+    @wraps(f)
+    @token_required
+    def decorated(*args, **kwargs):
+        user_id = request.current_user.get("sub")
+        from app.models.user import User
+        user = User.query.get(user_id)
+        if not user or user.role != "ADMIN":
+            return api_error("Access restricted: Only Sundaram (Admin) has permission to perform this action.", code="FORBIDDEN", status_code=403)
+        return f(*args, **kwargs)
+    return decorated

@@ -16,14 +16,16 @@ import {
 import { api } from '../../api/client';
 import { QuestionSkeleton } from '../../components/common/Skeleton';
 import { EmptyState } from '../../components/common/EmptyState';
-import type { PDFDocument, PDFQuestionDraft } from '../../types';
+import type { PDFDocument, PDFQuestionDraft, User } from '../../types';
 
 interface PDFStudioProps {
   onStartPractice?: (docId: string, title: string) => void;
+  user?: User | null;
 }
 
-export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
-  const [activeTab, setActiveTab] = useState<'review' | 'library'>('review');
+export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice, user }) => {
+  const isAdmin = user?.role === 'ADMIN';
+  const [activeTab, setActiveTab] = useState<'review' | 'library'>(() => isAdmin ? 'review' : 'library');
   const [documents, setDocuments] = useState<PDFDocument[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<PDFDocument | null>(null);
   const [drafts, setDrafts] = useState<PDFQuestionDraft[]>([]);
@@ -335,16 +337,18 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
 
       {/* Main Studio Navigation Tabs */}
       <div className="flex flex-wrap items-center gap-2 sm:gap-3 border-b border-slate-200 dark:border-dark-border pb-2">
-        <button
-          onClick={() => setActiveTab('review')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-            activeTab === 'review'
-              ? 'bg-[#0B2545] dark:bg-brand-600 text-white shadow-xs'
-              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-surface'
-          }`}
-        >
-          Review & Extraction Studio
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('review')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              activeTab === 'review'
+                ? 'bg-[#0B2545] dark:bg-brand-600 text-white shadow-xs'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-surface'
+            }`}
+          >
+            Review & Extraction Studio (Admin)
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('library')}
           className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
@@ -353,7 +357,7 @@ export const PDFStudio: React.FC<PDFStudioProps> = ({ onStartPractice }) => {
               : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-dark-surface'
           }`}
         >
-          My PDFs Library ({documents.length})
+          {isAdmin ? `My PDFs Library (${documents.length})` : `Curated Test Papers (${documents.length})`}
         </button>
       </div>
 

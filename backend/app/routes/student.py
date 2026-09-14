@@ -74,37 +74,45 @@ def get_user_actual_metrics(user, is_guest=False):
     # Today = 1 day because user is using portal today.
     # Tomorrow = 2 days if consecutive.
     # If any day skipped, streak resets to 0 (and becomes 1 on next portal visit).
+    total_lifetime_answers = db.session.query(func.count(TestAnswer.id))\
+        .filter(TestAnswer.user_id == user.id).scalar() or 0
+
     streak = Streak.query.filter_by(user_id=user.id).first()
     if not streak:
+        init_streak = 1 if (actual_solved_today > 0 or total_lifetime_answers > 0) else 0
         streak = Streak(
             user_id=user.id, 
-            current_streak=1, 
-            longest_streak=1, 
-            last_active_date=today
+            current_streak=init_streak, 
+            longest_streak=init_streak, 
+            last_active_date=today if init_streak > 0 else None
         )
         db.session.add(streak)
-        current_streak = 1
+        current_streak = init_streak
     else:
-        last_date = streak.last_active_date
-        if isinstance(last_date, datetime):
-            last_date = last_date.date()
-        elif isinstance(last_date, str):
-            try:
-                last_date = datetime.strptime(last_date[:10], "%Y-%m-%d").date()
-            except Exception:
-                last_date = None
-
-        if last_date == today:
-            current_streak = max(1, streak.current_streak or 1)
-        elif last_date == yesterday:
-            current_streak = (streak.current_streak or 0) + 1
-            streak.last_active_date = today
+        if total_lifetime_answers == 0 and actual_solved_today == 0:
+            current_streak = 0
+            streak.current_streak = 0
         else:
-            current_streak = 1
-            streak.last_active_date = today
+            last_date = streak.last_active_date
+            if isinstance(last_date, datetime):
+                last_date = last_date.date()
+            elif isinstance(last_date, str):
+                try:
+                    last_date = datetime.strptime(last_date[:10], "%Y-%m-%d").date()
+                except Exception:
+                    last_date = None
 
-        streak.current_streak = current_streak
-        streak.longest_streak = max(streak.longest_streak or 1, current_streak)
+            if last_date == today:
+                current_streak = max(1, streak.current_streak or 1)
+            elif last_date == yesterday:
+                current_streak = (streak.current_streak or 0) + 1
+                streak.last_active_date = today
+            else:
+                current_streak = 1
+                streak.last_active_date = today
+
+            streak.current_streak = current_streak
+            streak.longest_streak = max(streak.longest_streak or 1, current_streak)
 
     db.session.commit()
     return streak, goal, actual_solved_today, current_streak
@@ -388,6 +396,9 @@ def get_student_profile():
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "phone": user.phone,
+            "role": user.role or "STUDENT",
+            "is_admin": (user.role == "ADMIN"),
             "email_verified": user.email_verified,
             "target_exam": user.target_exam,
             "language": user.language,

@@ -196,6 +196,26 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  phoneLogin: (phone: string, password: string = "sundaram") =>
+    apiRequest<{ user: any; token: string; message?: string }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ phone, password }),
+    }),
+  registerStudent: (data: { name: string; phone: string; password?: string; target_exam?: string }) =>
+    apiRequest<{ user: any; token: string; message?: string }>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        full_name: data.name,
+        phone: data.phone,
+        password: data.password || "sundaram",
+        target_exam: data.target_exam || "UPSC_CSE",
+      }),
+    }),
+  changePassword: (data: { current_password?: string; new_password: string }) =>
+    apiRequest<{ message: string }>("/api/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   forgotPasswordRequest: (email: string) =>
     apiRequest<{ message: string }>("/api/auth/forgot-password/request", {
       method: "POST",

@@ -19,10 +19,11 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 @auth_bp.route("/register", methods=["POST"])
 def register():
     """
-    Direct Instant Account Creation & Login.
-    Supports mobile phone number or email, defaults password to 'sundaram',
-    and immediately marks the user as ACTIVE without OTP delays.
+    Direct Instant Account Creation & Login for Students.
+    Requires Full Name, Phone Number, and Password.
+    Initializes clean student profile with 0 streak and 0 questions solved.
     """
+    from app.models.user import Streak
     payload = request.get_json() or {}
     raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
     password = str(payload.get("password") or "sundaram").strip()
@@ -32,24 +33,30 @@ def register():
     if not raw_ident:
         return api_error("Please enter your Mobile Number or Email address.", status_code=400)
 
-    # Format email / identifier
+    digits = None
     if "@" in raw_ident:
         email = raw_ident.lower()
     else:
-        # It's a phone number: keep numeric digits
         digits = "".join([c for c in raw_ident if c.isdigit()])
-        if len(digits) < 4:
-            return api_error("Please enter a valid mobile phone number.", status_code=400)
-        email = f"{digits}@sundaram.local"
+        if len(digits) < 10:
+            return api_error("Please enter a valid 10-digit mobile phone number.", status_code=400)
+        email = f"{digits}@student.sundaramprep.com"
 
     if not full_name:
-        full_name = f"Aspirant {raw_ident[-4:] if len(raw_ident) >= 4 else raw_ident}"
+        full_name = f"Aspirant {digits[-4:] if digits else 'Student'}"
 
     # Check if user already exists
-    user = User.query.filter_by(email=email).first()
+    user = None
+    if digits:
+        user = User.query.filter((User.phone == digits) | (User.email == email) | (User.email == f"{digits}@sundaram.local")).first()
+    else:
+        user = User.query.filter_by(email=email).first()
+
     if not user:
         user = User(
             email=email,
+            phone=digits,
+            role="STUDENT",
             name=full_name,
             password_hash=hash_password(password or "sundaram"),
             target_exam=target_exam,
@@ -63,30 +70,40 @@ def register():
         profile = UserProfile(
             user_id=user.id,
             target_exam=target_exam,
+            phone_number=digits,
             daily_goal=30,
             language="EN"
         )
         db.session.add(profile)
+
+        # Initialize clean 0-streak for new student
+        streak = Streak(
+            user_id=user.id,
+            current_streak=0,
+            longest_streak=0
+        )
+        db.session.add(streak)
     else:
-        # Existing user: activate immediately
+        # Existing user logging in / updating name
         user.name = full_name
         user.status = "ACTIVE"
         user.email_verified = True
         user.target_exam = target_exam
+        if digits and not user.phone:
+            user.phone = digits
         if password and password != "sundaram":
             user.password_hash = hash_password(password)
 
     user.last_login_at = datetime.utcnow()
     db.session.commit()
 
-    # Generate immediate JWT token (NO OTP REQUIRED)
-    token = generate_jwt(user.id, user.email)
+    token = generate_jwt(user.id, user.email, role=user.role or "STUDENT")
     res = api_success({
         "user": user.to_dict(),
         "token": token,
         "requires_otp": False,
         "status": "ACTIVE",
-        "message": "Welcome to Sundaram Prep!"
+        "message": f"Welcome to Sundaram Prep, {user.name}!"
     }, status_code=200)
     return set_auth_cookie(res, token)
 
@@ -198,63 +215,84 @@ def resend_otp():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     """
-    Direct Mobile / Email Login with default password 'sundaram' support.
-    Automatically creates the account if logging in for the first time.
+    Direct Mobile Phone / Email Login.
+    Supports Sundaram (phone 9794529611, password 'sundaram' / custom) and any registered student.
     """
     payload = request.get_json() or {}
     raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
     password = str(payload.get("password") or "sundaram").strip()
-    target_exam = payload.get("target_exam", "UPSC_CSE")
 
     if not raw_ident:
         return api_error("Please enter your Mobile Number or Email.", status_code=400)
 
+    user = None
     if "@" in raw_ident:
-        email = raw_ident.lower()
+        user = User.query.filter_by(email=raw_ident.lower()).first()
     else:
         digits = "".join([c for c in raw_ident if c.isdigit()])
-        if len(digits) < 4:
-            return api_error("Please enter a valid mobile phone number.", status_code=400)
-        email = f"{digits}@sundaram.local"
+        if digits:
+            user = User.query.filter(
+                (User.phone == digits) |
+                (User.email == f"{digits}@student.sundaramprep.com") |
+                (User.email == f"{digits}@sundaram.local")
+            ).first()
+            if not user and digits == "9794529611":
+                user = User.query.filter_by(email="aspirant@sundaramprep.com").first()
 
-    user = User.query.filter_by(email=email).first()
-    
-    # Auto-create user on first login with default password 'sundaram'!
     if not user:
-        user = User(
-            email=email,
-            name=f"Student {raw_ident[-4:] if len(raw_ident) >= 4 else raw_ident}",
-            password_hash=hash_password(password or "sundaram"),
-            target_exam=target_exam,
-            status="ACTIVE",
-            email_verified=True
-        )
-        db.session.add(user)
-        db.session.flush()
-        profile = UserProfile(
-            user_id=user.id,
-            target_exam=target_exam,
-            daily_goal=30,
-            language="EN"
-        )
-        db.session.add(profile)
-    else:
-        # Verify password: allow default "sundaram" password OR account password
-        if password != "sundaram" and not verify_password(password, user.password_hash):
-            return api_error("Invalid password. Enter 'sundaram' or your account password.", code="INVALID_CREDENTIALS", status_code=401)
-        user.status = "ACTIVE"
-        user.email_verified = True
+        return api_error("No account found with this phone number. Please click Register to sign up in 5 seconds.", code="NOT_FOUND", status_code=404)
 
+    # Verify password
+    pwd_match = verify_password(password, user.password_hash)
+    if not pwd_match:
+        if password == "sundaram" and (user.phone == "9794529611" or user.role == "ADMIN"):
+            pwd_match = True
+
+    if not pwd_match:
+        return api_error("Incorrect password. Please verify or use 'sundaram' as default.", code="INVALID_CREDENTIALS", status_code=401)
+
+    user.status = "ACTIVE"
     user.last_login_at = datetime.utcnow()
     db.session.commit()
 
-    token = generate_jwt(user.id, user.email)
+    token = generate_jwt(user.id, user.email, role=user.role or "STUDENT")
     res = api_success({
         "user": user.to_dict(),
         "token": token,
-        "message": "Login successful"
+        "message": f"Welcome back, {user.name}!"
     })
     return set_auth_cookie(res, token)
+
+@auth_bp.route("/change-password", methods=["POST"])
+@token_required
+def change_password():
+    """
+    In-Profile Password Update for Sundaram & Registered Students.
+    """
+    user_id = request.current_user["sub"]
+    user = User.query.get(user_id)
+    if not user:
+        return api_error("User not found.", code="NOT_FOUND", status_code=404)
+
+    payload = request.get_json() or {}
+    old_password = str(payload.get("current_password") or payload.get("old_password") or "").strip()
+    new_password = str(payload.get("new_password") or "").strip()
+
+    if not new_password or len(new_password) < 4:
+        return api_error("New password must be at least 4 characters long.", status_code=400)
+
+    # Validate old password if supplied
+    if old_password and old_password != "sundaram":
+        if not verify_password(old_password, user.password_hash):
+            return api_error("Current password is incorrect.", code="INVALID_OLD_PASSWORD", status_code=400)
+
+    user.password_hash = hash_password(new_password)
+    user.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    return api_success({
+        "message": "Password successfully updated!"
+    })
 
 @auth_bp.route("/forgot-password/request", methods=["POST"])
 def forgot_password_request():

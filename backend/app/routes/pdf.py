@@ -54,58 +54,60 @@ def upload_pdf():
         return api_error("File size exceeds 16MB limit.", status_code=413)
 
     user_id = get_optional_user_id()
+    from app.models.user import User
+    user = User.query.get(user_id) if user_id else None
+    if not user or user.role != "ADMIN":
+        return api_error("Access restricted: Only Sundaram (Admin) can upload new test papers. Students can practice all available materials.", code="FORBIDDEN", status_code=403)
     
     # Section 11: AI Cost Control & Duplicate File Hashing
     file_hash = pdf_pipeline.calculate_file_hash(save_path)
     cached_doc = pdf_pipeline.check_cached_document(user_id=user_id, file_hash=file_hash)
     if cached_doc:
-        # Document already processed; reuse existing results
+        os.remove(save_path)
         return api_success({
             "document": cached_doc.to_dict(),
-            "cached": True,
-            "message": f"Identical file already processed ({cached_doc.extracted_questions_count} questions ready). Reused processing to avoid unnecessary AI costs."
+            "message": "File was previously processed. Loaded cached questions.",
+            "cached": True
         }, status_code=200)
-
-    # Database stores metadata & storage reference, NOT large binary blobs in PostgreSQL
+        
     doc = PDFDocument(
         user_id=user_id,
         file_name=filename,
         file_path=save_path,
-        file_url=f"/api/pdf/files/{filename}",
+        file_size=file_size,
         file_hash=file_hash,
-        file_size_bytes=file_size,
         status="PROCESSING",
-        processing_stage="EXTRACTING"
+        processing_stage="PARSING"
     )
     db.session.add(doc)
     db.session.commit()
     
-    # Run pipeline synchronously or in background
-    # Synchronous for immediate availability in testing, with stage tracking
-    pdf_pipeline.process_document(doc.id)
-    db.session.refresh(doc)
+    # Non-blocking async background processing
+    worker = threading.Thread(
+        target=pdf_pipeline.process_document_async,
+        args=(doc.id,),
+        daemon=True
+    )
+    worker.start()
     
     return api_success({
         "document": doc.to_dict(),
-        "cached": False,
-        "message": f"Successfully ingested {filename}. {doc.extracted_questions_count} questions detected."
-    }, status_code=201)
+        "message": "Document uploaded and background AI extraction started."
+    }, status_code=202)
 
 @pdf_bp.route("/documents", methods=["GET"])
 def list_documents():
     """
-    Section 9: Paginated PDF Library ('My PDFs').
-    Avoids loading every document on every visit.
+    Section 5: Document list endpoint.
+    All students can access and practice test papers uploaded by Sundaram.
     """
+    from app.models.user import User
     user_id = get_optional_user_id()
     page = int(request.args.get("page", 1))
     limit = min(int(request.args.get("limit", 10)), 50)
     offset = (page - 1) * limit
     
     query = PDFDocument.query.filter(~PDFDocument.file_name.ilike('%sample_polity_test%'))
-    if user_id:
-        query = query.filter_by(user_id=user_id)
-        
     total = query.count()
     docs = query.order_by(PDFDocument.created_at.desc()).offset(offset).limit(limit).all()
     
@@ -361,8 +363,10 @@ def delete_document(doc_id):
         return api_error("Document not found", status_code=404)
         
     user_id = get_optional_user_id()
-    if user_id and doc.user_id and doc.user_id != user_id:
-        return api_error("Access denied. You do not own this document.", status_code=403)
+    from app.models.user import User
+    user = User.query.get(user_id) if user_id else None
+    if not user or user.role != "ADMIN":
+        return api_error("Access restricted: Only Sundaram (Admin) can delete documents.", code="FORBIDDEN", status_code=403)
         
     # Remove file from disk if present
     if os.path.exists(doc.file_path):

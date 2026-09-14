@@ -9,6 +9,8 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     email_verified = db.Column(db.Boolean, default=False, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    phone = db.Column(db.String(20), unique=True, nullable=True, index=True)
+    role = db.Column(db.String(20), default="STUDENT", index=True) # ADMIN or STUDENT
     
     target_exam = db.Column(db.String(50), default="UPSC_CSE", index=True)  # UPSC_CSE, SSC_CGL, BANK_PO, etc.
     language = db.Column(db.String(10), default="EN")  # EN, HI, BILINGUAL
@@ -32,12 +34,15 @@ class User(db.Model):
             "id": self.id,
             "name": self.name,
             "email": self.email,
+            "phone": self.phone,
+            "role": self.role or "STUDENT",
+            "is_admin": (self.role == "ADMIN"),
             "email_verified": self.email_verified,
             "target_exam": self.target_exam,
             "language": self.language,
             "avatar": self.avatar,
             "daily_goal": self.daily_goal,
-            "streak_count": self.streak.current_streak if (self.streak and self.streak.current_streak is not None and self.streak.current_streak > 0) else 1,
+            "streak_count": self.streak.current_streak if (self.streak and self.streak.current_streak is not None and self.streak.current_streak > 0) else 0,
             "personal_bests": self.personal_bests or {},
             "timezone": self.timezone,
             "status": self.status,
