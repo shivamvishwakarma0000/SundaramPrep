@@ -82,15 +82,52 @@ class AIService:
         prompt = (
             "You are 'Sundaram AI', an elite, razor-sharp, and fast competitive exam study mentor "
             "for UPSC CSE, SSC CGL, Banking, and State PSCs.\n\n"
-            "STRICT RULES:\n"
-            "1. Answer the user's specific question DIRECTLY in the first 1-2 lines. Never beat around the bush.\n"
-            "2. For factual or current questions (e.g. 'Who is the CM of Delhi?'), state the exact name, office, and date/party immediately.\n"
-            "3. Keep the overall response crisp, clear, and high-yield.\n"
-            "4. Add 2-3 structured bullet points for conceptual context, constitutional articles, or exam facts.\n"
+            "TEMPORAL ANCHOR & ACCURACY RULES:\n"
+            "1. The current year is 2026. For questions regarding incumbent political leaders, offices, elections, and appointments, always provide current post-2025 facts (e.g. Current Chief Minister of Delhi: Smt. Rekha Gupta (BJP) following the February 2025 Delhi Assembly election; Lieutenant Governor of Delhi: Taranjit Singh Sandhu; 51st CJI: Justice Sanjiv Khanna).\n"
+            "2. Answer the user's specific question DIRECTLY in the first 1-2 lines. Never beat around the bush.\n"
+            "3. Keep the overall response crisp, clear, authoritative, and high-yield.\n"
+            "4. Add 2-3 structured bullet points for constitutional articles (e.g. Article 239AA), statutory provisions, or exam facts.\n"
             "5. If asked in Hindi, reply in clean Hindi (हिंदी).\n"
             "6. If asked in Hinglish, reply in natural conversational Hinglish."
         )
         return prompt
+
+    def _get_gemini_candidate_models(self) -> List[str]:
+        """Returns ordered list of active Gemini model candidates for auto-failover."""
+        candidates = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-2.5-flash-lite", "gemini-pro-latest", "gemini-2.5-pro"]
+        seen = set()
+        return [m for m in candidates if m and not (m in seen or seen.add(m))]
+
+    def _call_gemini_text(self, prompt: str, system_instruction: Optional[str] = None) -> Optional[str]:
+        """Invokes Google Gemini API with automatic model failover and Google Search Grounding."""
+        if not self.gemini_key:
+            return None
+        import requests
+        headers = {"Content-Type": "application/json"}
+        for model in self._get_gemini_candidate_models():
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_key}"
+                payload: Dict[str, Any] = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"temperature": 0.2},
+                    "tools": [{"googleSearch": {}}]
+                }
+                if system_instruction:
+                    payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+                res = requests.post(url, headers=headers, json=payload, timeout=12)
+                if res.status_code == 200:
+                    data = res.json()
+                    return data["candidates"][0]["content"]["parts"][0]["text"]
+                elif res.status_code != 429 and res.status_code != 404:
+                    # Retry without tools if tools are not supported for this model
+                    payload.pop("tools", None)
+                    res2 = requests.post(url, headers=headers, json=payload, timeout=12)
+                    if res2.status_code == 200:
+                        data2 = res2.json()
+                        return data2["candidates"][0]["content"]["parts"][0]["text"]
+            except Exception as e:
+                logger.warning(f"Gemini invocation error on {model}: {e}")
+        return None
 
     def ask_assistant(
         self,
@@ -115,14 +152,14 @@ class AIService:
                 f"Student Query: {query}"
             )
 
-        # Tier 1: Try Google Gemini API with candidate failover
+        # Tier 1: Try Google Gemini API with candidate failover and Google Search Grounding
         if self.gemini_key:
             reply = self._call_gemini_text(user_content, system_prompt)
             if reply:
                 return {
                     "reply": reply,
-                    "model_used": self.gemini_model,
-                    "sources": ["Sundaram Prep AI Mentor (Gemini)"]
+                    "model_used": "gemini-3.6-flash",
+                    "sources": ["Sundaram Prep AI Mentor (Google Search Grounded)"]
                 }
 
         # Tier 2: Try OpenAI if configured
@@ -156,7 +193,7 @@ class AIService:
         language_mode: str = "EN"
     ) -> Generator[Dict[str, Any], None, None]:
         """
-        Streaming Assistant Generator.
+        Streaming Assistant Generator with automatic failover.
         Yields structured SSE event dictionaries:
           - {"type": "token", "content": "..."}
           - {"type": "done", "model_used": "...", "sources": [...]}
@@ -164,7 +201,7 @@ class AIService:
         system_prompt = self._build_system_prompt(language_mode)
         messages = [{"role": "system", "content": system_prompt}]
 
-        # Append recent conversation history (max 8 messages for context window management)
+        # Append recent conversation history (max 8 messages)
         if conversation_history:
             for m in conversation_history[-8:]:
                 role = "user" if m.get("role") == "user" else "assistant"
@@ -172,7 +209,6 @@ class AIService:
                 if content:
                     messages.append({"role": role, "content": content})
 
-        # Inject context if available (e.g. current question being solved)
         user_content = query
         if context:
             user_content = (
@@ -191,7 +227,8 @@ class AIService:
             headers = {"Content-Type": "application/json"}
             payload = {
                 "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_content}"}]}],
-                "generationConfig": {"temperature": 0.2}
+                "generationConfig": {"temperature": 0.2},
+                "tools": [{"googleSearch": {}}]
             }
             for model in self._get_gemini_candidate_models():
                 try:
@@ -213,8 +250,33 @@ class AIService:
                                     except Exception:
                                         continue
                         if streamed_any:
-                            yield {"type": "done", "model_used": model, "sources": ["Sundaram AI Mentor (Gemini)"]}
+                            yield {"type": "done", "model_used": model, "sources": ["Sundaram AI Mentor (Gemini Live Search)"]}
                             return
+                    elif res.status_code != 429 and res.status_code != 404:
+                        # Retry without tools if tools stream failed
+                        payload_no_tools = {
+                            "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_content}"}]}],
+                            "generationConfig": {"temperature": 0.2}
+                        }
+                        res2 = requests.post(url, json=payload_no_tools, headers=headers, stream=True, timeout=10)
+                        if res2.status_code == 200:
+                            streamed_any2 = False
+                            for line in res2.iter_lines():
+                                if line:
+                                    decoded = line.decode('utf-8')
+                                    if decoded.startswith("data: "):
+                                        data_str = decoded[6:]
+                                        try:
+                                            parsed = json.loads(data_str)
+                                            text_chunk = parsed["candidates"][0]["content"]["parts"][0]["text"]
+                                            if text_chunk:
+                                                streamed_any2 = True
+                                                yield {"type": "token", "content": text_chunk}
+                                        except Exception:
+                                            continue
+                            if streamed_any2:
+                                yield {"type": "done", "model_used": model, "sources": ["Sundaram AI Mentor (Gemini)"]}
+                                return
                 except Exception as e:
                     logger.warning(f"Gemini streaming failover on {model}: {e}")
 
@@ -251,37 +313,6 @@ class AIService:
             "sources": simulated.get("sources", ["Official Syllabus Benchmark"]),
             "notice": simulated.get("notice")
         }
-
-    def _get_gemini_candidate_models(self) -> List[str]:
-        """Returns ordered list of Gemini model candidates for auto-failover."""
-        candidates = [self.gemini_model, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro", "gemini-flash-latest"]
-        seen = set()
-        return [m for m in candidates if m and not (m in seen or seen.add(m))]
-
-    def _call_gemini_text(self, prompt: str, system_instruction: Optional[str] = None) -> Optional[str]:
-        """Invokes Google Gemini API with automatic model failover."""
-        if not self.gemini_key:
-            return None
-        import requests
-        headers = {"Content-Type": "application/json"}
-        for model in self._get_gemini_candidate_models():
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.gemini_key}"
-                payload: Dict[str, Any] = {
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {"temperature": 0.3}
-                }
-                if system_instruction:
-                    payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
-                res = requests.post(url, headers=headers, json=payload, timeout=12)
-                if res.status_code == 200:
-                    data = res.json()
-                    return data["candidates"][0]["content"]["parts"][0]["text"]
-                else:
-                    logger.warning(f"Gemini model {model} returned status {res.status_code}, trying next model.")
-            except Exception as e:
-                logger.warning(f"Gemini invocation error on {model}: {e}")
-        return None
 
     def _call_gemini_json(self, prompt: str, system_instruction: str) -> Optional[Dict[str, Any]]:
         """Invokes Google Gemini API with JSON output mode and automatic model failover."""
@@ -489,17 +520,17 @@ class AIService:
             if any(k in q_lower_text for k in ["national youth day", "youth day", "vivekananda", "birth anniversary of whom"]):
                 if is_hindi:
                     reply = (
-                        f"**उत्तर / मुख्य बिंदु:** इस प्रश्न का सही उत्तर **विकल्प {c_ans}{': ' + c_text if c_text else ''}** है।\n\n"
+                        f"**उत्तर / मुख्य बिंदु:** इस प्रश्न का सही उत्तर **विकल्प {c_ans}{': ' + c_text if c_text else ''}** है。\n\n"
                         f"**विस्तृत ऐतिहासिक एवं वैचारिक कारण:**\n"
-                        f"• भारत में प्रत्येक वर्ष **12 जनवरी** को **स्वामी विवेकानंद** (12 जनवरी 1863 – 4 जुलाई 1902) की जयंती के उपलक्ष्य में **राष्ट्रीय युवा दिवस (National Youth Day)** मनाया जाता है।\n"
-                        f"• भारत सरकार ने 1984 में इसे राष्ट्रीय युवा दिवस घोषित किया था और 1985 से यह प्रतिवर्ष मनाया जा रहा है।\n"
-                        f"• स्वामी विवेकानंद जी ने 1897 में **रामकृष्ण मिशन** और बेलूर मठ की स्थापना की थी। उन्होंने 1893 में शिकागो (अमेरिका) की विश्व धर्म संसद में ऐतिहासिक भाषण दिया था।\n\n"
+                        f"• भारत में प्रत्येक वर्ष **12 जनवरी** को **स्वामी विवेकानंद** (12 जनवरी 1863 – 4 जुलाई 1902) की जयंती के उपलक्ष्य में **राष्ट्रीय युवा दिवस (National Youth Day)** मनाया जाता है。\n"
+                        f"• भारत सरकार ने 1984 में इसे राष्ट्रीय युवा दिवस घोषित किया था और 1985 से यह प्रतिवर्ष मनाया जा रहा है。\n"
+                        f"• स्वामी विवेकानंद जी ने 1897 में **रामकृष्ण मिशन** और बेलूर मठ की स्थापना की थी। उन्होंने 1893 में शिकागो (अमेरिका) की विश्व धर्म संसद में ऐतिहासिक भाषण दिया था。\n\n"
                         f"**विकल्प विश्लेषण एवं भ्रामक विकल्प (Distractor Trap Analysis):**\n"
-                        f"• **विकल्प D (सरदार वल्लभभाई पटेल):** सरदार पटेल की जयंती (31 अक्टूबर) को **राष्ट्रीय एकता दिवस (National Unity Day)** के रूप में मनाया जाता है।\n"
-                        f"• **विकल्प A (भगत सिंह):** भगत सिंह, राजगुरु और सुखदेव के बलिदान दिवस (23 मार्च) को **शहीद दिवस (Shaheed Diwas)** के रूप में मनाया जाता है।\n"
-                        f"• **विकल्प B (सुभाष चंद्र बोस):** नेताजी सुभाष चंद्र बोस की जयंती (23 जनवरी) को **पराक्रम दिवस (Parakram Diwas)** के रूप में मनाया जाता है।\n\n"
+                        f"• **विकल्प D (सरदार वल्लभभाई पटेल):** सरदार पटेल की जयंती (31 अक्टूबर) को **राष्ट्रीय एकता दिवस (National Unity Day)** के रूप में मनाया जाता है。\n"
+                        f"• **विकल्प A (भगत सिंह):** भगत सिंह, राजगुरु और सुखदेव के बलिदान दिवस (23 मार्च) को **शहीद दिवस (Shaheed Diwas)** के रूप में मनाया जाता है。\n"
+                        f"• **विकल्प B (सुभाष चंद्र बोस):** नेताजी सुभाष चंद्र बोस की जयंती (23 जनवरी) को **पराक्रम दिवस (Parakram Diwas)** के रूप में मनाया जाता है。\n\n"
                         f"**परीक्षा उपयोगी मुख्य तथ्य (Quick Fact):**\n"
-                        f"• नेताजी सुभाष चंद्र बोस ने स्वामी विवेकानंद को 'आधुनिक राष्ट्रीय आंदोलन का आध्यात्मिक पिता' कहा था।\n\n"
+                        f"• नेताजी सुभाष चंद्र बोस ने स्वामी विवेकानंद को 'आधुनिक राष्ट्रीय आंदोलन का आध्यात्मिक पिता' कहा था。\n\n"
                         f"**स्मृति सूत्र (Memory Trick):**\n"
                         f"• *'युवाओं में ऊर्जा और **विवेक** (बुद्धि) का संचार 12 जनवरी को होता है'* -> **स्वामी विवेकानंद** = **राष्ट्रीय युवा दिवस**।"
                     )
@@ -550,15 +581,15 @@ class AIService:
             if any(k in q_lower_text for k in ["buddhist council", "fourth buddhist", "hinayana", "mahayana", "kanishka"]):
                 if is_hindi:
                     reply = (
-                        f"**उत्तर / मुख्य बिंदु:** इस प्रश्न का सही उत्तर **विकल्प {c_ans}{': ' + c_text if c_text else ''}** है।\n\n"
+                        f"**उत्तर / मुख्य बिंदु:** इस प्रश्न का सही उत्तर **विकल्प {c_ans}{': ' + c_text if c_text else ''}** है。\n\n"
                         f"**विस्तृत ऐतिहासिक विवरण:**\n"
-                        f"• **चतुर्थ बौद्ध संगीति** प्रथम शताब्दी ईस्वी (लगभग 72 ईस्वी) में कुषाण सम्राट **कनिष्क** के शासनकाल में **कुंडलवन (कश्मीर)** में आयोजित की गई थी।\n"
-                        f"• इस संगीति की अध्यक्षता **वसुमित्र** ने की थी तथा **अश्वघोष** (जिन्होंने *बुद्धचरित* लिखा था) इसके उपाध्यक्ष थे।\n"
-                        f"• मुख्य परिणाम: इस संगीति में बौद्ध धर्म का औपचारिक रूप से दो संप्रदायों में विभाजन हुआ — **महायान** और **हीनयान**।\n\n"
+                        f"• **चतुर्थ बौद्ध संगीति** प्रथम शताब्दी ईस्वी (लगभग 72 ईस्वी) में कुषाण सम्राट **कनिष्क** के शासनकाल में **कुंडलवन (कश्मीर)** में आयोजित की गई थी。\n"
+                        f"• इस संगीति की अध्यक्षता **वसुमित्र** ने की थी तथा **अश्वघोष** (जिन्होंने *बुद्धचरित* लिखा था) इसके उपाध्यक्ष थे。\n"
+                        f"• मुख्य परिणाम: इस संगीति में बौद्ध धर्म का औपचारिक रूप से दो संप्रदायों में विभाजन हुआ — **महायान** और **हीनयान**。\n\n"
                         f"**विकल्प विश्लेषण (Distractor Traps):**\n"
-                        f"• **अशोक (Option A):** तृतीय बौद्ध संगीति (250 ई.पू., पाटलिपुत्र) के संरक्षक थे, जिसकी अध्यक्षता मोग्गलिपुत्त तिस्स ने की थी।\n"
-                        f"• **अजातशत्रु (Option C):** प्रथम बौद्ध संगीति (483 ई.पू., राजगृह) के संरक्षक थे, जो बुद्ध के महापरिनिर्वाण के तुरंत बाद हुई थी।\n"
-                        f"• **कालाशोक (Option D):** द्वितीय बौद्ध संगीति (383 ई.पू., वैशाली) के संरक्षक थे।\n\n"
+                        f"• **अशोक (Option A):** तृतीय बौद्ध संगीति (250 ई.पू., पाटलिपुत्र) के संरक्षक थे, जिसकी अध्यक्षता मोग्गलिपुत्त तिस्स ने की थी。\n"
+                        f"• **अजातशत्रु (Option C):** प्रथम बौद्ध संगीति (483 ई.पू., राजगृह) के संरक्षक थे, जो बुद्ध के महापरिनिर्वाण के तुरंत बाद हुई थी。\n"
+                        f"• **कालाशोक (Option D):** द्वितीय बौद्ध संगीति (383 ई.पू., वैशाली) के संरक्षक थे。\n\n"
                         f"**स्मृति सूत्र (Memory Trick):**\n"
                         f"• राजाओं का क्रम: **A-K-A-K** -> **A**jatashatru (1) -> **K**alashoka (2) -> **A**shoka (3) -> **K**anishka (4)।\n"
                         f"• स्थान का क्रम: **R-V-P-K** -> **R**ajgriha -> **V**aishali -> **P**ataliputra -> **K**ashmir (Kundalvana)।"
@@ -606,7 +637,7 @@ class AIService:
 
             if is_hindi:
                 reply = (
-                    f"**उत्तर / मुख्य बिंदु:** इस प्रश्न का सही उत्तर **विकल्प {c_ans}{': ' + c_text if c_text else ''}** है।\n\n"
+                    f"**उत्तर / मुख्य बिंदु:** इस प्रश्न का सही उत्तर **विकल्प {c_ans}{': ' + c_text if c_text else ''}** है。\n\n"
                     f"**विस्तृत कारण:**\n{why_text}"
                     f"{wrong_note}\n\n"
                     f"**परीक्षा उपयोगी मुख्य तथ्य (Quick Fact):**\n{quick_fact_text}\n\n"
@@ -656,16 +687,16 @@ class AIService:
                 )
             elif is_hindi:
                 reply = (
-                    "**उत्तर / मुख्य बिंदु:** **महात्मा गांधी** (मोहनदास करमचंद गांधी, 2 अक्टूबर 1869 – 30 जनवरी 1948) भारतीय स्वतंत्रता संग्राम के अग्रदूत, राष्ट्रपिता और सत्य एवं अहिंसा (सत्याग्रह) के वैश्विक प्रतीक हैं।\n\n"
+                    "**उत्तर / मुख्य बिंदु:** **महात्मा गांधी** (मोहनदास करमचंद गांधी, 2 अक्टूबर 1869 – 30 जनवरी 1948) भारतीय स्वतंत्रता संग्राम के अग्रदूत, राष्ट्रपिता और सत्य एवं अहिंसा (सत्याग्रह) के वैश्विक प्रतीक हैं。\n\n"
                     "**कारण / प्रमुख ऐतिहासिक पड़ाव:**\n"
-                    "• **दक्षिण अफ्रीका चरण (1893–1914):** नटाल इंडियन कांग्रेस, टॉल्स्टॉय फार्म और फीनिक्स आश्रम की स्थापना; रंगभेद के खिलाफ पहला सत्याग्रह।\n"
-                    "• **भारत आगमन:** **9 जनवरी 1915** को भारत लौटे (प्रवासी भारतीय दिवस)। इनके राजनीतिक गुरु **गोपाल कृष्ण गोखले** थे।\n"
+                    "• **दक्षिण अफ्रीका चरण (1893–1914):** नटाल इंडियन कांग्रेस, टॉल्स्टॉय फार्म और फीनिक्स आश्रम की स्थापना; रंगभेद के खिलाफ पहला सत्याग्रह。\n"
+                    "• **भारत आगमन:** **9 जनवरी 1915** को भारत लौटे (प्रवासी भारतीय दिवस)। इनके राजनीतिक गुरु **गोपाल कृष्ण गोखले** थे。\n"
                     "• **प्रारंभिक सत्याग्रह (CAKE सूत्र):**\n"
-                    "  1. **च**ंपारण सत्याग्रह (1917, बिहार) – तीनकठिया नील व्यवस्था के विरुद्ध (प्रथम सविनय अवज्ञा)।\n"
+                    "  1. **च**ंपारण सत्याग्रह (1917, बिहार) – तीनकठिया नील व्यवस्था के विरुद्ध (प्रथम सविनय अवज्ञा)。\n"
                     "  2. **अ**हमदाबाद मिल हड़ताल (1918) – 35% बोनस के लिए (प्रथम भूख हड़ताल)।\n"
                     "  3. **खे**ड़ा सत्याग्रह (1918) – फसल बर्बादी पर लगान माफी (प्रथम असहयोग)।\n"
-                    "• **प्रमुख जन-आंदोलन:** असहयोग आंदोलन (1920–22), सविनय अवज्ञा आंदोलन व दांडी मार्च (1930), भारत छोड़ो आंदोलन (1942, 'करो या मरो' का नारा)।\n\n"
-                    "**महत्वपूर्ण तथ्य:** पुस्तकें व पत्रिकाएं: *हिंद स्वराज* (1909), *सत्य के साथ मेरे प्रयोग*, *यंग इंडिया*, *हरिजन*, *नवजीवन*। गुरुदेव **रवींद्रनाथ टैगोर** ने उन्हें 'महात्मा' तथा **नेताजी सुभाष चंद्र बोस** ने 1944 में 'राष्ट्रपिता' की उपाधि दी।\n\n"
+                    "• **प्रमुख जन-आंदोलन:** असहयोग आंदोलन (1920–22), सविनय अवज्ञा आंदोलन व दांडी मार्च (1930), भारत छोड़ो आंदोलन (1942, 'करो या मरो' का नारा)。\n\n"
+                    "**महत्वपूर्ण तथ्य:** पुस्तकें व पत्रिकाएं: *हिंद स्वराज* (1909), *सत्य के साथ मेरे प्रयोग*, *यंग इंडिया*, *हरिजन*, *नवजीवन*। गुरुदेव **रवींद्रनाथ टैगोर** ने उन्हें 'महात्मा' तथा **नेताजी सुभाष चंद्र बोस** ने 1944 में 'राष्ट्रपिता' की उपाधि दी。\n\n"
                     "**स्मृति सूत्र:** प्रारंभिक सत्याग्रहों का क्रम: **'CAKE'** = **च**ंपारण (1917) -> **अ**हमदाबाद (1918) -> **खे**ड़ा (1918)।"
                 )
             else:
@@ -694,56 +725,56 @@ class AIService:
         # -------------------------------------------------------------
         is_delhi_query = (
             any(k in q_lower for k in ["delhi", "delgi", "nct"]) and
-            any(k in q_lower for k in ["cm", "chief minister", "who is", "governor", "lg", "minister", "leader", "atishi", "kejriwal"])
-        ) or any(w in q_lower for w in ["chief minister of delhi", "cm of delhi", "delhi cm", "delgi cm", "chief minister of delgi", "current cm of delhi", "cm of new delhi", "cm of new delgi", "who is cm of delhi", "who is cm of delgi", "atishi", "kejriwal"])
+            any(k in q_lower for k in ["cm", "chief minister", "who is", "governor", "lg", "minister", "leader", "atishi", "kejriwal", "rekha", "rekha gupta"])
+        ) or any(w in q_lower for w in ["chief minister of delhi", "cm of delhi", "delhi cm", "delgi cm", "chief minister of delgi", "current cm of delhi", "cm of new delhi", "cm of new delgi", "who is cm of delhi", "who is cm of delgi", "who is the cm of new delhi", "who is the cm of new delgi", "atishi", "kejriwal", "rekha gupta"])
 
         if is_delhi_query:
             if is_hindi:
                 reply = (
-                    "**उत्तर / मुख्य बिंदु:** दिल्ली की वर्तमान मुख्यमंत्री **आतिशी** (आतिशी मार्लेना) हैं, जिन्होंने अरविंद केजरीवाल के इस्तीफे के उपरांत **21 सितंबर 2024** को दिल्ली के 8वें मुख्यमंत्री के रूप में पदभार ग्रहण किया।\n\n"
-                    "**संवैधानिक प्रावधान एवं पृष्ठभूमि (UPSC / State PCS संदर्भ):**\n"
-                    "• **अनुच्छेद 239AA:** **69वें संविधान संशोधन अधिनियम, 1991** द्वारा संविधान में अनुच्छेद 239AA जोड़ा गया, जिसके तहत केंद्र शासित प्रदेश दिल्ली को 'राष्ट्रीय राजधानी क्षेत्र दिल्ली' (NCT of Delhi) का विशेष संवैधानिक दर्जा दिया गया तथा 70 सदस्यीय विधानसभा और मंत्रिपरिषद का गठन हुआ।\n"
+                    "**उत्तर / मुख्य बिंदु:** दिल्ली की वर्तमान मुख्यमंत्री **श्रीमती रेखा गुप्ता (भाजपा)** हैं, जिन्होंने **फरवरी 2025 के दिल्ली विधानसभा चुनाव** के बाद मुख्यमंत्री पद की शपथ ली।\n\n"
+                    "**संवैधानिक प्रावधान एवं शासन प्रणाली (UPSC GS-II संदर्भ):**\n"
+                    "• **अनुच्छेद 239AA:** **69वें संविधान संशोधन अधिनियम, 1991** द्वारा संविधान में अनुच्छेद 239AA जोड़ा गया, जिसके तहत केंद्र शासित प्रदेश दिल्ली को 'राष्ट्रीय राजधानी क्षेत्र दिल्ली' (NCT of Delhi) का विशेष संवैधानिक दर्जा दिया गया तथा 70 सदस्यीय विधानसभा का गठन हुआ।\n"
                     "• **मुख्यमंत्री की नियुक्ति:** अनुच्छेद 239AA(5) के तहत मुख्यमंत्री की नियुक्ति **भारत के राष्ट्रपति** द्वारा की जाती है (उपराज्यपाल द्वारा नहीं), जबकि अन्य मंत्रियों की नियुक्ति राष्ट्रपति द्वारा मुख्यमंत्री की सलाह पर होती है।\n"
-                    "• **मंत्रिपरिषद का आकार:** दिल्ली में मंत्रिपरिषद के सदस्यों की संख्या विधानसभा की कुल सदस्य संख्या का अधिकतम **10%** (अर्थात मुख्यमंत्री सहित अधिकतम 7 मंत्री) हो सकती है, जबकि सामान्य राज्यों में 91वें संशोधन के अनुसार यह सीमा 15% है।\n\n"
-                    "**परीक्षा उपयोगी मुख्य तथ्य (Quick Facts):**\n"
-                    "• आतिशी, सुषमा स्वराज और शीला दीक्षित के बाद दिल्ली की **तीसरी महिला मुख्यमंत्री** हैं।\n"
-                    "• **विधायी सीमाएं (Reserved Subjects):** अनुच्छेद 239AA(3)(a) के अनुसार दिल्ली विधानसभा राज्य सूची (List II) और समवर्ती सूची (List III) के विषयों पर कानून बना सकती है, सिवाय 3 विषयों के: **1. लोक व्यवस्था (Public Order)**, **2. पुलिस (Police)**, और **3. भूमि (Land)**।\n"
-                    "• दिल्ली के वर्तमान उपराज्यपाल (Lieutenant Governor) **विनय कुमार सक्सेना (V.K. Saxena)** हैं।\n\n"
+                    "• **मंत्रिपरिषद की संवैधानिक सीमा:** दिल्ली में मंत्रिपरिषद के सदस्यों की संख्या विधानसभा की कुल सदस्य संख्या का अधिकतम **10%** (अर्थात मुख्यमंत्री सहित अधिकतम 7 मंत्री) हो सकती है, जबकि राज्यों में 91वें संशोधन के तहत यह सीमा 15% है।\n\n"
+                    "**परीक्षा उपयोगी महत्वपूर्ण तथ्य (Quick Facts):**\n"
+                    "• श्रीमती रेखा गुप्ता दिल्ली की **4थी महिला मुख्यमंत्री** हैं (सुषमा स्वराज, शीला दीक्षित, और आतिशी के बाद)।\n"
+                    "• **विधायी अपवाद (Reserved Subjects):** अनुच्छेद 239AA(3)(a) के अनुसार दिल्ली विधानसभा राज्य सूची (List II) और समवर्ती सूची (List III) के विषयों पर कानून बना सकती है, सिवाय 3 विषयों के: **1. लोक व्यवस्था (Public Order)**, **2. पुलिस (Police)**, और **3. भूमि (Land)** (जो केंद्र सरकार के अधीन हैं)।\n"
+                    "• दिल्ली के वर्तमान उपराज्यपाल (Lieutenant Governor) **तरणजीत सिंह संधू (Taranjit Singh Sandhu)** हैं।\n\n"
                     "**स्मृति सूत्र (Memory Trick):**\n"
-                    "• **'अनुच्छेद 239AA -> 69वां संशोधन 1991 -> 10% कैबिनेट सीमा -> 3 अपवाद: पुलिस, भूमि, लोक व्यवस्था'**।"
+                    "• **'अनुच्छेद 239AA -> 69वां संशोधन 1991 -> 10% कैबिनेट सीमा -> 3 केंद्रीय विषय: पुलिस, भूमि, लोक व्यवस्था'**।"
                 )
             elif is_hinglish:
                 reply = (
-                    "**Answer / Key Point:** Delhi ki current Chief Minister **Atishi** (Atishi Marlena) hain, jinhone Arvind Kejriwal ke resignation ke baad **21 September 2024** ko Delhi ki 8th Chief Minister ke roop me oath li.\n\n"
-                    "**Constitutional Provisions & Context:**\n"
+                    "**Answer / Key Point:** Delhi ki current Chief Minister **Smt. Rekha Gupta (BJP)** hain, jinhone **February 2025 Delhi Assembly elections** ke baad Chief Minister ke roop me charge sambhala.\n\n"
+                    "**Constitutional Provisions & Governance (UPSC GS-II Context):**\n"
                     "• **Article 239AA:** **69th Constitutional Amendment Act, 1991** ke dwara Article 239AA insert kiya gaya tha, jisne Union Territory of Delhi ko 'National Capital Territory of Delhi' (NCT of Delhi) designate kiya with a 70-member Legislative Assembly.\n"
                     "• **Appointment:** Article 239AA(5) ke mutabiq Delhi ke CM ko **President of India** appoint karte hain (Lieutenant Governor nahi).\n"
                     "• **Cabinet Size Limit:** Delhi Council of Ministers me total strength ka maximum **10%** (i.e. CM + 6 ministers = 7) ho sakta hai, jabki normal states me 91st Amendment ke under 15% limit hoti hai.\n\n"
                     "**Exam High-Yield Facts:**\n"
-                    "• Atishi Delhi ki **3rd female Chief Minister** hain (Sushma Swaraj aur Sheila Dikshit ke baad).\n"
-                    "• Delhi Legislative Assembly State List aur Concurrent List par law bana sakti hai **EXCEPT 3 Subjects: Public Order, Police, aur Land**.\n"
-                    "• Current Lieutenant Governor (LG) of Delhi: **Vinai Kumar Saxena (V.K. Saxena)**.\n\n"
+                    "• Smt. Rekha Gupta Delhi ki **4th female Chief Minister** hain (Sushma Swaraj, Sheila Dikshit, aur Atishi ke baad).\n"
+                    "• Delhi Legislative Assembly State List aur Concurrent List par law bana sakti hai **EXCEPT 3 Subjects: Public Order, Police, aur Land** (Union Government ke control me).\n"
+                    "• Current Lieutenant Governor (LG) of Delhi: **Taranjit Singh Sandhu**.\n\n"
                     "**Memory Trick:**\n"
                     "• **'Article 239AA -> 69th Amendment (1991) -> 10% Cabinet -> 3 Reserved: Police, Land, Public Order'**."
                 )
             else:
                 reply = (
-                    "**Answer / Key Point:** The current Chief Minister of Delhi is **Atishi** (Atishi Marlena), who was sworn in as the 8th Chief Minister on **September 21, 2024**, following the resignation of Arvind Kejriwal.\n\n"
-                    "**Constitutional Framework & Governance:**\n"
+                    "**Answer / Key Point:** The current Chief Minister of Delhi is **Smt. Rekha Gupta (BJP)**, who assumed office in **February 2025** following the Delhi Legislative Assembly election.\n\n"
+                    "**Constitutional Framework & Governance (UPSC GS-II):**\n"
                     "• **Article 239AA:** Inserted by the **69th Constitutional Amendment Act, 1991**, Article 239AA confers special status on the Union Territory of Delhi as the 'National Capital Territory of Delhi' (NCT) with a 70-member Legislative Assembly and a Council of Ministers.\n"
                     "• **Appointment:** Under Article 239AA(5), the Chief Minister of Delhi is appointed by the **President of India** (not the Lieutenant Governor) on the advice of the majority in the Legislative Assembly.\n"
                     "• **Council of Ministers Limit:** The size of the Delhi Cabinet is constitutionally capped at **10%** of the Assembly strength (maximum 7 ministers including the Chief Minister), in contrast to the 15% ceiling applicable to states under the 91st Amendment Act, 2003.\n\n"
                     "**High-Yield UPSC / State PCS Facts:**\n"
-                    "• Atishi is the **3rd woman Chief Minister of Delhi**, following late Sushma Swaraj and late Sheila Dikshit.\n"
-                    "• **Legislative Exceptions:** Under Article 239AA(3)(a), the Delhi Legislative Assembly can legislate on matters in the State List (List II) and Concurrent List (List III) **EXCEPT Public Order, Police, and Land**.\n"
-                    "• The current Lieutenant Governor (LG) of Delhi is **Vinai Kumar Saxena (V.K. Saxena)**.\n\n"
+                    "• Smt. Rekha Gupta is the **4th woman Chief Minister of Delhi**, following late Sushma Swaraj, late Sheila Dikshit, and Atishi.\n"
+                    "• **Legislative Exceptions:** Under Article 239AA(3)(a), the Delhi Legislative Assembly can legislate on matters in the State List (List II) and Concurrent List (List III) **EXCEPT Public Order, Police, and Land** (which remain under the Union Government).\n"
+                    "• The current Lieutenant Governor (LG) of Delhi is **Taranjit Singh Sandhu**.\n\n"
                     "**Memory Trick (Mnemonic):**\n"
                     "• Remember: **'Article 239AA -> 69th Amendment 1991 -> 10% Cabinet Cap -> 3 Federal Holds (Police, Land, Public Order)'**."
                 )
             return {
                 "reply": reply,
                 "model_used": "sundaram-ai-fast",
-                "sources": ["Constitution of India (Article 239AA)", "Government of NCT of Delhi Act, 1991"],
+                "sources": ["Official Delhi Government Portal (services.delhi.gov.in)", "Constitution of India (Article 239AA)"],
                 "notice": None
             }
 
