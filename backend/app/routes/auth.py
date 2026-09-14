@@ -23,86 +23,95 @@ def register():
     Requires Full Name, Phone Number, and Password.
     Initializes clean student profile with 0 streak and 0 questions solved.
     """
-    from app.models.user import Streak
-    payload = request.get_json() or {}
-    raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
-    password = str(payload.get("password") or "sundaram").strip()
-    full_name = (payload.get("full_name") or payload.get("name") or "").strip()
-    target_exam = payload.get("target_exam", "UPSC_CSE")
-    
-    if not raw_ident:
-        return api_error("Please enter your Mobile Number or Email address.", status_code=400)
+    try:
+        from app.models.user import Streak
+        payload = request.get_json() or {}
+        raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
+        password = str(payload.get("password") or "sundaram").strip()
+        full_name = (payload.get("full_name") or payload.get("name") or "").strip()
+        target_exam = payload.get("target_exam", "UPSC_CSE")
+        
+        if not raw_ident:
+            return api_error("Please enter your Mobile Number or Email address.", status_code=400)
 
-    digits = None
-    if "@" in raw_ident:
-        email = raw_ident.lower()
-    else:
-        digits = "".join([c for c in raw_ident if c.isdigit()])
-        if len(digits) < 10:
-            return api_error("Please enter a valid 10-digit mobile phone number.", status_code=400)
-        email = f"{digits}@student.sundaramprep.com"
+        digits = None
+        if "@" in raw_ident:
+            email = raw_ident.lower()
+        else:
+            digits = "".join([c for c in raw_ident if c.isdigit()])
+            if len(digits) < 10:
+                return api_error("Please enter a valid 10-digit mobile phone number.", status_code=400)
+            email = f"{digits}@student.sundaramprep.com"
 
-    if not full_name:
-        full_name = f"Aspirant {digits[-4:] if digits else 'Student'}"
+        if not full_name:
+            full_name = f"Aspirant {digits[-4:] if digits else 'Student'}"
 
-    # Check if user already exists
-    user = None
-    if digits:
-        user = User.query.filter((User.phone == digits) | (User.email == email) | (User.email == f"{digits}@sundaram.local")).first()
-    else:
-        user = User.query.filter_by(email=email).first()
+        # Check if user already exists
+        user = None
+        if digits:
+            user = User.query.filter((User.phone == digits) | (User.email == email) | (User.email == f"{digits}@sundaram.local")).first()
+        else:
+            user = User.query.filter_by(email=email).first()
 
-    if not user:
-        user = User(
-            email=email,
-            phone=digits,
-            role="STUDENT",
-            name=full_name,
-            password_hash=hash_password(password or "sundaram"),
-            target_exam=target_exam,
-            status="ACTIVE",
-            email_verified=True
-        )
-        db.session.add(user)
-        db.session.flush()
+        if not user:
+            user = User(
+                email=email,
+                phone=digits,
+                role="STUDENT",
+                name=full_name,
+                password_hash=hash_password(password or "sundaram"),
+                target_exam=target_exam,
+                status="ACTIVE",
+                email_verified=True
+            )
+            db.session.add(user)
+            db.session.flush()
 
-        # Initialize student profile
-        profile = UserProfile(
-            user_id=user.id,
-            phone_number=digits
-        )
-        db.session.add(profile)
+            # Initialize student profile
+            profile = UserProfile(
+                user_id=user.id,
+                phone_number=digits
+            )
+            db.session.add(profile)
 
-        # Initialize clean 0-streak for new student
-        streak = Streak(
-            user_id=user.id,
-            current_streak=0,
-            longest_streak=0
-        )
-        db.session.add(streak)
-    else:
-        # Existing user logging in / updating name
-        user.name = full_name
-        user.status = "ACTIVE"
-        user.email_verified = True
-        user.target_exam = target_exam
-        if digits and not user.phone:
-            user.phone = digits
-        if password and password != "sundaram":
-            user.password_hash = hash_password(password)
+            # Initialize clean 0-streak for new student
+            try:
+                streak = Streak(
+                    user_id=user.id,
+                    current_streak=0,
+                    longest_streak=0
+                )
+                db.session.add(streak)
+            except Exception as se:
+                logger.warning(f"Could not initialize streak: {se}")
+        else:
+            # Existing user logging in / updating name
+            user.name = full_name
+            user.status = "ACTIVE"
+            user.email_verified = True
+            user.target_exam = target_exam
+            if digits and not user.phone:
+                user.phone = digits
+            if password and password != "sundaram":
+                user.password_hash = hash_password(password)
 
-    user.last_login_at = datetime.utcnow()
-    db.session.commit()
+        user.last_login_at = datetime.utcnow()
+        db.session.commit()
 
-    token = generate_jwt(user.id, user.email, role=user.role or "STUDENT")
-    res = api_success({
-        "user": user.to_dict(),
-        "token": token,
-        "requires_otp": False,
-        "status": "ACTIVE",
-        "message": f"Welcome to Sundaram Prep, {user.name}!"
-    }, status_code=200)
-    return set_auth_cookie(res, token)
+        token = generate_jwt(user.id, user.email, role=user.role or "STUDENT")
+        res = api_success({
+            "user": user.to_dict(),
+            "token": token,
+            "requires_otp": False,
+            "status": "ACTIVE",
+            "message": f"Welcome to Sundaram Prep, {user.name}!"
+        }, status_code=200)
+        return set_auth_cookie(res, token)
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        logger.error(f"Register failed: {traceback.format_exc()}")
+        return api_error(f"Registration error: {str(e)}", code="REGISTER_ERROR", status_code=500)
 
 @auth_bp.route("/verify-otp", methods=["POST"])
 def verify_otp():
