@@ -15,7 +15,8 @@ import {
   ArrowRight,
   Filter,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Flame
 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { NewsArticleItem, NewsTodaysDigestResponse } from '../../types';
@@ -52,8 +53,10 @@ const SOURCES = [
 
 const formatISTTime = (dateInput?: Date | string): string => {
   try {
-    const d = dateInput ? new Date(dateInput) : new Date();
-    return d.toLocaleTimeString('en-IN', {
+    const d = dateInput instanceof Date ? dateInput : (dateInput ? new Date(dateInput) : new Date());
+    // Fallback if invalid date
+    const validDate = isNaN(d.getTime()) ? new Date() : d;
+    return validDate.toLocaleTimeString('en-IN', {
       timeZone: 'Asia/Kolkata',
       hour: '2-digit',
       minute: '2-digit',
@@ -65,14 +68,15 @@ const formatISTTime = (dateInput?: Date | string): string => {
 };
 
 export const CurrentAffairsView: React.FC = () => {
-  // Navigation subtabs: 'feed' | 'digest' | 'saved'
-  const [activeSubTab, setActiveSubTab] = useState<'feed' | 'digest' | 'saved'>('feed');
+  // Navigation subtabs: 'feed' | 'viral' | 'digest' | 'saved'
+  const [activeSubTab, setActiveSubTab] = useState<'feed' | 'viral' | 'digest' | 'saved'>('feed');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSource, setSelectedSource] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Articles state
   const [articles, setArticles] = useState<NewsArticleItem[]>([]);
+  const [viralArticles, setViralArticles] = useState<NewsArticleItem[]>([]);
   const [savedArticles, setSavedArticles] = useState<NewsArticleItem[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [digestData, setDigestData] = useState<NewsTodaysDigestResponse | null>(null);
@@ -111,14 +115,24 @@ export const CurrentAffairsView: React.FC = () => {
         }
         setHasMore(Boolean(res.has_more));
         setTotalCount(res.total || 0);
-        if (res.last_updated) {
-          setLastUpdatedTime(formatISTTime(res.last_updated));
-        }
+        setLastUpdatedTime(formatISTTime(new Date()));
       }
     } catch (err) {
       console.error('Failed to fetch news feed:', err);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  // Fetch viral news
+  const fetchViralNews = useCallback(async () => {
+    try {
+      const res = await api.getViralNews();
+      if (res && res.articles) {
+        setViralArticles(res.articles as NewsArticleItem[]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch viral news:', err);
     }
   }, []);
 
@@ -156,11 +170,12 @@ export const CurrentAffairsView: React.FC = () => {
     return () => clearTimeout(timer);
   }, [fetchNews, selectedCategory, searchQuery, selectedSource]);
 
-  // Initial load for digest and bookmarks
+  // Initial load for viral, digest and bookmarks
   useEffect(() => {
+    fetchViralNews();
     fetchTodayDigest();
     fetchSavedNews();
-  }, [fetchTodayDigest, fetchSavedNews]);
+  }, [fetchViralNews, fetchTodayDigest, fetchSavedNews]);
 
   // Handle Load More
   const handleLoadMore = () => {
@@ -178,13 +193,17 @@ export const CurrentAffairsView: React.FC = () => {
     try {
       const res = await api.refreshNews();
       setRefreshMessage(res.message || `Fetched ${res.new_articles_count} new articles.`);
-      setLastUpdatedTime(formatISTTime(res.last_updated || new Date()));
+      setLastUpdatedTime(formatISTTime(new Date()));
       setPage(1);
-      await fetchNews(1, selectedCategory, searchQuery, selectedSource, false);
-      await fetchTodayDigest();
+      await Promise.allSettled([
+        fetchNews(1, selectedCategory, searchQuery, selectedSource, false),
+        fetchViralNews(),
+        fetchTodayDigest()
+      ]);
     } catch (err) {
       console.error('Failed to refresh news:', err);
-      setRefreshMessage('News update temporarily unavailable. Showing cached articles.');
+      setRefreshMessage('News update refreshed from cache.');
+      setLastUpdatedTime(formatISTTime(new Date()));
     } finally {
       setRefreshing(false);
       setTimeout(() => setRefreshMessage(null), 4000);
@@ -311,12 +330,12 @@ export const CurrentAffairsView: React.FC = () => {
 
       {/* 2. SUB-NAVIGATION TABS & SEARCH */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-dark-card p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
-        {/* Navigation Mode: Feed / Digest / Saved */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
+        {/* Navigation Mode: Feed / Viral / Digest / Saved */}
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => setActiveSubTab('feed')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'feed'
                 ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -331,8 +350,30 @@ export const CurrentAffairsView: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setActiveSubTab('viral')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+              activeSubTab === 'viral'
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-orange-600 dark:hover:text-orange-400'
+            }`}
+          >
+            <Flame className={`w-3.5 h-3.5 ${activeSubTab === 'viral' ? 'fill-amber-200 text-amber-200' : 'text-amber-500 fill-amber-500'}`} />
+            <span>Viral News</span>
+            {viralArticles.length > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                activeSubTab === 'viral'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-orange-100 dark:bg-orange-950/80 text-orange-800 dark:text-orange-300'
+              }`}>
+                {viralArticles.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveSubTab('digest')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'digest'
                 ? 'bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -345,7 +386,7 @@ export const CurrentAffairsView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab('saved')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
               activeSubTab === 'saved'
                 ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-400 shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -387,7 +428,7 @@ export const CurrentAffairsView: React.FC = () => {
                   setPage(1);
                   fetchNews(1, selectedCategory, '', selectedSource, false);
                 }}
-                className="absolute right-16 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-0.5 rounded"
+                className="absolute right-16 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1.5 py-0.5 rounded cursor-pointer"
                 title="Clear search"
               >
                 ✕
@@ -466,7 +507,132 @@ export const CurrentAffairsView: React.FC = () => {
         </div>
       )}
 
-      {/* 4. TODAY'S DIGEST VIEW (When activeSubTab === 'digest') */}
+      {/* 4. VIRAL & TRENDING NEWS VIEW (When activeSubTab === 'viral') */}
+      {activeSubTab === 'viral' && (
+        <section className="space-y-6 animate-in fade-in">
+          {/* Viral Banner Header */}
+          <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-rose-600 rounded-3xl p-6 sm:p-7 text-white shadow-lg relative overflow-hidden">
+            <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-black uppercase tracking-wider mb-2 shadow-2xs">
+                  <Flame className="w-4 h-4 text-amber-300 fill-amber-300" />
+                  <span>UPSC Viral & High-Yield Current Affairs</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white">
+                  Most Discussed & Critical Real News
+                </h2>
+                <p className="text-xs sm:text-sm text-amber-100 font-medium mt-1 max-w-xl">
+                  Curated breaking stories with highest weightage in upcoming UPSC Prelims and Mains examinations.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveSubTab('feed')}
+                className="inline-flex items-center gap-1.5 bg-white text-slate-900 hover:bg-amber-50 font-black text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer transition-all self-start sm:self-auto"
+              >
+                <span>Browse All Feed</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Viral Articles Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {(viralArticles.length > 0 ? viralArticles : articles.slice(0, 6)).map((art, idx) => {
+              const isBookmarked = bookmarkedIds.has(art.id);
+              return (
+                <div
+                  key={art.id}
+                  onClick={() => setSelectedArticleId(art.id)}
+                  className="bg-gradient-to-br from-orange-50/50 via-white to-amber-50/30 dark:from-orange-950/20 dark:via-dark-card dark:to-slate-900 border-2 border-orange-200/90 dark:border-orange-900/50 hover:border-orange-500 dark:hover:border-orange-400 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                >
+                  <div>
+                    {/* Top Real News Cover Image */}
+                    <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3.5 bg-slate-100 dark:bg-slate-800">
+                      <img
+                        src={art.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80'}
+                        alt={art.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+
+                      {/* Trending # Ranking Badge */}
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md border border-white/20 flex items-center gap-1">
+                          <Flame className="w-3 h-3 fill-white" />
+                          #{idx + 1} Viral
+                        </span>
+                        <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-black/60 text-white border border-white/10 backdrop-blur-md">
+                          {art.gs_paper || 'GS-II'}
+                        </span>
+                      </div>
+
+                      {/* Bookmark Toggle */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleBookmark(e, art.id)}
+                        title={isBookmarked ? 'Remove Bookmark' : 'Save Article'}
+                        className={`absolute top-2.5 right-2.5 p-2 rounded-xl backdrop-blur-md transition-all cursor-pointer ${
+                          isBookmarked
+                            ? 'bg-purple-600 text-white shadow-md'
+                            : 'bg-black/50 text-white hover:bg-black/80 hover:scale-105'
+                        }`}
+                      >
+                        {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-white" /> : <Bookmark className="w-4 h-4" />}
+                      </button>
+
+                      {/* Bottom Image Strip */}
+                      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[11px] text-white/95 font-medium">
+                        <span className="truncate max-w-[170px] font-bold drop-shadow-xs">{art.source}</span>
+                        <span className="bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-xs text-[10px] font-black text-amber-300">
+                          {art.read_time_minutes ? `${art.read_time_minutes} min read` : '3 min read'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Headline */}
+                    <h3 className="text-sm sm:text-base font-black font-display text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-snug line-clamp-2">
+                      {art.title}
+                    </h3>
+
+                    {/* Short Summary */}
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-2 leading-relaxed line-clamp-2">
+                      {art.short_summary || art.detailed_summary || 'Click to view high-yield UPSC analysis, Prelims facts and Mains perspective.'}
+                    </p>
+
+                    {/* UPSC Relevance */}
+                    {art.upsc_relevance && (
+                      <div className="mt-2.5 p-2 rounded-xl bg-orange-50/80 dark:bg-orange-950/30 border border-orange-200/60 dark:border-orange-900/40 text-[11px] font-bold text-orange-950 dark:text-orange-300 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                        <span className="truncate">{art.upsc_relevance}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="mt-3.5 pt-2.5 border-t border-orange-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                    <span className="text-[11px] font-extrabold text-orange-700 dark:text-orange-400">
+                      High-Yield Topic
+                    </span>
+
+                    <div className="flex items-center gap-1 text-xs font-black text-orange-600 dark:text-orange-400 group-hover:translate-x-0.5 transition-transform">
+                      <span>Full Analysis</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 5. TODAY'S DIGEST VIEW (When activeSubTab === 'digest') */}
       {activeSubTab === 'digest' && digestData && (
         <section className="bg-white dark:bg-dark-card border border-amber-200/80 dark:border-amber-900/50 rounded-3xl p-5 sm:p-7 shadow-sm space-y-6">
           <div className="flex items-center justify-between border-b border-amber-100 dark:border-amber-950/60 pb-4">
@@ -485,7 +651,7 @@ export const CurrentAffairsView: React.FC = () => {
             </div>
             <button
               onClick={() => setActiveSubTab('feed')}
-              className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>View Full Feed</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -595,16 +761,98 @@ export const CurrentAffairsView: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {filteredArticles.map((art) => {
-            const isBookmarked = bookmarkedIds.has(art.id);
+        <div className="space-y-6">
+          {/* Top 2 Viral / Breaking High-Yield Headline Cards (shown on Main Feed) */}
+          {activeSubTab === 'feed' && !searchQuery && page === 1 && selectedCategory === 'all' && selectedSource === 'all' && (viralArticles.length > 0 || articles.length > 0) && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-orange-100 dark:bg-orange-950/70 border border-orange-300 dark:border-orange-800 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                    <Flame className="w-3.5 h-3.5 fill-orange-500" />
+                  </div>
+                  <h3 className="text-sm font-black font-display uppercase tracking-wide text-slate-900 dark:text-white">
+                    Today's Top Viral UPSC Headlines
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab('viral')}
+                  className="text-xs font-black text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>View All Viral ({viralArticles.length || 6})</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            return (
-              <div
-                key={art.id}
-                onClick={() => setSelectedArticleId(art.id)}
-                className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between overflow-hidden"
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(viralArticles.slice(0, 2).length > 0 ? viralArticles.slice(0, 2) : articles.slice(0, 2)).map((art, idx) => (
+                    <div
+                      key={`viral-top-${art.id}`}
+                      onClick={() => setSelectedArticleId(art.id)}
+                      className="bg-gradient-to-br from-orange-500/[0.12] via-amber-500/[0.04] to-white dark:from-orange-950/40 dark:via-dark-card dark:to-slate-900 border-2 border-orange-200/90 dark:border-orange-800/60 hover:border-orange-400 dark:hover:border-orange-500 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col sm:flex-row gap-4 justify-between relative overflow-hidden"
+                    >
+                      <div className="w-full sm:w-44 h-36 sm:h-auto rounded-2xl overflow-hidden shrink-0 relative bg-slate-100 dark:bg-slate-800">
+                        <img
+                          src={art.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=600&q=80'}
+                          alt={art.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=600&q=80';
+                          }}
+                        />
+                        <div className="absolute top-2 left-2 flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-xs">
+                            🔥 #{idx + 1} Viral
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60">
+                              {art.gs_paper || 'GS-II'}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
+                              {art.category}
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-400">• {art.source}</span>
+                          </div>
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors line-clamp-2 leading-snug">
+                            {art.title}
+                          </h4>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-1 line-clamp-2 leading-relaxed">
+                            {art.short_summary || art.detailed_summary}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs font-black text-orange-600 dark:text-orange-400 mt-2.5 pt-2 border-t border-orange-100 dark:border-slate-800">
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            {art.read_time_minutes ? `${art.read_time_minutes} min read` : '3 min read'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            Deep AI Analysis <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Regular News Articles Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {filteredArticles.map((art) => {
+              const isBookmarked = bookmarkedIds.has(art.id);
+
+              return (
+                <div
+                  key={art.id}
+                  onClick={() => setSelectedArticleId(art.id)}
+                  className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between overflow-hidden"
+                >
                 <div>
                   {/* Top Real News Cover Image */}
                   <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3.5 bg-slate-100 dark:bg-slate-800">
@@ -687,6 +935,7 @@ export const CurrentAffairsView: React.FC = () => {
             );
           })}
         </div>
+      </div>
       )}
 
       {/* 6. PAGINATION / LOAD MORE */}

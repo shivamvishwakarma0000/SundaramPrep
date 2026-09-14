@@ -433,11 +433,18 @@ def submit_practice_response():
                 if mistake.accuracy >= 0.66:
                     mistake.is_resolved = True
 
-        # Increment Daily Goal
-        today = date.today()
+        # Increment Daily Goal (IST synchronized)
+        from app.routes.student import get_ist_today
+        today = get_ist_today()
         goal = DailyGoal.query.filter_by(user_id=user_id, date=today).first()
-        if goal:
-            goal.solved_today += 1
+        if not goal:
+            from app.models.user import User
+            user_obj = User.query.get(user_id)
+            target_q = (user_obj.daily_goal if user_obj and user_obj.daily_goal else 40)
+            goal = DailyGoal(user_id=user_id, target_questions=target_q, date=today, solved_today=1, is_achieved=(1 >= target_q))
+            db.session.add(goal)
+        else:
+            goal.solved_today = (goal.solved_today or 0) + 1
             if goal.solved_today >= goal.target_questions:
                 goal.is_achieved = True
 

@@ -404,6 +404,24 @@ class NewsService:
             }
         }
 
+    def get_viral_articles(self, limit: int = 10) -> Dict[str, Any]:
+        """Returns top trending, viral, and high-impact UPSC news stories."""
+        self._ensure_seed_articles_exist()
+        articles = NewsArticle.query.filter(
+            NewsArticle.is_published == True
+        ).order_by(
+            NewsArticle.is_featured.desc(),
+            NewsArticle.relevance_score.desc(),
+            NewsArticle.views_count.desc(),
+            NewsArticle.published_at.desc()
+        ).limit(limit).all()
+
+        return {
+            "articles": [a.to_dict(include_full_analysis=False) for a in articles],
+            "total": len(articles),
+            "last_updated": datetime.utcnow().isoformat()
+        }
+
     def refresh_news(self, force_fetch: bool = False) -> Dict[str, Any]:
         """
         Centralized safe refresh mechanism:

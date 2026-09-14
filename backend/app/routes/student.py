@@ -45,31 +45,46 @@ def get_or_create_demo_user():
         db.session.commit()
     return user
 
+def get_ist_now():
+    """Return the current datetime in Indian Standard Time (UTC+5:30)."""
+    return datetime.utcnow() + timedelta(hours=5, minutes=30)
+
+def get_ist_today():
+    """Return today's date in Indian Standard Time."""
+    return get_ist_now().date()
+
+def get_ist_day_start_utc(target_date=None):
+    """Return the UTC datetime corresponding to 00:00:00 IST on the target date."""
+    if target_date is None:
+        target_date = get_ist_today()
+    ist_midnight = datetime.combine(target_date, datetime.min.time())
+    return ist_midnight - timedelta(hours=5, minutes=30)
+
 # =========================================================================
 # 1. HOME DASHBOARD (Section 10: Low-Transfer Aggregated Home)
 def get_user_actual_metrics(user, is_guest=False):
-    today = date.today()
+    today = get_ist_today()
     yesterday = today - timedelta(days=1)
     from sqlalchemy import func
     
-    # 1. Real actual questions answered today (counting QuizResponse + TestAnswer)
-    # Use timezone-lenient start of day (covers IST UTC+5:30)
-    today_start = datetime.combine(today, datetime.min.time()) - timedelta(hours=6)
+    # 1. Real actual questions answered today in IST timezone (since 00:00 IST)
+    today_start_utc = get_ist_day_start_utc(today)
     
     quiz_solved_today = db.session.query(func.count(QuizResponse.id))\
-        .filter(QuizResponse.user_id == user.id, QuizResponse.created_at >= today_start).scalar() or 0
+        .filter(QuizResponse.user_id == user.id, QuizResponse.created_at >= today_start_utc).scalar() or 0
     test_solved_today = db.session.query(func.count(TestAnswer.id))\
-        .filter(TestAnswer.user_id == user.id, TestAnswer.created_at >= today_start).scalar() or 0
+        .filter(TestAnswer.user_id == user.id, TestAnswer.created_at >= today_start_utc).scalar() or 0
     actual_solved_today = quiz_solved_today + test_solved_today
 
     target_q = user.daily_goal if (user.daily_goal and user.daily_goal > 0) else 40
     goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
     if not goal:
         goal = DailyGoal(user_id=user.id, target_questions=target_q, date=today, solved_today=actual_solved_today)
+        goal.is_achieved = (actual_solved_today >= target_q)
         db.session.add(goal)
     else:
         goal.target_questions = target_q
-        goal.solved_today = max(actual_solved_today, goal.solved_today or 0)
+        goal.solved_today = actual_solved_today
         goal.is_achieved = (goal.solved_today >= target_q)
         
     # 2. Daily consecutive streak tracking:
@@ -86,7 +101,7 @@ def get_user_actual_metrics(user, is_guest=False):
             user_id=user.id, 
             current_streak=init_streak, 
             longest_streak=init_streak, 
-            last_active_date=today if init_streak > 0 else None
+            last_active_date=today if actual_solved_today > 0 else (yesterday if total_lifetime_answers > 0 else None)
         )
         db.session.add(streak)
         current_streak = init_streak
@@ -104,14 +119,21 @@ def get_user_actual_metrics(user, is_guest=False):
                 except Exception:
                     last_date = None
 
-            if last_date == today:
-                current_streak = max(1, streak.current_streak or 1)
-            elif last_date == yesterday:
-                current_streak = (streak.current_streak or 0) + 1
+            if actual_solved_today > 0:
+                if last_date == yesterday:
+                    current_streak = (streak.current_streak or 0) + 1
+                elif last_date == today:
+                    current_streak = max(1, streak.current_streak or 1)
+                else:
+                    current_streak = 1
                 streak.last_active_date = today
             else:
-                current_streak = 1
-                streak.last_active_date = today
+                if last_date == yesterday or last_date == today:
+                    current_streak = max(1, streak.current_streak or 1)
+                elif last_date and (today - last_date).days > 1:
+                    current_streak = 0
+                else:
+                    current_streak = max(0, streak.current_streak or 0)
 
             streak.current_streak = current_streak
             streak.longest_streak = max(streak.longest_streak or 1, current_streak)
@@ -129,7 +151,7 @@ def get_home_summary():
     user = User.query.get(user_id) if user_id else get_or_create_demo_user()
     
     # 1. Real Day-Wise Streak & Real Daily Goal
-    today = date.today()
+    today = get_ist_today()
     streak, goal, actual_solved_today, current_streak = get_user_actual_metrics(user, is_guest=(user_id is None))
 
     # 2. Continue Practice (Last in-progress or recent session)
@@ -172,8 +194,8 @@ def get_home_summary():
         "exam_relevance": "UPSC GS-II (Polity & Governance)"
     }
 
-    # 5. Real Weekly Progress (Past 7 days calculated from actual user attempts)
-    start_7d = datetime.combine(today - timedelta(days=6), datetime.min.time())
+    # 5. Real Weekly Progress (Past 7 days calculated from actual user attempts in IST)
+    start_7d = get_ist_day_start_utc(today - timedelta(days=6))
     answers_7d = TestAnswer.query.filter(
         TestAnswer.user_id == user.id,
         TestAnswer.created_at >= start_7d
@@ -441,7 +463,7 @@ def update_student_profile():
         try:
             val = int(payload["daily_goal"])
             user.daily_goal = max(5, min(200, val))
-            today = date.today()
+            today = get_ist_today()
             goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
             if goal:
                 goal.target_questions = user.daily_goal
@@ -708,7 +730,7 @@ def update_daily_goal():
     user.daily_goal = target_questions
     
     # Update today's goal
-    today = date.today()
+    today = get_ist_today()
     goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
     if goal:
         goal.target_questions = target_questions

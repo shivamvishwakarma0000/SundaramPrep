@@ -61,6 +61,12 @@ def get_todays_news():
     return api_success(data)
 
 
+@news_bp.route("/news/viral", methods=["GET"])
+def get_viral_news():
+    data = news_service.get_viral_articles(limit=10)
+    return api_success(data)
+
+
 @news_bp.route("/news/<article_id>", methods=["GET"])
 def get_news_detail(article_id):
     user_id = get_current_user_id()

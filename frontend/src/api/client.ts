@@ -413,6 +413,7 @@ export const api = {
   },
   getTodaysNews: () => apiRequest<any>("/api/news/today"),
   getTodaysDigest: () => apiRequest<any>("/api/news/today"),
+  getViralNews: () => apiRequest<any>("/api/news/viral"),
   getNewsDetail: (articleId: string) => apiRequest<any>(`/api/news/${articleId}`),
   executeNewsAIAction: (articleId: string, actionType: string) =>
     apiRequest<{ result: string; cached: boolean }>(`/api/news/${articleId}/ai-action`, {
