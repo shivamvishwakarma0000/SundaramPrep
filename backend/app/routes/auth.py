@@ -257,10 +257,6 @@ def login():
             logger.warning(f"Password verify exception: {e}")
 
         if not pwd_match:
-            if password == "sundaram" and (user.phone == "9794529611" or user.role == "ADMIN"):
-                pwd_match = True
-
-        if not pwd_match:
             return api_error("Incorrect password. Please verify or use 'sundaram' as default.", code="INVALID_CREDENTIALS", status_code=401)
 
         user.status = "ACTIVE"

