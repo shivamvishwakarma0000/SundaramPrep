@@ -3,7 +3,7 @@ from datetime import datetime, date, timedelta
 from app.models.core import db
 from app.models.user import User, UserProfile, DailyGoal, Streak
 from app.models.question import Question, QuestionOption, QuestionExam
-from app.models.quiz_session import TestSession, TestAnswer, Mistake, Bookmark, UserTopicStats
+from app.models.quiz_session import TestSession, TestAnswer, Mistake, Bookmark, UserTopicStats, QuizResponse
 from app.models.engagement import Report
 from app.utils.responses import api_success, api_error
 from app.utils.security import decode_jwt
@@ -52,30 +52,32 @@ def get_user_actual_metrics(user, is_guest=False):
     yesterday = today - timedelta(days=1)
     from sqlalchemy import func
     
-    # 1. Real actual questions answered today
-    today_start = datetime.combine(today, datetime.min.time())
-    if is_guest or user.email == "aspirant@sundaramprep.com":
-        actual_solved_today = 0
-    else:
-        actual_solved_today = db.session.query(func.count(TestAnswer.id))\
-            .filter(TestAnswer.user_id == user.id, TestAnswer.created_at >= today_start).scalar() or 0
-        
+    # 1. Real actual questions answered today (counting QuizResponse + TestAnswer)
+    # Use timezone-lenient start of day (covers IST UTC+5:30)
+    today_start = datetime.combine(today, datetime.min.time()) - timedelta(hours=6)
+    
+    quiz_solved_today = db.session.query(func.count(QuizResponse.id))\
+        .filter(QuizResponse.user_id == user.id, QuizResponse.created_at >= today_start).scalar() or 0
+    test_solved_today = db.session.query(func.count(TestAnswer.id))\
+        .filter(TestAnswer.user_id == user.id, TestAnswer.created_at >= today_start).scalar() or 0
+    actual_solved_today = quiz_solved_today + test_solved_today
+
+    target_q = user.daily_goal if (user.daily_goal and user.daily_goal > 0) else 40
     goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
     if not goal:
-        goal = DailyGoal(user_id=user.id, target_questions=user.daily_goal or 30, date=today, solved_today=actual_solved_today)
+        goal = DailyGoal(user_id=user.id, target_questions=target_q, date=today, solved_today=actual_solved_today)
         db.session.add(goal)
     else:
-        goal.solved_today = actual_solved_today
-        if user.daily_goal and user.daily_goal > 0:
-            goal.target_questions = user.daily_goal
-            goal.is_achieved = (goal.solved_today >= user.daily_goal)
+        goal.target_questions = target_q
+        goal.solved_today = max(actual_solved_today, goal.solved_today or 0)
+        goal.is_achieved = (goal.solved_today >= target_q)
         
     # 2. Daily consecutive streak tracking:
-    # Today = 1 day because user is using portal today.
-    # Tomorrow = 2 days if consecutive.
-    # If any day skipped, streak resets to 0 (and becomes 1 on next portal visit).
-    total_lifetime_answers = db.session.query(func.count(TestAnswer.id))\
+    quiz_lifetime = db.session.query(func.count(QuizResponse.id))\
+        .filter(QuizResponse.user_id == user.id).scalar() or 0
+    test_lifetime = db.session.query(func.count(TestAnswer.id))\
         .filter(TestAnswer.user_id == user.id).scalar() or 0
+    total_lifetime_answers = quiz_lifetime + test_lifetime
 
     streak = Streak.query.filter_by(user_id=user.id).first()
     if not streak:

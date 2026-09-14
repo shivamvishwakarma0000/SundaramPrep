@@ -418,10 +418,12 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
   }
 
 
+  const isDarkThemeOrProctored = isFullscreen || mode === 'FOCUS_TEST';
+
   return (
     <div 
       ref={arenaContainerRef}
-      className={`space-y-4 max-w-4xl mx-auto ${isFullscreen ? 'p-6 bg-slate-900 text-white min-h-screen' : ''}`}
+      className={`space-y-4 max-w-4xl mx-auto ${isDarkThemeOrProctored ? 'p-4 sm:p-6 bg-slate-900 text-slate-100 min-h-screen' : ''}`}
     >
       {/* Focus Mode Fullscreen Trigger Prompt (if not entered yet) */}
       {mode === 'FOCUS_TEST' && !isFullscreen && !isCompleted && (
@@ -437,7 +439,7 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           </div>
           <button
             onClick={requestFullscreenMode}
-            className="px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shrink-0 shadow-xs"
+            className="px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
           >
             <Maximize2 className="w-3.5 h-3.5" />
             Enter Fullscreen
@@ -447,24 +449,30 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
       {/* Top Arena Navigation Bar */}
       <div className={`rounded-2xl p-4 border flex items-center justify-between transition-colors ${
-        isFullscreen 
-          ? 'bg-slate-800/80 border-slate-700' 
+        isDarkThemeOrProctored 
+          ? 'bg-slate-800/90 border-slate-700 text-white' 
           : 'bg-white dark:bg-dark-surface border-cool-200 dark:border-dark-border shadow-subtle dark:shadow-dark-card'
       }`}>
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={onExit}
-            className="text-xs font-bold text-slate-500 dark:text-dark-muted hover:text-slate-800 dark:hover:text-dark-text transition-all flex items-center gap-1 cursor-pointer"
+            className={`text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+              isDarkThemeOrProctored
+                ? 'text-slate-300 hover:text-white'
+                : 'text-slate-500 dark:text-dark-muted hover:text-slate-800 dark:hover:text-dark-text'
+            }`}
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Exit</span>
           </button>
-          <div className="h-4 w-[1px] bg-cool-200 dark:bg-dark-border" />
+          <div className={`h-4 w-[1px] ${isDarkThemeOrProctored ? 'bg-slate-700' : 'bg-cool-200 dark:bg-dark-border'}`} />
           <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900/40">
             {mode.replace('_', ' ')}
           </span>
-          <span className="text-xs font-bold text-slate-700 dark:text-dark-text">
-            Q {currentIndex + 1} <span className="text-slate-400 dark:text-dark-muted font-normal">/ {questions.length}</span>
+          <span className={`text-xs font-bold ${
+            isDarkThemeOrProctored ? 'text-white' : 'text-slate-700 dark:text-dark-text'
+          }`}>
+            Q {currentIndex + 1} <span className={`font-normal ${isDarkThemeOrProctored ? 'text-slate-400' : 'text-slate-400 dark:text-dark-muted'}`}>/ {questions.length}</span>
           </span>
         </div>
 
@@ -472,7 +480,9 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           {/* Timer */}
           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold ${
             mode === 'FOCUS_TEST' && timerSeconds < 120 
-              ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 animate-pulse' 
+              ? 'bg-rose-900/70 text-rose-200 border border-rose-700/60 animate-pulse' 
+              : isDarkThemeOrProctored
+              ? 'bg-slate-800 border border-slate-700 text-slate-100'
               : 'bg-slate-100 dark:bg-dark-card text-slate-800 dark:text-dark-text'
           }`}>
             <Timer className="w-3.5 h-3.5" />
@@ -481,8 +491,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
 
           {/* Focus Score badge if Focus Mode */}
           {mode === 'FOCUS_TEST' && (
-            <div className="hidden sm:flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/40">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <div className="hidden sm:flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-xl bg-indigo-950/60 text-indigo-200 border border-indigo-800/60">
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
               Focus: {focusScore} ({focusViolations}/3)
             </div>
           )}
@@ -490,7 +500,11 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           {/* Question Navigator Grid Button */}
           <button
             onClick={() => setIsNavigatorOpen(true)}
-            className="w-8 h-8 rounded-xl bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-dark-text transition-all cursor-pointer"
+            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+              isDarkThemeOrProctored
+                ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200'
+                : 'bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 text-slate-700 dark:text-dark-text'
+            }`}
             title="Question Navigator"
           >
             <Grid className="w-4 h-4" />
@@ -502,6 +516,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
             className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
               currentQ && bookmarkedIds.has(currentQ.id)
                 ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
+                : isDarkThemeOrProctored
+                ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300'
                 : 'bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 text-slate-600 dark:text-dark-muted'
             }`}
             title="Bookmark Question"
@@ -514,8 +530,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
       {/* Question Card */}
       {currentQ ? (
         <div className={`rounded-2xl p-4 sm:p-6 md:p-8 border shadow-card dark:shadow-dark-card space-y-4 sm:space-y-6 transition-colors ${
-          isFullscreen 
-            ? 'bg-slate-800/90 border-slate-700 text-white' 
+          isDarkThemeOrProctored 
+            ? 'bg-slate-800/90 border-slate-700 text-slate-100' 
             : 'bg-white dark:bg-dark-surface border-cool-200 dark:border-dark-border'
         }`}>
           {/* Question Meta tags */}
@@ -530,8 +546,10 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                   {currentQ.subject || 'General Studies'}
                 </span>
               )}
-              <span className="text-slate-400 dark:text-dark-muted">·</span>
-              <span className="text-slate-600 dark:text-dark-muted font-semibold">{currentQ.topic}</span>
+              <span className={isDarkThemeOrProctored ? 'text-slate-500' : 'text-slate-400 dark:text-dark-muted'}>·</span>
+              <span className={`font-semibold ${isDarkThemeOrProctored ? 'text-slate-300' : 'text-slate-600 dark:text-dark-muted'}`}>
+                {currentQ.topic}
+              </span>
             </div>
 
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
@@ -546,19 +564,27 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           </div>
 
           {/* Question Stem - Responsive Fluid Typography clamp() */}
-          <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-dark-text leading-relaxed font-display text-fluid-q break-words min-w-0">
+          <h3 className={`text-base sm:text-lg lg:text-xl font-bold leading-relaxed font-display text-fluid-q break-words min-w-0 ${
+            isDarkThemeOrProctored ? 'text-white' : 'text-slate-900 dark:text-dark-text'
+          }`}>
             {currentQ.question_text}
           </h3>
 
           {/* Diagram / Map image if available */}
           {currentQ.image_url && (
-            <div className="my-4 p-3 bg-slate-50 dark:bg-dark-card rounded-xl border border-cool-200 dark:border-dark-border flex flex-col items-center">
+            <div className={`my-4 p-3 rounded-xl border flex flex-col items-center ${
+              isDarkThemeOrProctored
+                ? 'bg-slate-900/60 border-slate-700'
+                : 'bg-slate-50 dark:bg-dark-card border-cool-200 dark:border-dark-border'
+            }`}>
               <img 
                 src={currentQ.image_url} 
                 alt="Question Diagram" 
                 className="max-h-56 sm:max-h-72 object-contain rounded-lg shadow-2xs w-auto max-w-full" 
               />
-              <span className="text-[10px] text-slate-400 dark:text-dark-muted mt-1 font-medium">Exhibit / Map Reference</span>
+              <span className={`text-[10px] mt-1 font-medium ${
+                isDarkThemeOrProctored ? 'text-slate-400' : 'text-slate-400 dark:text-dark-muted'
+              }`}>Exhibit / Map Reference</span>
             </div>
           )}
 
@@ -578,7 +604,9 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                     const isThisTheCorrectAnswer = Boolean(correctKey && opt.id === correctKey);
                     
                     // Color styles depending on mode and submission
-                    let optStyle = 'bg-slate-50 dark:bg-dark-card hover:bg-slate-100 dark:hover:bg-slate-700/60 border-slate-200 dark:border-dark-border text-slate-800 dark:text-dark-text';
+                    let optStyle = isDarkThemeOrProctored
+                      ? 'bg-slate-800/80 hover:bg-slate-700/80 border-slate-700 text-slate-100'
+                      : 'bg-slate-50 dark:bg-dark-card hover:bg-slate-100 dark:hover:bg-slate-700/60 border-slate-200 dark:border-dark-border text-slate-800 dark:text-dark-text';
                     
                     if (mode !== 'FOCUS_TEST' && currentSubmission) {
                       if (isThisTheCorrectAnswer) {
@@ -587,7 +615,9 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                         optStyle = 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 dark:border-rose-500 text-rose-950 dark:text-rose-100 font-bold ring-2 ring-rose-500/40 shadow-xs';
                       }
                     } else if (isSelected) {
-                      optStyle = 'bg-brand-50/90 dark:bg-brand-950/60 border-brand-600 dark:border-brand-500 text-brand-950 dark:text-brand-200 font-bold ring-2 ring-brand-600/30';
+                      optStyle = isDarkThemeOrProctored
+                        ? 'bg-brand-600/30 border-brand-500 text-white font-bold ring-2 ring-brand-500/40 shadow-xs'
+                        : 'bg-brand-50/90 dark:bg-brand-950/60 border-brand-600 dark:border-brand-500 text-brand-950 dark:text-brand-200 font-bold ring-2 ring-brand-600/30';
                     }
 
                     return (
@@ -604,6 +634,8 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
                             ? 'bg-rose-600 text-white'
                             : isSelected
                             ? 'bg-brand-600 text-white'
+                            : isDarkThemeOrProctored
+                            ? 'bg-slate-700 text-slate-200'
                             : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-dark-muted'
                         }`}>
                           {opt.id}
@@ -686,12 +718,18 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
           })()}
 
           {/* Action Button Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-2.5 pt-4 border-t border-cool-200 dark:border-dark-border">
+          <div className={`flex flex-wrap items-center justify-between gap-2.5 pt-4 border-t ${
+            isDarkThemeOrProctored ? 'border-slate-700' : 'border-cool-200 dark:border-dark-border'
+          }`}>
             <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
               <button
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
-                className="px-3 xs:px-3.5 py-2 bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-dark-text font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                className={`px-3 xs:px-3.5 py-2 disabled:opacity-40 font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer ${
+                  isDarkThemeOrProctored
+                    ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200'
+                    : 'bg-cool-100 dark:bg-dark-card hover:bg-cool-200 dark:hover:bg-slate-700 text-slate-700 dark:text-dark-text'
+                }`}
               >
                 <ArrowLeft className="w-4 h-4" />
                 Prev
@@ -700,7 +738,11 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               {mode !== 'FOCUS_TEST' && (
                 <button
                   onClick={handleSkip}
-                  className="px-3 xs:px-3.5 py-2 bg-slate-100 dark:bg-dark-card hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-dark-muted font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  className={`px-3 xs:px-3.5 py-2 font-bold text-xs rounded-xl transition-all cursor-pointer ${
+                    isDarkThemeOrProctored
+                      ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300'
+                      : 'bg-slate-100 dark:bg-dark-card hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-dark-muted'
+                  }`}
                 >
                   Skip
                 </button>
@@ -709,7 +751,11 @@ export const PracticeArena: React.FC<PracticeArenaProps> = ({
               {/* In-Question Ask AI button */}
               <button
                 onClick={() => setIsAITutorOpen(true)}
-                className="px-2.5 xs:px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-950/70 text-indigo-900 dark:text-indigo-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-indigo-200 dark:border-indigo-900/40"
+                className={`px-2.5 xs:px-3.5 py-2 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border ${
+                  isDarkThemeOrProctored
+                    ? 'bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-200 border-indigo-800/60'
+                    : 'bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-950/70 text-indigo-900 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900/40'
+                }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 Ask AI

@@ -45,6 +45,19 @@ class PDFPipeline:
             query = query.filter_by(user_id=user_id)
         return query.order_by(Document.created_at.desc()).first()
 
+    def process_document_async(self, document_id: str, app=None):
+        """Runs process_document within an explicit Flask app context in a background thread."""
+        if not app:
+            from flask import current_app
+            try:
+                app = current_app._get_current_object()
+            except Exception:
+                from app import create_app
+                app = create_app()
+
+        with app.app_context():
+            self.process_document(document_id)
+
     def process_document(self, document_id: str):
         """
         Executes the full pipeline for a document.

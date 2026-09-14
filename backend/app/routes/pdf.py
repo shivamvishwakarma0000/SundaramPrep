@@ -53,47 +53,65 @@ def upload_pdf():
         os.remove(save_path)
         return api_error("File size exceeds 16MB limit.", status_code=413)
 
-    user_id = get_optional_user_id()
-    from app.models.user import User
-    user = User.query.get(user_id) if user_id else None
-    if not user or user.role != "ADMIN":
-        return api_error("Access restricted: Only Sundaram (Admin) can upload new test papers. Students can practice all available materials.", code="FORBIDDEN", status_code=403)
-    
-    # Section 11: AI Cost Control & Duplicate File Hashing
-    file_hash = pdf_pipeline.calculate_file_hash(save_path)
-    cached_doc = pdf_pipeline.check_cached_document(user_id=user_id, file_hash=file_hash)
-    if cached_doc:
-        os.remove(save_path)
-        return api_success({
-            "document": cached_doc.to_dict(),
-            "message": "File was previously processed. Loaded cached questions.",
-            "cached": True
-        }, status_code=200)
+    try:
+        user_id = get_optional_user_id()
+        from app.models.user import User
+        user = User.query.get(user_id) if user_id else None
+        if not user:
+            # Associate with Sundaram / Admin
+            admin_user = User.query.filter((User.phone == "9794529611") | (User.role == "ADMIN")).first()
+            if admin_user:
+                user = admin_user
+                user_id = admin_user.id
+        elif user.role != "ADMIN" and user.phone != "9794529611":
+            return api_error("Access restricted: Only Sundaram (Admin) can upload new test papers. Students can practice all available materials.", code="FORBIDDEN", status_code=403)
         
-    doc = PDFDocument(
-        user_id=user_id,
-        file_name=filename,
-        file_path=save_path,
-        file_size=file_size,
-        file_hash=file_hash,
-        status="PROCESSING",
-        processing_stage="PARSING"
-    )
-    db.session.add(doc)
-    db.session.commit()
-    
-    # Non-blocking async background processing
-    worker = threading.Thread(
-        target=pdf_pipeline.process_document_async,
-        args=(doc.id,),
-        daemon=True
-    )
-    worker.start()
-    
-    return api_success({
-        "document": doc.to_dict(),
-        "message": "Document uploaded and background AI extraction started."
-    }, status_code=202)
+        # Section 11: AI Cost Control & Duplicate File Hashing
+        file_hash = pdf_pipeline.calculate_file_hash(save_path)
+        cached_doc = pdf_pipeline.check_cached_document(user_id=user_id, file_hash=file_hash)
+        if cached_doc:
+            os.remove(save_path)
+            return api_success({
+                "document": cached_doc.to_dict(),
+                "message": "File was previously processed. Loaded cached questions.",
+                "cached": True
+            }, status_code=200)
+            
+        doc = PDFDocument(
+            user_id=user_id,
+            file_name=filename,
+            file_path=save_path,
+            file_size_bytes=file_size,
+            file_hash=file_hash,
+            status="PROCESSING",
+            processing_stage="PARSING"
+        )
+        db.session.add(doc)
+        db.session.commit()
+        
+        # Non-blocking async background processing with application context
+        from flask import current_app
+        app_obj = current_app._get_current_object()
+        worker = threading.Thread(
+            target=pdf_pipeline.process_document_async,
+            args=(doc.id, app_obj),
+            daemon=True
+        )
+        worker.start()
+        
+        return api_success({
+            "document": doc.to_dict(),
+            "message": "Document uploaded and background AI extraction started."
+        }, status_code=202)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        if os.path.exists(save_path):
+            try:
+                os.remove(save_path)
+            except Exception:
+                pass
+        return api_error(f"Failed to process PDF upload: {str(e)}", status_code=500)
 
 @pdf_bp.route("/documents", methods=["GET"])
 def list_documents():

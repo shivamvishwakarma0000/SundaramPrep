@@ -120,30 +120,26 @@ class PDFExtractor:
 
         # Look for explicit Answer Key sections first (e.g., at end of test paper)
         key_sections = re.findall(
-            r'(?:Answer\s*Key|Answers|Answer\s*Sheet|Solutions|उत्तर\s*कुंजी|उत्तरमाला)[\s\:\-\_]*(.*)',
+            r'(?:Answer\s*Key|Answer\s*Sheet|Answers?|Solutions?|उत्तर\s*कुंजी|उत्तरमाला|उत्तर\s*सूची|Key\s*Sheet)[\s\:\-\_]*(.*)',
             text,
             re.IGNORECASE | re.DOTALL
         )
         
-        # Only parse global answer key if a dedicated Answer Key section was found!
-        # Do NOT scan the entire test paper text as an answer key, as that misidentifies question option A as the answer!
-        if not key_sections:
-            return key_map
-
-        for target in key_sections:
-            # Pattern matching: 1. A, 1.(A), 1 - A, 1: A, 1) A, Q1: A, Q.1 (B)
-            matches = re.findall(
-                r'(?:Q(?:uestion)?\.?\s*|\b)([0-9]{1,3})[\.\)\:\-\s]+\(?([A-Da-dक-घअ-द1-4])\)?',
-                target
-            )
-            for q_num_str, ans_char in matches:
-                try:
-                    q_num = int(q_num_str)
-                    mapped = HINDI_OPT_MAP.get(ans_char, ans_char.upper())
-                    if mapped in ["A", "B", "C", "D"]:
-                        key_map[q_num] = mapped
-                except ValueError:
-                    continue
+        if key_sections:
+            for target in key_sections:
+                # Pattern matching: 1. A, 1.(A), 1 - A, 1: A, 1) A, Q1: A, Q.1 (B), 1.A, 1-B
+                matches = re.findall(
+                    r'(?:Q(?:uestion)?\.?\s*|\b)([0-9]{1,3})[\.\)\:\-\s]*[\(\[]?([A-Da-dक-घअ-द1-4])[\)\]]?',
+                    target
+                )
+                for q_num_str, ans_char in matches:
+                    try:
+                        q_num = int(q_num_str)
+                        mapped = HINDI_OPT_MAP.get(ans_char, ans_char.upper())
+                        if mapped in ["A", "B", "C", "D"]:
+                            key_map[q_num] = mapped
+                    except ValueError:
+                        continue
 
         if key_map:
             logger.info(f"Global answer key detected for {len(key_map)} questions.")
@@ -156,7 +152,7 @@ class PDFExtractor:
         - English headers: Q1., Q.1, 1., 1), (1), Question 1:, MCQ 1.
         - Hindi headers: प्र.1, प्रश्न 1, १., २., (१)
         - Options: (A), (B), (C), (D) or (a), (b), (c), (d) or A., B., C., D. or (क), (ख), (ग), (घ) or (1), (2), (3), (4)
-        - Answers: Inline (Ans: B) or Global Answer Key tables at end of document
+        - Answers: Inline (Ans: B, Ans. B, Answer - B, [Ans: B]) or Global Answer Key tables at end of document
         """
         questions = []
         if not text:
@@ -192,7 +188,7 @@ class PDFExtractor:
 
             # 1. Detect explicit answer if present in the block with explicit delimiter
             ans_match = re.search(
-                r'\b(?:Ans(?:wer)?|Correct\s*(?:Option|Answer)?|Key|उत्तर)[\s]*[:\-=]\s*\(?([A-Da-dक-घअ-द1-4])\)?',
+                r'\b(?:Ans(?:wer)?|Correct\s*(?:Option|Answer)?|Key|उत्तर)[\s]*[:\.\-=]?\s*[\(\[]?([A-Da-dक-घअ-द1-4])[\)\]]?',
                 block,
                 re.IGNORECASE
             )

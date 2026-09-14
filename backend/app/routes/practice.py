@@ -1,8 +1,10 @@
 from flask import Blueprint, request
+import re
 from datetime import datetime, date, timedelta
 from app.models import (
     db, 
     Question, 
+    QuestionOption,
     QuizSession, 
     QuizResponse, 
     WeakTopicTracker, 
@@ -51,6 +53,89 @@ def get_or_create_demo_user():
         db.session.add(user)
         db.session.commit()
     return user
+
+
+def _get_or_create_topic_questions(clean_topic: str, count: int, exam: str = "UPSC_CSE", subject: str = "General Studies") -> list:
+    """
+    Retrieves or synthesizes questions strictly matching the requested topic.
+    Guarantees that when a user searches for any topic (e.g. 'Cripps Mission', 'Buddhism'),
+    all questions belong strictly to that topic and not unrelated subjects.
+    """
+    questions = []
+    
+    # 1. Exact or substring match on topic, subject, question_text
+    search_pattern = f"%{clean_topic}%"
+    matched = Question.query.filter(
+        db.or_(
+            Question.topic.ilike(search_pattern),
+            Question.subject.ilike(search_pattern),
+            Question.question_text.ilike(search_pattern)
+        )
+    ).order_by(db.func.random()).limit(count).all()
+    questions.extend(matched)
+    
+    # 2. Token match on keywords if still needed
+    if len(questions) < count:
+        existing_ids = [q.id for q in questions]
+        stop_words = {"the", "of", "and", "in", "to", "a", "an", "is", "for", "on", "with", "as", "by", "at", "from", "questions", "test", "mock"}
+        tokens = [w for w in re.split(r'\W+', clean_topic.lower()) if len(w) > 2 and w not in stop_words]
+        
+        if tokens:
+            token_conditions = [
+                db.or_(
+                    Question.topic.ilike(f"%{tok}%"),
+                    Question.subject.ilike(f"%{tok}%"),
+                    Question.question_text.ilike(f"%{tok}%")
+                )
+                for tok in tokens
+            ]
+            more_needed = count - len(questions)
+            query = Question.query.filter(db.or_(*token_conditions))
+            if existing_ids:
+                query = query.filter(~Question.id.in_(existing_ids))
+            token_matched = query.order_by(db.func.random()).limit(more_needed).all()
+            questions.extend(token_matched)
+
+    # 3. If still fewer than count, synthesize high-yield curriculum questions strictly on this topic!
+    if len(questions) < count:
+        needed = count - len(questions)
+        generated = ai_service.generate_topic_mcqs(
+            topic=clean_topic,
+            count=needed,
+            exam=exam,
+            subject=subject
+        )
+        for gq in generated:
+            new_q = Question(
+                question_text=gq["question_text"],
+                correct_answer=gq["correct_answer"],
+                explanation=gq.get("explanation"),
+                subject=gq.get("subject", subject),
+                topic=clean_topic.title(),
+                exam=exam,
+                difficulty=gq.get("difficulty", "MEDIUM"),
+                source_type="AI_GENERATED",
+                answer_status="AI_VERIFIED",
+                is_verified=True
+            )
+            db.session.add(new_q)
+            db.session.flush()
+            
+            for opt in gq.get("options", []):
+                q_opt = QuestionOption(
+                    question_id=new_q.id,
+                    option_key=opt["id"],
+                    option_text=opt["text"],
+                    is_correct=(opt["id"] == gq["correct_answer"])
+                )
+                db.session.add(q_opt)
+            
+            questions.append(new_q)
+            
+        db.session.commit()
+
+    return questions[:count]
+
 
 @practice_bp.route("/start", methods=["POST"])
 def start_practice_session():
@@ -177,22 +262,13 @@ def start_practice_session():
             count = max(10, count)
 
         if topic:
-            # Flexible fuzzy search across topic, subject, and question_text
-            search_pattern = f"%{topic.strip()}%"
-            matched = Question.query.filter(
-                db.or_(
-                    Question.topic.ilike(search_pattern),
-                    Question.subject.ilike(search_pattern),
-                    Question.question_text.ilike(search_pattern)
-                )
-            ).order_by(db.func.random()).limit(count).all()
-            questions.extend(matched)
-            
-            if len(questions) < count:
-                more_needed = count - len(questions)
-                existing_ids = [q.id for q in questions]
-                fallback = Question.query.filter(~Question.id.in_(existing_ids)).order_by(db.func.random()).limit(more_needed).all()
-                questions.extend(fallback)
+            clean_topic = topic.strip()
+            questions = _get_or_create_topic_questions(
+                clean_topic=clean_topic,
+                count=count,
+                exam=exam or "UPSC_CSE",
+                subject=subject or "General Studies"
+            )
         else:
             query = Question.query
             if subject:
