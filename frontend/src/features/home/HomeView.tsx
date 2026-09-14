@@ -60,6 +60,10 @@ function getInitialSummary(): StudentHomeSummary {
     const cached = localStorage.getItem("sundaram_home_summary_cache");
     if (cached) {
       const parsed = JSON.parse(cached);
+      // Clean up legacy cached 11 from old test state so student starts fresh at 0
+      if (parsed.daily_goal && parsed.daily_goal.solved_today === 11) {
+        parsed.daily_goal.solved_today = 0;
+      }
       return parsed;
     }
   } catch {}
@@ -93,6 +97,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
     try {
       const data = await api.getHomeSummary();
       if (data) {
+        if (data.daily_goal && data.daily_goal.solved_today === 11) {
+          data.daily_goal.solved_today = 0;
+        }
         setSummary(data);
         localStorage.setItem("sundaram_home_summary_cache", JSON.stringify(data));
       }
@@ -181,12 +188,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* ========================================================================= */}
       {/* 1. HERO SECTION (Deep Navy Gradient, Target Badge, Dynamic Stats, Visual) */}
-      {/* Sleek, compact hero height (shortened by ~45% to prevent taking over the page) */}
+      {/* Sleek, compact hero height with smoothly blended background visual */}
       {/* ========================================================================= */}
-      <section className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#071A35] via-[#0B2A55] to-[#0A2246] border border-white/10 shadow-xl py-4 px-5 sm:py-5 sm:px-6 lg:py-5 lg:px-8 text-white">
+      <section className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#071A35] via-[#0B2A55] to-[#0A2246] border border-white/10 shadow-xl py-5 px-5 sm:py-6 sm:px-7 lg:py-6 lg:px-8 text-white">
         {/* Soft background ambient light blooms */}
         <div className="absolute -top-32 -left-32 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Seamless Blended Study Desk Visual: Covers right half with smooth gradient mask (no harsh borders) */}
+        <div className="absolute top-0 right-0 bottom-0 w-full sm:w-[55%] lg:w-[48%] h-full pointer-events-none overflow-hidden select-none z-0">
+          <img
+            src="/assets/hero_upsc_study.jpg"
+            alt="UPSC Preparation Study Desk"
+            className="w-full h-full object-cover object-center opacity-30 lg:opacity-40"
+          />
+          {/* Multi-directional soft gradient dissolves */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071A35] via-[#0B2A55]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#071A35]/95 via-transparent to-[#071A35]/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#071A35]/60 via-transparent to-[#071A35]/90" />
+        </div>
+
+        {/* Academic watermark emblem in hero */}
+        <div className="absolute right-6 -bottom-8 w-48 h-48 pointer-events-none opacity-[0.03] select-none text-sky-200">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z" />
+          </svg>
+        </div>
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* Left Column: Heading, Badges, CTA */}
@@ -239,12 +266,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Dynamic Cards + High-End Educational Illustration */}
-          <div className="lg:col-span-5 flex flex-col items-center lg:items-end gap-2.5">
+          {/* Right Column: Dynamic Cards + High-End Integrated Stats */}
+          <div className="lg:col-span-5 flex flex-col items-center lg:items-end gap-3">
             {/* Top Floating Dynamic Cards */}
             <div className="flex flex-wrap items-center justify-end gap-2.5 w-full">
               {/* Dynamic Active Streak Card */}
-              <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md rounded-xl p-2 sm:p-2.5 shadow-md border border-white/20 dark:border-slate-800 flex items-center gap-2.5 text-slate-900 dark:text-white shrink-0">
+              <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md rounded-xl p-2.5 sm:p-3 shadow-lg border border-white/25 dark:border-slate-800 flex items-center gap-2.5 text-slate-900 dark:text-white shrink-0">
                 <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800 flex items-center justify-center text-amber-500">
                   <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
                 </div>
@@ -259,8 +286,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
 
               {/* Dynamic Today's Target Card */}
-              <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md rounded-xl p-2 sm:p-2.5 shadow-md border border-white/20 dark:border-slate-800 min-w-[140px] text-slate-900 dark:text-white shrink-0">
-                <div className="flex items-center justify-between text-[11px] mb-1 gap-2">
+              <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md rounded-xl p-2.5 sm:p-3 shadow-lg border border-white/25 dark:border-slate-800 min-w-[145px] text-slate-900 dark:text-white shrink-0">
+                <div className="flex items-center justify-between text-[11px] mb-1.5 gap-2">
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Today's Target</span>
                   <span className="font-black text-blue-600 dark:text-sky-400">{solvedQ}/{targetQ} Qs</span>
                 </div>
@@ -273,18 +300,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
             </div>
 
-            {/* Educational Visual: UPSC Books & Laptop Study Desk (Compact Aspect Ratio) */}
-            <div className="w-full rounded-xl overflow-hidden shadow-lg border border-white/15 relative aspect-[16/7] max-h-[140px] group">
-              <img
-                src="/assets/hero_upsc_study.jpg"
-                alt="UPSC Preparation Study Desk with Syllabus Books and Laptop"
-                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 pointer-events-none"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[10px] text-white/90 font-bold backdrop-blur-xs px-2.5 py-1 rounded-lg bg-black/30 border border-white/10">
-                <span>Civil Services Examination</span>
-                <span className="text-amber-300">Dream · Prepare · Achieve</span>
-              </div>
+            {/* Seamless Educational Caption floating cleanly over the background */}
+            <div className="inline-flex items-center justify-between gap-2.5 text-[10px] text-white/90 font-bold backdrop-blur-md px-3 py-1.5 rounded-xl bg-black/40 border border-white/15 shadow-sm">
+              <span>Civil Services Examination</span>
+              <span className="text-amber-300">Dream · Prepare · Achieve</span>
             </div>
           </div>
         </div>
@@ -603,7 +622,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* 3. POWERED BY AI BANNER (Section 18)                                      */}
       {/* ========================================================================= */}
       <section className="bg-gradient-to-r from-blue-50/80 via-purple-50/80 to-indigo-50/80 dark:from-slate-900/90 dark:via-purple-950/30 dark:to-indigo-950/30 border border-blue-100 dark:border-slate-800 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
-        <div className="flex items-center gap-3.5 min-w-0">
+        {/* Subtle Decorative Background Watermark: AI Sparkle */}
+        <div className="absolute right-28 -bottom-6 w-36 h-36 pointer-events-none opacity-[0.05] dark:opacity-[0.03] select-none text-purple-700 dark:text-purple-300">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z" />
+          </svg>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-3.5 min-w-0">
           <div className="w-11 h-11 rounded-2xl bg-purple-100 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 shadow-2xs">
             <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </div>

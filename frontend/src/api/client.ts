@@ -248,7 +248,7 @@ export const api = {
   getSmartRevisionSummary: () =>
     apiRequest<{ total_recommended: number; mistakes_count: number; repeated_mistakes_count: number; weak_topics_count: number; current_affairs_count: number; recommended_formula: string }>("/api/student/smart-revision"),
   getStudentAnalytics: (weak_threshold: number = 50, strong_threshold: number = 70) =>
-    apiRequest<any>(`/api/student/analytics?weak_threshold=${weak_threshold}&strong_threshold=${strong_threshold}`),
+    apiRequest<any>(`/api/student/analytics?weak_threshold=${weak_threshold}&strong_threshold=${strong_threshold}&_t=${Date.now()}`),
   getPersonalBests: () =>
     apiRequest<{ personal_bests: any }>("/api/student/personal-bests"),
   updateDailyGoal: (target_questions: number) =>

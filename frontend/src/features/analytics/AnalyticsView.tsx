@@ -32,25 +32,36 @@ interface AnalyticsViewProps {
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt, onNavigateToPractice }) => {
   const [data, setData] = useState<StudentAnalytics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [refreshedToast, setRefreshedToast] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'needs_work' | 'mastered'>('all');
 
-  const loadAnalytics = async () => {
-    setLoading(true);
+  const loadAnalytics = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const res = await api.getStudentAnalytics();
       setData(res);
+      if (isManualRefresh) {
+        setRefreshedToast(true);
+        setTimeout(() => setRefreshedToast(false), 2000);
+      }
     } catch (e: any) {
       console.error('Failed to load student analytics:', e);
       setError(e?.message || 'Unable to load performance data.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    loadAnalytics();
+    loadAnalytics(false);
   }, []);
 
   const totalQuestions = data?.metrics?.total_questions_solved || 0;
@@ -128,7 +139,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
             </p>
           </div>
           <button
-            onClick={loadAnalytics}
+            onClick={() => loadAnalytics(false)}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
@@ -146,8 +157,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
       {/* 1. TOP HERO / TITLE CARD                                                  */}
       {/* ========================================================================= */}
       <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden transition-all">
-        {/* Soft background ambient gradient */}
+        {/* Soft background ambient gradient & Diagnostics Watermark */}
         <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-blue-50/50 via-sky-50/20 to-transparent dark:from-blue-950/20 dark:via-transparent pointer-events-none" />
+        <div className="absolute right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-blue-900 dark:text-blue-100">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+          </svg>
+        </div>
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -164,12 +180,15 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
 
           <div className="flex items-center gap-2">
             <button
-              onClick={loadAnalytics}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-dark-surface dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold shadow-2xs transition-colors cursor-pointer"
-              title="Refresh Analytics"
+              onClick={() => loadAnalytics(true)}
+              disabled={refreshing}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-dark-surface dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold shadow-2xs transition-all cursor-pointer ${
+                refreshing ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
+              title="Refresh Analytics from server"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Refresh</span>
+              <RotateCcw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-blue-600 dark:text-sky-400' : ''}`} />
+              <span>{refreshing ? 'Refreshing...' : refreshedToast ? '✓ Updated' : 'Refresh'}</span>
             </button>
           </div>
         </div>

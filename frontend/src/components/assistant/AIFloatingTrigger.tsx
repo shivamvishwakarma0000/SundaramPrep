@@ -11,11 +11,7 @@ export const AIFloatingTrigger: React.FC<AIFloatingTriggerProps> = ({ onClick, i
 
   return (
     <aside aria-label="AI Assistant Quick Launch" className="contents">
-      <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2">
-        {/* Black Pill Badge "AI Assistant" (Matches Reference) */}
-        <div className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-full bg-slate-900/90 dark:bg-black/90 text-white text-xs font-bold shadow-lg border border-white/10 backdrop-blur-md select-none pointer-events-none animate-in fade-in">
-          AI Assistant
-        </div>
+      <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center">
 
         {/* Glowing Circular AI Assistant Trigger Button */}
         <button

@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Flame, 
   User as UserIcon, 
   ArrowLeft, 
   Sun, 
@@ -34,12 +33,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   canGoBack = false,
   onGoBack,
-  streakCount,
   activeTab = 'home',
   onTabSelect,
 }) => {
   const { theme, setTheme } = useTheme();
-  const displayStreak = streakCount ?? (user?.streak_count || 1);
 
   const examOptions: { id: ExamType; label: string }[] = [
     { id: 'UPSC_CSE', label: 'UPSC CSE' },
@@ -133,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             aria-label="Toggle Theme"
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-50 dark:bg-dark-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-dark-border cursor-pointer transition-colors shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-50 dark:bg-dark-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-dark-border cursor-pointer transition-colors shrink-0 shadow-2xs"
             title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
             {theme === 'dark' ? (
@@ -143,19 +140,10 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Dynamic Active Streak Badge */}
-          <div className="flex items-center gap-1.5 bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-300 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-bold shadow-xs shrink-0">
-            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-amber-500 shrink-0" />
-            <div className="flex items-center gap-1 leading-none">
-              <span className="font-extrabold">{displayStreak} Days</span>
-              <span className="hidden xl:inline text-[10px] text-amber-700 dark:text-amber-400 font-semibold">Active Streak</span>
-            </div>
-          </div>
-
           {/* User Profile / Login */}
           <button
             onClick={onOpenAuth}
-            className="flex items-center gap-1.5 bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-dark-text border border-slate-300 dark:border-dark-border px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-dark-text border border-slate-300 dark:border-dark-border px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 shadow-2xs"
           >
             <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 dark:text-dark-muted shrink-0" />
             <span className="hidden sm:inline font-semibold">

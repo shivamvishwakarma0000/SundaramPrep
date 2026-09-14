@@ -349,16 +349,23 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in pb-12 transition-colors">
       {/* 1. INSTANT 10-QUESTION TOPIC SEARCH MOCK GENERATOR */}
-      <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-5 shadow-xs space-y-3 relative overflow-hidden">
+        {/* Subtle Watermark: Globe / Topic Search */}
+        <div className="absolute right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-blue-900 dark:text-blue-100">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+          </svg>
+        </div>
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-brand-600 bg-brand-50 border border-brand-200 px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-black uppercase tracking-wider text-brand-600 dark:text-sky-400 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-900/60 px-2.5 py-0.5 rounded-full">
               Topic-Wise 10-Question Mock Test
             </span>
-            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 mt-1">
+            <h2 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white mt-1">
               Search Any Topic & Start Instant 10-Question Test
             </h2>
-            <p className="text-xs font-medium text-slate-500">
+            <p className="text-xs font-medium text-slate-500 dark:text-dark-muted">
               Type any syllabus topic to practice 10 questions. After completion, take 10 more or search another topic.
             </p>
           </div>
@@ -371,7 +378,7 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
               onStartMode('MOCK_TEST', undefined, searchTopic.trim());
             }
           }}
-          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1"
+          className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1"
         >
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -380,7 +387,7 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
               value={searchTopic}
               onChange={(e) => setSearchTopic(e.target.value)}
               placeholder="Search topic (e.g. Dandi March, Fundamental Rights, Monetary Policy, 1857 Revolt)..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-600 focus:bg-white transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-dark-surface border-2 border-slate-200 dark:border-dark-border rounded-xl text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-brand-600 focus:bg-white dark:focus:bg-dark-card transition-all"
             />
           </div>
           <button
@@ -394,7 +401,7 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         </form>
 
         {/* Quick Topic Chips */}
-        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+        <div className="relative z-10 flex items-center gap-1.5 flex-wrap pt-1">
           <span className="text-[11px] font-bold text-slate-400">Popular:</span>
           {['Dandi March', 'Fundamental Rights', 'Monetary Policy', 'Revolt of 1857', 'National Parks', 'Judiciary'].map((t) => (
             <button
@@ -404,7 +411,7 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
                 setSearchTopic(t);
                 onStartMode('MOCK_TEST', undefined, t);
               }}
-              className="text-[11px] font-bold text-slate-700 hover:text-brand-700 bg-slate-100 hover:bg-brand-50 hover:border-brand-300 border border-slate-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+              className="text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:text-brand-700 dark:hover:text-brand-300 bg-slate-100 dark:bg-dark-surface hover:bg-brand-50 dark:hover:bg-slate-800 hover:border-brand-300 border border-slate-200 dark:border-dark-border px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
             >
               {t}
             </button>
@@ -413,8 +420,15 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
       </div>
 
       {/* 2. INSTANT 10-QUESTION MOCK TEST FROM YOUR UPLOADED PDF PAPERS */}
-      <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-5 shadow-xs space-y-4 transition-all">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border rounded-2xl p-5 shadow-xs space-y-4 relative overflow-hidden transition-all">
+        {/* Subtle Watermark: PDF Paper */}
+        <div className="absolute right-4 -bottom-6 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-emerald-900 dark:text-emerald-100">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+          </svg>
+        </div>
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 rounded-full flex items-center gap-1">

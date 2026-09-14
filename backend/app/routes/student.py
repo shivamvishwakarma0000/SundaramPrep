@@ -47,15 +47,18 @@ def get_or_create_demo_user():
 
 # =========================================================================
 # 1. HOME DASHBOARD (Section 10: Low-Transfer Aggregated Home)
-def get_user_actual_metrics(user):
+def get_user_actual_metrics(user, is_guest=False):
     today = date.today()
     yesterday = today - timedelta(days=1)
     from sqlalchemy import func
     
     # 1. Real actual questions answered today
     today_start = datetime.combine(today, datetime.min.time())
-    actual_solved_today = db.session.query(func.count(TestAnswer.id))\
-        .filter(TestAnswer.user_id == user.id, TestAnswer.created_at >= today_start).scalar() or 0
+    if is_guest or user.email == "aspirant@sundaramprep.com":
+        actual_solved_today = 0
+    else:
+        actual_solved_today = db.session.query(func.count(TestAnswer.id))\
+            .filter(TestAnswer.user_id == user.id, TestAnswer.created_at >= today_start).scalar() or 0
         
     goal = DailyGoal.query.filter_by(user_id=user.id, date=today).first()
     if not goal:
@@ -114,7 +117,7 @@ def get_home_summary():
     
     # 1. Real Day-Wise Streak & Real Daily Goal
     today = date.today()
-    streak, goal, actual_solved_today, current_streak = get_user_actual_metrics(user)
+    streak, goal, actual_solved_today, current_streak = get_user_actual_metrics(user, is_guest=(user_id is None))
 
     # 2. Continue Practice (Last in-progress or recent session)
     recent_session = TestSession.query.filter_by(user_id=user.id)\
