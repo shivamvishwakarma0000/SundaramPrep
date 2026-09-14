@@ -163,18 +163,26 @@ def get_home_summary():
     }
 
     # 5. Real Weekly Progress (Past 7 days calculated from actual user attempts)
+    start_7d = datetime.combine(today - timedelta(days=6), datetime.min.time())
+    answers_7d = TestAnswer.query.filter(
+        TestAnswer.user_id == user.id,
+        TestAnswer.created_at >= start_7d
+    ).all()
+    
+    day_buckets = { (today - timedelta(days=i)).strftime("%Y-%m-%d"): [] for i in range(7) }
+    for a in answers_7d:
+        if a.created_at:
+            ds = a.created_at.strftime("%Y-%m-%d")
+            if ds in day_buckets:
+                day_buckets[ds].append(a)
+
     weekly_points = []
     for i in range(6, -1, -1):
         d = today - timedelta(days=i)
-        d_start = datetime.combine(d, datetime.min.time())
-        d_end = datetime.combine(d, datetime.max.time())
-        day_answers = TestAnswer.query.filter(
-            TestAnswer.user_id == user.id,
-            TestAnswer.created_at >= d_start,
-            TestAnswer.created_at <= d_end
-        ).all()
-        solved = len(day_answers)
-        acc = round((sum(1 for a in day_answers if a.correct) / solved) * 100) if solved > 0 else 0
+        ds = d.strftime("%Y-%m-%d")
+        b_answers = day_buckets.get(ds, [])
+        solved = len(b_answers)
+        acc = round((sum(1 for a in b_answers if a.correct) / solved) * 100) if solved > 0 else 0
         weekly_points.append({
             "day": d.strftime("%a"),
             "solved": solved,

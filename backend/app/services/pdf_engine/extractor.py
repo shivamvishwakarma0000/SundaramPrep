@@ -216,8 +216,9 @@ class PDFExtractor:
                     raw_opt_id = match[0] or match[1]
                     norm_id = HINDI_OPT_MAP.get(raw_opt_id, raw_opt_id.upper())
                     opt_body = match[2].strip()
-                    # Clean any trailing answer notes from option text
+                    # Clean any trailing answer notes or document page/section headers from option text
                     opt_body = re.sub(r'\b(?:Ans(?:wer)?|Key|उत्तर)[\s:\-=].*$', '', opt_body, flags=re.IGNORECASE).strip()
+                    opt_body = re.sub(r'\n+(?:Indian GK|General Studies|Mock Test|Page \d+|History|Geography|Polity|Economy|General Science|Arithmetic|General Hindi|General English|Logical Reasoning|Reasoning|Constitution).*$', '', opt_body, flags=re.IGNORECASE).strip()
                     options.append({"id": norm_id, "text": opt_body})
 
                 # Determine question stem up to first option

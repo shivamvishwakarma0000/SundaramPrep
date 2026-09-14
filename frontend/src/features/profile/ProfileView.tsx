@@ -10,7 +10,11 @@ import {
   Moon, 
   Sun,
   Save,
-  Camera
+  Camera,
+  GraduationCap,
+  Sliders,
+  Zap,
+  BookOpen
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useTheme } from '../../context/ThemeContext';
@@ -28,9 +32,32 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onExamChange,
 }) => {
   const { theme, setTheme } = useTheme();
-  const [profile, setProfile] = useState<StudentProfileData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [editingGoal, setEditingGoal] = useState<number>(30);
+  const [profile, setProfile] = useState<StudentProfileData | null>(() => {
+    try {
+      const cached = localStorage.getItem('sundaram_profile_cache');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return null;
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    try {
+      return !localStorage.getItem('sundaram_profile_cache');
+    } catch {
+      return true;
+    }
+  });
+  const [editingGoal, setEditingGoal] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem('sundaram_user_daily_goal');
+      if (stored) return parseInt(stored, 10);
+      const cached = localStorage.getItem('sundaram_profile_cache');
+      if (cached) {
+        const p = JSON.parse(cached);
+        if (p?.user?.daily_goal) return p.user.daily_goal;
+      }
+    } catch {}
+    return 40;
+  });
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -124,6 +151,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       try {
         const data = await api.getProfile();
         setProfile(data);
+        try {
+          localStorage.setItem('sundaram_profile_cache', JSON.stringify(data));
+        } catch {}
         const storedGoal = localStorage.getItem('sundaram_user_daily_goal');
         if (storedGoal) {
           setEditingGoal(parseInt(storedGoal, 10));
@@ -160,6 +190,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           }
           localStorage.setItem('sundaram_home_summary_cache', JSON.stringify(parsed));
         }
+        // Update profile cache as well
+        const profCache = localStorage.getItem('sundaram_profile_cache');
+        if (profCache) {
+          const p = JSON.parse(profCache);
+          if (p.user) p.user.daily_goal = editingGoal;
+          localStorage.setItem('sundaram_profile_cache', JSON.stringify(p));
+        }
         // 3. Dispatch real-time cross-view event
         window.dispatchEvent(new CustomEvent('sundaram_daily_goal_updated', { detail: editingGoal }));
       } catch {}
@@ -193,9 +230,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
-      {/* 1. Header Profile Card (20-24px rounded-3xl, SaaS style) */}
-      <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5 transition-colors">
-        <div className="flex items-center gap-4">
+      {/* 1. Header Profile Card with Subtle Watermark */}
+      <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5 transition-colors group">
+        {/* Subtle Watermark SVG */}
+        <GraduationCap className="absolute -right-5 -bottom-5 w-32 h-32 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-105" />
+        <div className="relative z-10 flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#0B2545] to-[#1E3A8A] text-white flex items-center justify-center font-black text-2xl shadow-xs shrink-0">
             {user.name ? user.name.charAt(0).toUpperCase() : 'S'}
           </div>
@@ -228,56 +267,73 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Key Exam Readiness Stats (4 Dynamic Metric Cards) */}
+      {/* 2. Key Exam Readiness Stats (4 Dynamic Metric Cards with Beautiful Watermarks) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-            <span className="text-xs font-semibold">Questions Solved</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        {/* Box 1: Questions Solved with CheckCircle Watermark */}
+        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
+          <CheckCircle2 className="absolute -right-3 -bottom-3 w-20 h-20 text-emerald-500/10 dark:text-emerald-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
+              <span className="text-xs font-semibold">Questions Solved</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
+              {stats.questions_solved}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">Total attempts</div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
-            {stats.questions_solved}
-          </div>
-          <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">Total attempts</div>
         </div>
 
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-            <span className="text-xs font-semibold">Tests Taken</span>
-            <Award className="w-4 h-4 text-brand-600 dark:text-sky-400" />
+        {/* Box 2: Tests Taken with Award Watermark */}
+        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
+          <Award className="absolute -right-3 -bottom-3 w-20 h-20 text-brand-500/10 dark:text-sky-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
+              <span className="text-xs font-semibold">Tests Taken</span>
+              <Award className="w-4 h-4 text-brand-600 dark:text-sky-400" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
+              {stats.tests_taken}
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">Focus + Practice</div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
-            {stats.tests_taken}
-          </div>
-          <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">Focus + Practice</div>
         </div>
 
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-            <span className="text-xs font-semibold">Net Accuracy</span>
-            <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+        {/* Box 3: Net Accuracy with Target Watermark */}
+        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
+          <Target className="absolute -right-3 -bottom-3 w-20 h-20 text-indigo-500/10 dark:text-indigo-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
+              <span className="text-xs font-semibold">Net Accuracy</span>
+              <Target className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
+              {stats.overall_accuracy}%
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">-0.66 penalty included</div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
-            {stats.overall_accuracy}%
-          </div>
-          <div className="text-[11px] text-slate-500 dark:text-dark-muted mt-1">-0.66 penalty included</div>
         </div>
 
-        <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
-            <span className="text-xs font-semibold">Study Streak</span>
-            <Flame className="w-4 h-4 text-amber-500" />
+        {/* Box 4: Study Streak with Flame Watermark */}
+        <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs transition-colors group">
+          <Flame className="absolute -right-3 -bottom-3 w-20 h-20 text-amber-500/10 dark:text-amber-400/10 pointer-events-none select-none transition-transform group-hover:scale-110" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between text-slate-400 dark:text-dark-muted mb-1">
+              <span className="text-xs font-semibold">Study Streak</span>
+              <Flame className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
+              {stats.streak}d
+            </div>
+            <div className="text-[11px] text-amber-700 dark:text-amber-400 font-bold mt-1">Active habit</div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
-            {stats.streak}d
-          </div>
-          <div className="text-[11px] text-amber-700 dark:text-amber-400 font-bold mt-1">Active habit</div>
         </div>
       </div>
 
-      {/* 3. Account & Practice Preferences Card (Section 11) */}
-      <div className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5 text-slate-900 dark:text-white transition-colors">
-        <div className="flex items-center justify-between">
+      {/* 3. Account & Practice Preferences Card with Sliders Watermark */}
+      <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5 text-slate-900 dark:text-white transition-colors group">
+        <Sliders className="absolute -right-6 -bottom-6 w-36 h-36 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-105" />
+        <div className="relative z-10 flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
             Account & Practice Preferences
           </h3>
@@ -296,8 +352,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         <div className="space-y-3.5 text-xs">
           {/* Target Exam Switcher */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border">
-            <div>
+          <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border group">
+            <BookOpen className="absolute -right-3 -bottom-3 w-16 h-16 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+            <div className="relative z-10">
               <div className="font-bold text-slate-900 dark:text-white">Primary Exam Target</div>
               <div className="text-slate-500 dark:text-dark-muted mt-0.5">
                 Calibrates syllabus, question difficulty, and AI reasoning depth.
@@ -306,7 +363,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <select
               value={currentExam}
               onChange={(e) => onExamChange(e.target.value as ExamType)}
-              className="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white font-bold text-xs py-2 px-3 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none min-h-[42px] cursor-pointer"
+              className="relative z-10 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white font-bold text-xs py-2 px-3 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none min-h-[42px] cursor-pointer"
             >
               <option value="UPSC_CSE">UPSC Civil Services (CSE)</option>
               <option value="SSC_CGL">SSC Combined Graduate Level</option>
@@ -317,14 +374,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           {/* Daily Goal Target */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border">
-            <div>
+          <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border group">
+            <Zap className="absolute -right-3 -bottom-3 w-16 h-16 text-amber-500/5 dark:text-amber-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+            <div className="relative z-10">
               <div className="font-bold text-slate-900 dark:text-white">Daily Goal (Questions / Day)</div>
               <div className="text-slate-500 dark:text-dark-muted mt-0.5">
                 Sets your target for daily consistency and streak completion.
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="relative z-10 flex items-center gap-2">
               <input
                 type="number"
                 min="10"
@@ -346,8 +404,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
           {/* Linguistic & Theme Settings */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between group">
+              <Globe className="absolute -right-2 -bottom-2 w-14 h-14 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+              <div className="relative z-10 flex items-center gap-2.5">
                 <Globe className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
                 <div>
                   <div className="font-bold text-slate-900 dark:text-white">Language Mode</div>
@@ -356,21 +415,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-brand-700 dark:text-sky-400 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-900/50">
+              <span className="relative z-10 text-xs font-bold text-brand-700 dark:text-sky-400 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-900/50">
                 Active
               </span>
             </div>
 
             {/* Interactive Theme Switcher */}
-            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between group">
+              <Moon className="absolute -right-2 -bottom-2 w-14 h-14 text-slate-400/5 dark:text-slate-200/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+              <div className="relative z-10 flex items-center gap-2.5">
                 <Moon className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
                 <div>
                   <div className="font-bold text-slate-900 dark:text-white">Appearance Theme</div>
                   <div className="text-slate-500 dark:text-dark-muted text-[11px] capitalize">{theme} Mode Active</div>
                 </div>
               </div>
-              <div className="flex items-center gap-1 bg-white dark:bg-dark-card p-1 rounded-xl border border-slate-200 dark:border-dark-border">
+              <div className="relative z-10 flex items-center gap-1 bg-white dark:bg-dark-card p-1 rounded-xl border border-slate-200 dark:border-dark-border">
                 <button
                   type="button"
                   onClick={() => setTheme('light')}
@@ -401,8 +461,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             {/* Daily Reminders with Real Notification API toggle */}
-            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3 group">
+              <Bell className="absolute -right-2 -bottom-2 w-14 h-14 text-emerald-500/5 dark:text-emerald-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+              <div className="relative z-10 flex items-center gap-2.5 min-w-0">
                 <Bell className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
                 <div className="min-w-0">
                   <div className="font-bold text-slate-900 dark:text-white">Daily Reminders</div>
@@ -411,7 +472,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="relative z-10 flex items-center gap-2 shrink-0">
                 {remindersEnabled && (
                   <button
                     type="button"
@@ -442,9 +503,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </div>
             </div>
 
-            {/* Custom Motivation Card Poster Upload (Right side of Daily Reminders) */}
-            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
+            {/* Custom Motivation Card Poster Upload */}
+            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3 group">
+              <Camera className="absolute -right-2 -bottom-2 w-14 h-14 text-indigo-500/5 dark:text-indigo-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
+              <div className="relative z-10 flex items-center gap-2.5 min-w-0">
                 <Camera className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
                 <div className="min-w-0">
                   <div className="font-bold text-slate-900 dark:text-white">Home Poster Image</div>

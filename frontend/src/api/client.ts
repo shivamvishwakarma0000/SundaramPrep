@@ -9,10 +9,35 @@ const RAW_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_UR
 // Normalize base URL: strip trailing slash and trailing /api if provided so ${BASE_URL}/api/... is always clean
 const BASE_URL = RAW_URL.replace(/\/+$/, "").replace(/\/api$/, "");
 
+const apiCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 25_000; // 25 seconds fast cache window
+
+export function invalidateApiCache(pattern?: string) {
+  if (!pattern) {
+    apiCache.clear();
+    return;
+  }
+  for (const key of apiCache.keys()) {
+    if (key.includes(pattern)) {
+      apiCache.delete(key);
+    }
+  }
+}
+
 export async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  useCache: boolean = false
 ): Promise<T> {
+  const method = (options.method || "GET").toUpperCase();
+  
+  if (method === "GET" && useCache) {
+    const cached = apiCache.get(endpoint);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data as T;
+    }
+  }
+
   const token = localStorage.getItem("sundaram_token");
   
   const headers: Record<string, string> = {
@@ -41,6 +66,20 @@ export async function apiRequest<T>(
     err.code = json?.error?.code;
     err.details = json?.error?.details;
     throw err;
+  }
+
+  if (method === "GET" && useCache) {
+    apiCache.set(endpoint, { data: json.data, timestamp: Date.now() });
+  } else if (method !== "GET") {
+    // Invalidate relevant cache keys on data modification
+    if (endpoint.includes("/profile") || endpoint.includes("/daily-goal")) {
+      invalidateApiCache("/student/profile");
+      invalidateApiCache("/student/home");
+    } else if (endpoint.includes("/practice/") || endpoint.includes("/submit") || endpoint.includes("/complete")) {
+      invalidateApiCache("/student/home");
+      invalidateApiCache("/student/analytics");
+      invalidateApiCache("/student/mistakes");
+    }
   }
 
   return json.data as T;
@@ -187,23 +226,23 @@ export const api = {
       body: JSON.stringify(prefs),
     }),
 
-  // Student Portal Optimized Endpoints (Neon Data Transfer Protection)
-  getHomeSummary: () => apiRequest<StudentHomeSummary>("/api/student/home"),
-  getPracticeHub: (exam?: string) => apiRequest<{ exam: string; subjects: any[]; total_questions_available: number }>(`/api/student/practice-hub?exam=${exam || 'UPSC_CSE'}`),
+  // Student Portal Optimized Endpoints (Neon Data Transfer Protection & Fast UI Caching)
+  getHomeSummary: () => apiRequest<StudentHomeSummary>("/api/student/home", {}, true),
+  getPracticeHub: (exam?: string) => apiRequest<{ exam: string; subjects: any[]; total_questions_available: number }>(`/api/student/practice-hub?exam=${exam || 'UPSC_CSE'}`, {}, true),
   startQuick10: (exam?: string) => apiRequest<{ session: any; questions: any[] }>("/api/student/quick-10", {
     method: "POST",
     body: JSON.stringify({ exam: exam || "UPSC_CSE" })
   }),
   getMistakes: (page: number = 1, limit: number = 10) =>
-    apiRequest<{ total: number; page: number; limit: number; mistakes: MistakeItem[] }>(`/api/student/mistakes?page=${page}&limit=${limit}`),
+    apiRequest<{ total: number; page: number; limit: number; mistakes: MistakeItem[] }>(`/api/student/mistakes?page=${page}&limit=${limit}`, {}, true),
   getBookmarks: (page: number = 1, limit: number = 10) =>
-    apiRequest<{ total: number; page: number; limit: number; bookmarks: BookmarkItem[] }>(`/api/student/bookmarks?page=${page}&limit=${limit}`),
+    apiRequest<{ total: number; page: number; limit: number; bookmarks: BookmarkItem[] }>(`/api/student/bookmarks?page=${page}&limit=${limit}`, {}, true),
   toggleBookmark: (question_id: string, notes?: string) =>
     apiRequest<{ bookmarked: boolean; bookmark?: any }>("/api/student/bookmarks/toggle", {
       method: "POST",
       body: JSON.stringify({ question_id, notes })
     }),
-  getProfile: () => apiRequest<StudentProfileData>("/api/student/profile"),
+  getProfile: () => apiRequest<StudentProfileData>("/api/student/profile", {}, true),
   updateProfile: (data: Partial<{ name: string; target_exam: string; language: string; daily_goal: number }>) =>
     apiRequest<{ user: any; message: string }>("/api/student/profile", {
       method: "PATCH",
@@ -213,9 +252,9 @@ export const api = {
   // Questions
   getQuestions: (params?: Record<string, string>) => {
     const query = new URLSearchParams(params).toString();
-    return apiRequest<{ total: number; questions: any[] }>(`/api/questions?${query}`);
+    return apiRequest<{ total: number; questions: any[] }>(`/api/questions?${query}`, {}, true);
   },
-  getFilters: () => apiRequest<{ exams: string[]; subjects: string[]; topics: string[]; source_types: string[]; answer_statuses: string[] }>("/api/questions/filters"),
+  getFilters: () => apiRequest<{ exams: string[]; subjects: string[]; topics: string[]; source_types: string[]; answer_statuses: string[] }>("/api/questions/filters", {}, true),
 
   // Practice & Focus Tests
   startPractice: (body: { exam: string; session_type?: string; subject?: string; topic?: string; count?: number; time_limit_seconds?: number; document_id?: string; document_ids?: string[] }) =>
@@ -240,17 +279,17 @@ export const api = {
     }),
   getSessionDetails: (session_id: string) =>
     apiRequest<{ session: any; responses: Record<string, any>; questions: any[] }>(`/api/practice/session/${session_id}`),
-  getWeakTopics: () => apiRequest<{ weak_topics: any[] }>("/api/practice/weak-topics"),
+  getWeakTopics: () => apiRequest<{ weak_topics: any[] }>("/api/practice/weak-topics", {}, true),
 
   // Current Affairs & Smart Revision & Analytics
   getDailyCurrentAffairs: (page: number = 1, limit: number = 10) =>
-    apiRequest<{ total: number; page: number; limit: number; current_affairs: any[] }>(`/api/student/current-affairs?page=${page}&limit=${limit}`),
+    apiRequest<{ total: number; page: number; limit: number; current_affairs: any[] }>(`/api/student/current-affairs?page=${page}&limit=${limit}`, {}, true),
   getSmartRevisionSummary: () =>
-    apiRequest<{ total_recommended: number; mistakes_count: number; repeated_mistakes_count: number; weak_topics_count: number; current_affairs_count: number; recommended_formula: string }>("/api/student/smart-revision"),
+    apiRequest<{ total_recommended: number; mistakes_count: number; repeated_mistakes_count: number; weak_topics_count: number; current_affairs_count: number; recommended_formula: string }>("/api/student/smart-revision", {}, true),
   getStudentAnalytics: (weak_threshold: number = 50, strong_threshold: number = 70) =>
-    apiRequest<any>(`/api/student/analytics?weak_threshold=${weak_threshold}&strong_threshold=${strong_threshold}&_t=${Date.now()}`),
+    apiRequest<any>(`/api/student/analytics?weak_threshold=${weak_threshold}&strong_threshold=${strong_threshold}`, {}, true),
   getPersonalBests: () =>
-    apiRequest<{ personal_bests: any }>("/api/student/personal-bests"),
+    apiRequest<{ personal_bests: any }>("/api/student/personal-bests", {}, true),
   updateDailyGoal: (target_questions: number) =>
     apiRequest<{ daily_goal: any; message: string }>("/api/student/daily-goal", {
       method: "PATCH",

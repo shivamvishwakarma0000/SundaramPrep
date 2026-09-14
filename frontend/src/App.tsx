@@ -18,8 +18,23 @@ import type { User, ExamType, Question, PracticeMode } from './types';
 import { ThemeProvider } from './context/ThemeContext';
 
 export function AppContent() {
-  const [user, setUser] = useState<User | null>(null);
-  const [currentExam, setCurrentExam] = useState<ExamType>('UPSC_CSE');
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem('sundaram_user_cache');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return null;
+  });
+  const [currentExam, setCurrentExam] = useState<ExamType>(() => {
+    try {
+      const cached = localStorage.getItem('sundaram_user_cache');
+      if (cached) {
+        const u = JSON.parse(cached);
+        if (u.target_exam) return u.target_exam;
+      }
+    } catch {}
+    return 'UPSC_CSE';
+  });
   const [activeTab, setActiveTab] = useState<PortalTab>('home');
 
   // Active Practice Session state (for Single-Feature Practice flow)
@@ -51,32 +66,49 @@ export function AppContent() {
     return 1;
   });
 
-  // Check auth token on mount
+  // Check auth token and hydrate data on mount in parallel for instantaneous load
   useEffect(() => {
     async function initApp() {
       try {
         const token = localStorage.getItem('sundaram_token');
+        const promises: [Promise<any>, Promise<any>?] = [
+          api.getHomeSummary().catch(() => null)
+        ];
+        
         if (token) {
-          const res = await api.getMe();
-          if (res.user) {
-            setUser(res.user);
-            if (res.user.streak_count) {
-              setSyncedStreak(res.user.streak_count);
+          promises.push(
+            api.getMe().catch((err) => {
+              if (err?.code === 'UNAUTHORIZED' || err?.message?.includes('token')) {
+                localStorage.removeItem('sundaram_token');
+                localStorage.removeItem('sundaram_user_cache');
+              }
+              return null;
+            })
+          );
+        }
+
+        const results = await Promise.allSettled(promises);
+        
+        const homeRes = results[0].status === 'fulfilled' ? results[0].value : null;
+        if (homeRes?.streak) {
+          setSyncedStreak(homeRes.streak);
+        }
+
+        if (token && results[1] && results[1].status === 'fulfilled') {
+          const userRes = results[1].value;
+          if (userRes?.user) {
+            setUser(userRes.user);
+            localStorage.setItem('sundaram_user_cache', JSON.stringify(userRes.user));
+            if (userRes.user.streak_count) {
+              setSyncedStreak(userRes.user.streak_count);
             }
-            if (res.user.target_exam) {
-              setCurrentExam(res.user.target_exam);
+            if (userRes.user.target_exam) {
+              setCurrentExam(userRes.user.target_exam);
             }
           }
         }
-        // Sync streak from live student home endpoint
-        try {
-          const homeRes = await api.getHomeSummary();
-          if (homeRes?.streak) {
-            setSyncedStreak(homeRes.streak);
-          }
-        } catch {}
       } catch (e) {
-        localStorage.removeItem('sundaram_token');
+        // Safe fallback
       }
     }
     initApp();
