@@ -83,10 +83,17 @@ class AIService:
             "You are 'Sundaram AI', an elite, razor-sharp, and fast competitive exam study mentor "
             "for UPSC CSE, SSC CGL, Banking, and State PSCs.\n\n"
             "TEMPORAL ANCHOR & ACCURACY RULES:\n"
-            "1. The current year is 2026. For questions regarding incumbent political leaders, offices, elections, and appointments, always provide current post-2025 facts (e.g. Current Chief Minister of Delhi: Smt. Rekha Gupta (BJP) following the February 2025 Delhi Assembly election; Lieutenant Governor of Delhi: Taranjit Singh Sandhu; 51st CJI: Justice Sanjiv Khanna).\n"
+            "1. The current year is 2026. For questions regarding incumbent political leaders, offices, elections, and appointments, always provide current post-2025 facts:\n"
+            "   - Prime Minister of India: Shri Narendra Modi (BJP, since 2014, Varanasi MP)\n"
+            "   - Chief Minister of Uttar Pradesh: Yogi Adityanath (BJP, since March 2017, re-elected 2022)\n"
+            "   - Chief Minister of Delhi: Smt. Rekha Gupta (BJP, sworn in February 2025)\n"
+            "   - Lieutenant Governor of Delhi: Taranjit Singh Sandhu\n"
+            "   - President of India: Smt. Droupadi Murmu (15th President)\n"
+            "   - Vice President of India: Jagdeep Dhankhar (14th Vice President)\n"
+            "   - 51st Chief Justice of India (CJI): Justice Sanjiv Khanna\n"
             "2. Answer the user's specific question DIRECTLY in the first 1-2 lines. Never beat around the bush.\n"
             "3. Keep the overall response crisp, clear, authoritative, and high-yield.\n"
-            "4. Add 2-3 structured bullet points for constitutional articles (e.g. Article 239AA), statutory provisions, or exam facts.\n"
+            "4. Add 2-3 structured bullet points for constitutional articles (e.g. Article 164, Article 75, Article 239AA), statutory provisions, or exam facts.\n"
             "5. If asked in Hindi, reply in clean Hindi (हिंदी).\n"
             "6. If asked in Hinglish, reply in natural conversational Hinglish."
         )
@@ -94,7 +101,7 @@ class AIService:
 
     def _get_gemini_candidate_models(self) -> List[str]:
         """Returns ordered list of active Gemini model candidates for auto-failover."""
-        candidates = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-2.5-flash-lite", "gemini-pro-latest", "gemini-2.5-pro"]
+        candidates = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.5-flash", "gemini-3.7-flash"]
         seen = set()
         return [m for m in candidates if m and not (m in seen or seen.add(m))]
 
@@ -114,17 +121,21 @@ class AIService:
                 }
                 if system_instruction:
                     payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
-                res = requests.post(url, headers=headers, json=payload, timeout=12)
+                res = requests.post(url, headers=headers, json=payload, timeout=4)
                 if res.status_code == 200:
                     data = res.json()
                     return data["candidates"][0]["content"]["parts"][0]["text"]
-                elif res.status_code != 429 and res.status_code != 404:
-                    # Retry without tools if tools are not supported for this model
+                elif res.status_code == 429:
+                    # Rate limit or quota exhausted - break immediately to trigger fast fallback
+                    break
+                elif res.status_code != 404:
                     payload.pop("tools", None)
-                    res2 = requests.post(url, headers=headers, json=payload, timeout=12)
+                    res2 = requests.post(url, headers=headers, json=payload, timeout=3.5)
                     if res2.status_code == 200:
                         data2 = res2.json()
                         return data2["candidates"][0]["content"]["parts"][0]["text"]
+                    elif res2.status_code == 429:
+                        break
             except Exception as e:
                 logger.warning(f"Gemini invocation error on {model}: {e}")
         return None
@@ -233,7 +244,7 @@ class AIService:
             for model in self._get_gemini_candidate_models():
                 try:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?key={self.gemini_key}&alt=sse"
-                    res = requests.post(url, json=payload, headers=headers, stream=True, timeout=10)
+                    res = requests.post(url, json=payload, headers=headers, stream=True, timeout=3.5)
                     if res.status_code == 200:
                         streamed_any = False
                         for line in res.iter_lines():
@@ -252,13 +263,14 @@ class AIService:
                         if streamed_any:
                             yield {"type": "done", "model_used": model, "sources": ["Sundaram AI Mentor (Gemini Live Search)"]}
                             return
-                    elif res.status_code != 429 and res.status_code != 404:
-                        # Retry without tools if tools stream failed
+                    elif res.status_code == 429:
+                        break
+                    elif res.status_code != 404:
                         payload_no_tools = {
                             "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_content}"}]}],
                             "generationConfig": {"temperature": 0.2}
                         }
-                        res2 = requests.post(url, json=payload_no_tools, headers=headers, stream=True, timeout=10)
+                        res2 = requests.post(url, json=payload_no_tools, headers=headers, stream=True, timeout=3)
                         if res2.status_code == 200:
                             streamed_any2 = False
                             for line in res2.iter_lines():
@@ -277,6 +289,8 @@ class AIService:
                             if streamed_any2:
                                 yield {"type": "done", "model_used": model, "sources": ["Sundaram AI Mentor (Gemini)"]}
                                 return
+                        elif res2.status_code == 429:
+                            break
                 except Exception as e:
                     logger.warning(f"Gemini streaming failover on {model}: {e}")
 
@@ -777,6 +791,168 @@ class AIService:
                 "sources": ["Official Delhi Government Portal (services.delhi.gov.in)", "Constitution of India (Article 239AA)"],
                 "notice": None
             }
+
+        # -------------------------------------------------------------
+        # 2c. Chief Minister of Uttar Pradesh / Yogi Adityanath
+        # -------------------------------------------------------------
+        is_up_cm_query = (
+            any(k in q_lower for k in ["uttar pradesh", "up cm", "cm of up", "chief minister of up", "chief minister of uttar pradesh", "yogi", "adityanath", "yogi adityanath", "ajay mohan bisht"])
+        )
+
+        if is_up_cm_query:
+            if is_hindi:
+                reply = (
+                    "**उत्तर / मुख्य बिंदु:** उत्तर प्रदेश के वर्तमान मुख्यमंत्री **योगी आदित्यनाथ (भाजपा)** (मूल नाम: अजय मोहन सिंह बिष्ट) हैं, जो **19 मार्च 2017** से लगातार उत्तर प्रदेश के 21वें मुख्यमंत्री के रूप में कार्यरत हैं (मार्च 2022 में लगातार दूसरे कार्यकाल हेतु पुनर्निर्वाचित)।\n\n"
+                    "**संवैधानिक प्रावधान एवं राज्य कार्यपालिका (UPSC GS-II संदर्भ):**\n"
+                    "• **अनुच्छेद 164:** संविधान के अनुच्छेद 164(1) के अनुसार राज्य के मुख्यमंत्री की नियुक्ति **राज्यपाल** (वर्तमान में श्रीमती आनंदीबेन पटेल) द्वारा की जाती है तथा अन्य मंत्रियों की नियुक्ति राज्यपाल मुख्यमंत्री की सलाह पर करते हैं।\n"
+                    "• **अनुच्छेद 167:** मुख्यमंत्री का यह संवैधानिक कर्तव्य है कि वह राज्य के प्रशासन एवं विधायी प्रस्तावों की जानकारी राज्यपाल को प्रस्तुत करें।\n"
+                    "• **द्विसदनीय विधायिका (Bicameral Legislature):** उत्तर प्रदेश में द्विसदनीय विधानमंडल है — 403 सदस्यीय विधानसभा (Vidhan Sabha) और 100 सदस्यीय विधान परिषद (Vidhan Parishad)। संसद में उत्तर प्रदेश का प्रतिनिधित्व सर्वाधिक है (80 लोकसभा सीटें और 31 राज्यसभा सीटें)।\n\n"
+                    "**परीक्षा उपयोगी महत्वपूर्ण तथ्य (High-Yield UPPSC / UPSC Facts):**\n"
+                    "• योगी आदित्यनाथ उत्तर प्रदेश के 37 वर्षों के चुनावी इतिहास (1985 के बाद) में लगातार 5 वर्ष का पूर्ण कार्यकाल पूरा कर पुनः पूर्ण बहुमत से सत्ता में लौटने वाले **पहले मुख्यमंत्री** हैं।\n"
+                    "• मुख्यमंत्री बनने से पूर्व वे गोरखपुर संसदीय क्षेत्र से लगातार 5 बार (1998 से 2017) लोकसभा सांसद रहे।\n"
+                    "• प्रमुख विकासात्मक योजनाएं: **ODOP (एक जिला एक उत्पाद योजना)**, गंगा एक्सप्रेसवे, पूर्वांचल एवं बुंदेलखंड एक्सप्रेसवे नेटवर्क, और यूपी डिफेंस इंडस्ट्रियल कॉरिडोर।\n\n"
+                    "**स्मृति सूत्र (Memory Trick):**\n"
+                    "• **'अनुच्छेद 164 (राज्यपाल द्वारा नियुक्ति) -> अनुच्छेद 167 (राज्यपाल को सूचना) -> 403 विधानसभा / 80 लोकसभा -> 37 वर्षों में पहले रिपीट CM'**।"
+                )
+            elif is_hinglish:
+                reply = (
+                    "**Answer / Key Point:** Uttar Pradesh ke current Chief Minister **Yogi Adityanath (BJP)** (real name: Ajay Mohan Singh Bisht) hain, jo **19 March 2017** se UP ke 21st Chief Minister ke roop me serve kar rahe hain (March 2022 me second consecutive term ke liye re-elect hue).\n\n"
+                    "**Constitutional Provisions & State Executive (UPSC GS-II):**\n"
+                    "• **Article 164:** Article 164(1) ke mutabiq State ke Chief Minister ko **Governor** (currently Smt. Anandiben Patel) appoint karte hain aur Council of Ministers assembly ke prati collectively responsible hoti hai.\n"
+                    "• **Article 167:** CM ki constitutional duty define karta hai Governor ko administration aur legislation se related information provide karne ke liye.\n"
+                    "• **Bicameral Legislature:** UP me Bicameral House hai (403 Vidhan Sabha seats + 100 Vidhan Parishad seats). UP Parliament me highest representation send karta hai (80 Lok Sabha + 31 Rajya Sabha seats).\n\n"
+                    "**High-Yield Facts:**\n"
+                    "• Yogi Adityanath UP ke 37 years ke electoral history me pehle aise CM hain jinhone 5 saal ka complete term poora karke consecutive term me absolute majority ke sath return kiya.\n"
+                    "• CM banne se pehle Gorakhpur constituency se 5 consecutive terms (1998–2017) Lok Sabha MP rahe.\n"
+                    "• Flagship Initiatives: **ODOP (One District One Product)**, Ganga Expressway, Bundelkhand Expressway, UP Defence Corridor.\n\n"
+                    "**Memory Trick:**\n"
+                    "• **'Article 164 (CM Appointment) -> Article 167 (Duties to Governor) -> 403 Assembly / 80 Lok Sabha -> 1st 5-yr repeat CM in 37 yrs'**."
+                )
+            else:
+                reply = (
+                    "**Answer / Key Point:** The current Chief Minister of Uttar Pradesh is **Yogi Adityanath (BJP)** (born Ajay Mohan Singh Bisht), who has served as the 21st Chief Minister of Uttar Pradesh since **19 March 2017** (re-elected for a second consecutive term in March 2022).\n\n"
+                    "**Constitutional Framework & State Executive (UPSC GS-II):**\n"
+                    "• **Article 164:** Under Article 164(1) of the Constitution, the Chief Minister is appointed by the **Governor** (currently Smt. Anandiben Patel), and the Council of Ministers is collectively responsible to the Legislative Assembly.\n"
+                    "• **Article 167:** Defines the constitutional duties of the Chief Minister in communicating administrative decisions and legislative proposals to the Governor.\n"
+                    "• **Bicameral Legislature:** Uttar Pradesh has a bicameral legislature with a 403-member Legislative Assembly (Vidhan Sabha) and a 100-member Legislative Council (Vidhan Parishad). UP holds the largest parliamentary representation (80 Lok Sabha MPs and 31 Rajya Sabha MPs).\n\n"
+                    "**High-Yield UPSC / State PCS Facts:**\n"
+                    "• Yogi Adityanath is the **first Chief Minister of Uttar Pradesh in 37 years** (since 1985) to complete a full 5-year tenure and return to power with an absolute majority.\n"
+                    "• Prior to assuming the Chief Ministership, he represented the Gorakhpur Lok Sabha constituency for five consecutive terms (1998–2017).\n"
+                    "• Key Policy Initiatives: **ODOP (One District One Product)** scheme (adopted nationwide), Ganga Expressway & Bundelkhand Expressway corridors, and the Uttar Pradesh Defence Industrial Corridor.\n\n"
+                    "**Memory Trick (Mnemonic):**\n"
+                    "• Remember: **'Article 164 (Governor Appointment) -> Article 167 (Duty to Governor) -> 403 Assembly / 80 Lok Sabha -> 1st 5-Yr Repeat CM in 37 Yrs'**."
+                )
+            return {
+                "reply": reply,
+                "model_used": "sundaram-ai-fast",
+                "sources": ["Official Government of Uttar Pradesh Portal (up.gov.in)", "Constitution of India (Articles 163, 164, 167)"],
+                "notice": None
+            }
+
+        # -------------------------------------------------------------
+        # 2d. Prime Minister of India / Narendra Modi
+        # -------------------------------------------------------------
+        is_pm_query = (
+            any(k in q_lower for k in ["narendra modi", "modi", "prime minister of india", "pm of india", "who is pm", "current pm of india", "who is the prime minister"])
+        )
+
+        if is_pm_query:
+            if is_hindi:
+                reply = (
+                    "**उत्तर / मुख्य बिंदु:** भारत के वर्तमान प्रधानमंत्री **श्री नरेन्द्र मोदी (भाजपा)** हैं, जो **26 मई 2014** से भारत के 14वें प्रधानमंत्री के रूप में सेवारत हैं (जून 2024 में लगातार तीसरे कार्यकाल हेतु शपथ ली)। वे लोकसभा में **वाराणसी** संसदीय क्षेत्र का प्रतिनिधित्व करते हैं।\n\n"
+                    "**संवैधानिक प्रावधान एवं केंद्रीय कार्यपालिका (UPSC GS-II):**\n"
+                    "• **अनुच्छेद 74(1):** राष्ट्रपति को उनके कार्यों में सहायता एवं सलाह देने हेतु प्रधानमंत्री की अध्यक्षता में एक मंत्रिपरिषद होगी (*de jure* बनाम *de facto* कार्यपालिका)।\n"
+                    "• **अनुच्छेद 75:** प्रधानमंत्री की नियुक्ति **राष्ट्रपति** द्वारा की जाती है तथा अन्य मंत्रियों की नियुक्ति राष्ट्रपति प्रधानमंत्री की सलाह पर करते हैं। मंत्रिपरिषद सामूहिक रूप से **लोकसभा** के प्रति उत्तरदायी होती है।\n"
+                    "• **अनुच्छेद 78:** प्रधानमंत्री का यह कर्तव्य है कि वह संघ के प्रशासन और विधान संबंधी सभी निर्णय राष्ट्रपति को सूचित करें।\n\n"
+                    "**परीक्षा उपयोगी महत्वपूर्ण तथ्य (Quick Facts):**\n"
+                    "• प्रधानमंत्री बनने से पूर्व श्री नरेन्द्र मोदी 2001 से 2014 तक लगातार 4 बार गुजरात के मुख्यमंत्री रहे।\n"
+                    "• वे स्वतंत्र भारत में जन्मे भारत के पहले प्रधानमंत्री हैं तथा सबसे लंबे समय तक सेवा देने वाले गैर-कांग्रेसी प्रधानमंत्री हैं।\n"
+                    "• प्रमुख राष्ट्रीय पहलें: **पीएम गति शक्ति**, डिजिटल इंडिया, स्वच्छ भारत मिशन, राष्ट्रीय हरित हाइड्रोजन मिशन, और आयुष्मान भारत योजना।\n\n"
+                    "**स्मृति सूत्र (Memory Trick):**\n"
+                    "• **'अनुच्छेद 74 (सलाह) -> अनुच्छेद 75 (नियुक्ति एवं सामूहिक उत्तरदायित्व) -> अनुच्छेद 78 (राष्ट्रपति को सूचना) -> वाराणसी सांसद'**।"
+                )
+            elif is_hinglish:
+                reply = (
+                    "**Answer / Key Point:** India ke current Prime Minister **Shri Narendra Modi (BJP)** hain, jo **26 May 2014** se India ke 14th Prime Minister ke roop me serve kar rahe hain (June 2024 me 3rd consecutive term ke liye sworn in hue). Yeh Lok Sabha me **Varanasi** constituency ko represent karte hain.\n\n"
+                    "**Constitutional Provisions (UPSC GS-II):**\n"
+                    "• **Article 74(1):** President ko aid aur advise karne ke liye Prime Minister ke headship me Council of Ministers hoti hai.\n"
+                    "• **Article 75:** PM ko **President of India** appoint karte hain aur Council of Ministers collectively **Lok Sabha** ke prati responsible hoti hai.\n"
+                    "• **Article 78:** Prime Minister ki duty define karta hai Union governance aur legislative proposals ki information President ko communicate karne ki.\n\n"
+                    "**Key Facts:**\n"
+                    "• PM banne se pehle Narendra Modi 2001 se 2014 tak Gujarat ke Chief Minister rahe.\n"
+                    "• Longest-serving non-Congress Prime Minister of India.\n"
+                    "• Key National Initiatives: **PM Gati Shakti**, Digital India, Swachh Bharat, National Green Hydrogen Mission, Ayushman Bharat.\n\n"
+                    "**Memory Trick:**\n"
+                    "• **'Article 74 (Aid & Advice) -> Article 75 (Appointment & Lok Sabha Responsibility) -> Article 78 (Duty to President) -> Varanasi MP'**."
+                )
+            else:
+                reply = (
+                    "**Answer / Key Point:** The Prime Minister of India is **Shri Narendra Modi (BJP)**, who has served as the 14th Prime Minister of India since **26 May 2014** (sworn in for a third consecutive term in June 2024). He represents the **Varanasi** parliamentary constituency in the Lok Sabha.\n\n"
+                    "**Constitutional Framework & Union Executive (UPSC GS-II):**\n"
+                    "• **Article 74(1):** Mandates a Council of Ministers headed by the Prime Minister to aid and advise the President, who acts in accordance with such advice (*de jure* vs *de facto* executive).\n"
+                    "• **Article 75:** The Prime Minister is appointed by the **President of India**, and the Council of Ministers is collectively responsible to the **House of the People (Lok Sabha)**.\n"
+                    "• **Article 78:** Prescribes the constitutional duties of the Prime Minister in communicating to the President all decisions of the Council of Ministers relating to the administration of the Union.\n\n"
+                    "**High-Yield UPSC / Competitive Exam Facts:**\n"
+                    "• Narendra Modi served as the Chief Minister of Gujarat for four consecutive terms from 2001 to 2014 before assuming the premiership.\n"
+                    "• He is the longest-serving non-Congress Prime Minister and the third-longest-serving Prime Minister in Indian history (after Pt. Jawaharlal Nehru and Indira Gandhi).\n"
+                    "• Key National Missions: **PM Gati Shakti National Master Plan**, Digital India, Swachh Bharat Mission, National Green Hydrogen Mission, and PM-JAY (Ayushman Bharat).\n\n"
+                    "**Memory Trick (Mnemonic):**\n"
+                    "• Remember: **'Article 74 (Aid & Advice) -> Article 75 (Appointment & Collective Responsibility) -> Article 78 (Duty to President) -> Varanasi MP'**."
+                )
+            return {
+                "reply": reply,
+                "model_used": "sundaram-ai-fast",
+                "sources": ["Prime Minister's Office (pmoffice.gov.in)", "Constitution of India (Articles 74, 75, 78)"],
+                "notice": None
+            }
+
+        # -------------------------------------------------------------
+        # 2e. Indian States Chief Ministers & Governors Directory Resolver
+        # -------------------------------------------------------------
+        state_cm_map = {
+            "bihar": {"cm": "Nitish Kumar", "party": "JD(U)", "capital": "Patna", "governor": "Rajendra Arlekar"},
+            "maharashtra": {"cm": "Devendra Fadnavis", "party": "BJP / Mahayuti", "capital": "Mumbai", "governor": "C.P. Radhakrishnan"},
+            "west bengal": {"cm": "Mamata Banerjee", "party": "AITC", "capital": "Kolkata", "governor": "C.V. Ananda Bose"},
+            "bengal": {"cm": "Mamata Banerjee", "party": "AITC", "capital": "Kolkata", "governor": "C.V. Ananda Bose"},
+            "tamil nadu": {"cm": "M.K. Stalin", "party": "DMK", "capital": "Chennai", "governor": "R.N. Ravi"},
+            "karnataka": {"cm": "Siddaramaiah", "party": "INC", "capital": "Bengaluru", "governor": "Thaawarchand Gehlot"},
+            "madhya pradesh": {"cm": "Dr. Mohan Yadav", "party": "BJP", "capital": "Bhopal", "governor": "Mangubhai C. Patel"},
+            "mp": {"cm": "Dr. Mohan Yadav", "party": "BJP", "capital": "Bhopal", "governor": "Mangubhai C. Patel"},
+            "rajasthan": {"cm": "Bhajan Lal Sharma", "party": "BJP", "capital": "Jaipur", "governor": "Haribhau Bagde"},
+            "odisha": {"cm": "Mohan Charan Majhi", "party": "BJP", "capital": "Bhubaneswar", "governor": "Raghubar Das"},
+            "orissa": {"cm": "Mohan Charan Majhi", "party": "BJP", "capital": "Bhubaneswar", "governor": "Raghubar Das"},
+            "andhra pradesh": {"cm": "N. Chandrababu Naidu", "party": "TDP", "capital": "Amaravati", "governor": "S. Abdul Nazeer"},
+            "andhra": {"cm": "N. Chandrababu Naidu", "party": "TDP", "capital": "Amaravati", "governor": "S. Abdul Nazeer"},
+            "telangana": {"cm": "A. Revanth Reddy", "party": "INC", "capital": "Hyderabad", "governor": "Jishnu Dev Varma"},
+            "assam": {"cm": "Dr. Himanta Biswa Sarma", "party": "BJP", "capital": "Dispur", "governor": "Lakshman Prasad Acharya"},
+            "kerala": {"cm": "Pinarayi Vijayan", "party": "CPI(M)", "capital": "Thiruvananthapuram", "governor": "Arif Mohammed Khan"},
+            "gujarat": {"cm": "Bhupendra Patel", "party": "BJP", "capital": "Gandhinagar", "governor": "Acharya Devvrat"},
+            "haryana": {"cm": "Nayab Singh Saini", "party": "BJP", "capital": "Chandigarh", "governor": "Bandaru Dattatreya"},
+            "punjab": {"cm": "Bhagwant Mann", "party": "AAP", "capital": "Chandigarh", "governor": "Gulab Chand Kataria"},
+            "himachal pradesh": {"cm": "Sukhvinder Singh Sukhu", "party": "INC", "capital": "Shimla", "governor": "Shiv Pratap Shukla"},
+            "himachal": {"cm": "Sukhvinder Singh Sukhu", "party": "INC", "capital": "Shimla", "governor": "Shiv Pratap Shukla"},
+            "uttarakhand": {"cm": "Pushkar Singh Dhami", "party": "BJP", "capital": "Dehradun", "governor": "Lt. Gen. Gurmit Singh (Retd.)"},
+            "jharkhand": {"cm": "Hemant Soren", "party": "JMM", "capital": "Ranchi", "governor": "Santosh Kumar Gangwar"},
+            "chhattisgarh": {"cm": "Vishnu Deo Sai", "party": "BJP", "capital": "Raipur", "governor": "Ramen Deka"},
+            "goa": {"cm": "Dr. Pramod Sawant", "party": "BJP", "capital": "Panaji", "governor": "P.S. Sreedharan Pillai"}
+        }
+
+        for st_name, st_info in state_cm_map.items():
+            if (st_name in q_lower or f"cm of {st_name}" in q_lower or f"chief minister of {st_name}" in q_lower) and any(k in q_lower for k in ["cm", "chief minister", "who is", "governor", "leader", "head"]):
+                reply = (
+                    f"**Answer / Key Point:** The current Chief Minister of **{st_name.title()}** is **{st_info['cm']} ({st_info['party']})**.\n\n"
+                    f"**Constitutional Governance & State Executive (UPSC GS-II):**\n"
+                    f"• **Article 164:** The Chief Minister is appointed by the Governor (current Governor of {st_name.title()}: **{st_info['governor']}**).\n"
+                    f"• **Council of Ministers:** Under Article 164(1A) inserted by the 91st Constitutional Amendment Act 2003, the total number of ministers including the CM shall not exceed **15%** of the total strength of the Legislative Assembly (and not less than 12 ministers).\n"
+                    f"• **Capital:** {st_info['capital']}.\n\n"
+                    f"**Memory Trick:** **'Article 164 (CM Appointment) -> 91st Amendment (15% Cabinet ceiling) -> Collective Responsibility to Vidhan Sabha'**."
+                )
+                return {
+                    "reply": reply,
+                    "model_used": "sundaram-ai-fast",
+                    "sources": [f"Official Government of {st_name.title()} Portal", "Constitution of India (Article 164)"],
+                    "notice": None
+                }
 
         # -------------------------------------------------------------
         # 3. Dr. B.R. Ambedkar (Constitutional Architect)
