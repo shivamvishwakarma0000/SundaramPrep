@@ -1156,12 +1156,12 @@ export const PracticeHub: React.FC<PracticeHubProps> = ({
         )}
       </div>
 
-      {/* Floating Daily News Action Button */}
+      {/* Floating Daily News Action Button (Positioned at Top) */}
       <button
         type="button"
         onClick={() => setShowNewsModal(true)}
         aria-label="Daily Exam News and Current Affairs"
-        className="fixed right-4 sm:right-6 bottom-20 sm:bottom-7 z-30 flex items-center gap-2.5 px-4 py-3 bg-[#0B2545] hover:bg-[#133A6B] text-white rounded-full shadow-xl border border-sky-400/30 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer group"
+        className="fixed right-4 sm:right-6 top-20 sm:top-24 z-30 flex items-center gap-2.5 px-4 py-2.5 sm:py-3 bg-[#0B2545] hover:bg-[#133A6B] text-white rounded-full shadow-xl border border-sky-400/30 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer group"
       >
         <div className="relative">
           <Newspaper className="w-5 h-5 text-amber-300 group-hover:rotate-12 transition-transform" />

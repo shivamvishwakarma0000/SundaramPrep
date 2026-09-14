@@ -372,11 +372,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
             </div>
 
-            {/* Motivational Tagline Pill */}
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-slate-200 hidden sm:flex items-center gap-2 shadow-2xs">
-              <span className="text-sky-300 font-bold">Civil Services Examination</span>
-              <span className="text-white/30">•</span>
-              <span className="text-amber-300 font-bold">Dream · Prepare · Achieve</span>
+            {/* Slanted Handwritten Dream Prepare Achieve script from Image 3 */}
+            <div className="hidden sm:flex flex-col items-center -rotate-6 select-none mr-2 mt-0.5">
+              <span className="text-sky-200 font-serif italic text-base sm:text-lg font-black tracking-wide drop-shadow-sm">
+                Dream · Prepare · Achieve
+              </span>
+              <svg className="w-32 h-2 text-sky-300/80 -mt-0.5" viewBox="0 0 120 8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M4 6C30 2 90 2 116 5" />
+              </svg>
             </div>
           </div>
         </div>
@@ -402,167 +405,141 @@ export const HomeView: React.FC<HomeViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 2. MAIN CONTENT LAYOUT: Motivational Card (Col 5) + 4 Feature Cards (Col 7) */}
+      {/* 2. MAIN CONTENT LAYOUT: Vertical Motivational Card + 4 Feature Cards (Image 2) */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* LEFT COLUMN: Motivational Side Card (Balanced proportion) */}
-        <div className="lg:col-span-5 flex flex-col">
-          <div className="relative rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow min-h-[380px] sm:min-h-[420px] h-full flex flex-col justify-between p-6 sm:p-7 text-white border border-slate-200/80 dark:border-slate-800 group">
+      <div className="flex flex-col lg:flex-row items-stretch gap-4 sm:gap-5">
+        {/* LEFT COLUMN: Vertical Motivational Banner Card (Matching Image 2 Reference) */}
+        <div className="w-full lg:w-[260px] xl:w-[280px] shrink-0 flex flex-col">
+          <div className="relative rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-shadow min-h-[380px] sm:min-h-[420px] h-full flex flex-col justify-between p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 group">
             {/* Background Visual (Responsive fit for any custom uploaded dimension) */}
             <img
               src={customMotivationImage}
               alt="Inspirational UPSC study background"
               className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 pointer-events-none"
             />
-            {/* High-contrast gradient overlay ensuring text legibility on any image */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/40" />
 
-            {/* Top Bar: Quote mark */}
-            <div className="relative z-10 flex items-center justify-between gap-3">
-              <span className="text-4xl sm:text-5xl font-serif text-white/70 block leading-none select-none">“</span>
+            {/* Top Light Mist Gradient Overlay for 100% Crisp Dark Typography */}
+            <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-white/95 via-white/80 via-40% to-transparent dark:from-slate-950/95 dark:via-slate-950/80 pointer-events-none" />
+
+            {/* Bottom Dark Gradient Overlay for Quote Legibility */}
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-slate-950/95 via-slate-950/60 via-40% to-transparent pointer-events-none" />
+
+            {/* Top Section */}
+            <div className="relative z-10">
+              <span className="text-3xl sm:text-4xl font-serif text-slate-800 dark:text-slate-100 block leading-none select-none">“</span>
+              <h3 className="text-base sm:text-[17px] font-black font-display leading-tight tracking-tight text-slate-900 dark:text-white mt-1">
+                Small steps<br />
+                every day lead to<br />
+                big results.
+              </h3>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mt-2 leading-relaxed">
+                Keep going, future IAS is waiting for you!
+              </p>
             </div>
 
-            {/* Motivational Content */}
-            <div className="relative z-10 flex flex-col justify-between h-full space-y-6 pt-4">
-              <div>
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black font-display leading-tight tracking-tight text-white drop-shadow-sm max-w-xl">
-                  Small steps<br />
-                  every day lead to<br />
-                  big results.
-                </h3>
-                <p className="text-xs sm:text-sm font-semibold text-slate-200 mt-3 drop-shadow-sm max-w-md">
-                  Keep going, future IAS is waiting for you!
-                </p>
-              </div>
-
-              <div className="pt-6 border-t border-white/10">
-                <span className="inline-block bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-bold text-white border border-white/25 mb-2.5 shadow-xs">
-                  {currentExamLabel}
-                </span>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium italic drop-shadow-sm leading-relaxed max-w-lg">
-                  "The journey of a thousand miles begins with a single step."
-                </p>
-              </div>
+            {/* Bottom Section */}
+            <div className="relative z-10 pt-4">
+              <span className="inline-block bg-[#0B2545]/90 backdrop-blur-md px-3 py-0.5 rounded-full text-[10px] font-black text-white border border-white/20 mb-2 shadow-xs">
+                {currentExamLabel}
+              </span>
+              <p className="text-[11px] text-slate-100 font-medium italic leading-relaxed drop-shadow-sm">
+                "The journey of a thousand miles begins with a single step."
+              </p>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: 4 Feature Cards (Arranged cleanly in 2x2 responsive grid) */}
-        <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* ------------------------------------------------------------------- */}
-          {/* CARD 1: Start Practice Arena (Blue Accent, Bullseye Watermark)       */}
-          {/* ------------------------------------------------------------------- */}
+        {/* RIGHT COLUMN: 4 Feature Cards (Expansive 2x2 Grid Matching Image 2) */}
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          {/* CARD 1: Start Practice Arena */}
           <div
             onClick={() => onNavigate('practice')}
-            className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-400 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Subtle Decorative Background Watermark (Section 15) */}
-            <svg 
-              className="absolute -right-4 -bottom-4 w-44 h-44 text-blue-500 opacity-[0.07] dark:opacity-[0.04] pointer-events-none select-none" 
-              viewBox="0 0 100 100" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              aria-hidden="true"
-            >
-              <circle cx="50" cy="50" r="42" strokeDasharray="3 3" />
-              <circle cx="50" cy="50" r="30" />
-              <circle cx="50" cy="50" r="18" />
-              <circle cx="50" cy="50" r="6" fill="currentColor" />
-              <line x1="50" y1="5" x2="50" y2="25" />
-              <line x1="50" y1="75" x2="50" y2="95" />
-              <line x1="5" y1="50" x2="25" y2="50" />
-              <line x1="75" y1="50" x2="95" y2="50" />
-            </svg>
+            {/* Soft Fluid Background Curve Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-48 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-blue-600 flex items-center justify-end pr-2">
+              <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" stroke="currentColor">
+                <circle cx="150" cy="100" r="80" strokeWidth="6" strokeDasharray="6 6" />
+                <circle cx="150" cy="100" r="50" strokeWidth="4" />
+                <circle cx="150" cy="100" r="20" strokeWidth="3" fill="currentColor" fillOpacity="0.3" />
+              </svg>
+            </div>
 
             <div className="relative z-10">
-              {/* Header: Icon Container + Status Pill */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform shadow-2xs">
-                  <Target className="w-6 h-6" />
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#EEF4FF] dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900/60 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform shadow-2xs">
+                  <Target className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Live Answers
                 </span>
               </div>
 
-              {/* Title & Description */}
-              <h3 className="text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
                 Start Practice Arena
               </h3>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
                 Instant MCQs with real-time feedback & high-yield takeaways.
               </p>
             </div>
 
-            {/* Footer */}
-            <div className="relative z-10 flex items-center justify-between pt-5 mt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onLaunchQuick10();
                 }}
-                className="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 transition-colors cursor-pointer"
               >
                 <Zap className="w-3 h-3 text-amber-500" />
                 <span>Quick 10</span>
               </button>
-              <div className="flex items-center gap-1 text-xs font-black text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
+              <div className="flex items-center gap-1 text-xs font-black text-blue-600 dark:text-sky-400 group-hover:translate-x-1 transition-transform">
                 <span>Start</span>
                 <ArrowRight className="w-4 h-4" />
               </div>
             </div>
           </div>
 
-          {/* ------------------------------------------------------------------- */}
-          {/* CARD 2: Upload PDF (Purple Accent, Document Watermark)              */}
-          {/* ------------------------------------------------------------------- */}
+          {/* CARD 2: Upload PDF */}
           <div
             onClick={onOpenUploadModal}
-            className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-purple-500 dark:hover:border-purple-400 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-purple-400 dark:hover:border-purple-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Subtle Decorative Background Watermark (Section 15) */}
-            <svg 
-              className="absolute -right-4 -bottom-4 w-44 h-44 text-purple-500 opacity-[0.07] dark:opacity-[0.04] pointer-events-none select-none" 
-              viewBox="0 0 100 100" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              aria-hidden="true"
-            >
-              <path d="M28 15h32l16 16v54H28z" />
-              <path d="M60 15v16h16" />
-              <line x1="38" y1="45" x2="66" y2="45" />
-              <line x1="38" y1="58" x2="66" y2="58" />
-              <line x1="38" y1="71" x2="54" y2="71" />
-            </svg>
+            {/* Soft Document Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-44 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-purple-600 flex items-center justify-end pr-3">
+              <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M28 15h32l16 16v54H28z" />
+                <path d="M60 15v16h16" />
+                <line x1="38" y1="45" x2="66" y2="45" />
+                <line x1="38" y1="58" x2="66" y2="58" />
+              </svg>
+            </div>
 
             <div className="relative z-10">
-              {/* Header: Icon Container + Status Pill */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-800/60 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shadow-2xs">
-                  <FileText className="w-6 h-6" />
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#F5F0FF] dark:bg-purple-950/60 border border-purple-100 dark:border-purple-900/60 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shadow-2xs">
+                  <FileText className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-3 py-1 rounded-full border border-purple-200 dark:border-purple-800 uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200/70 text-[10px] font-black text-purple-700 dark:text-purple-300 uppercase tracking-wide">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                   Auto-Extract
                 </span>
               </div>
 
-              {/* Title & Description */}
-              <h3 className="text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-purple-600 transition-colors">
                 Upload PDF
               </h3>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
                 Convert test paper PDFs into interactive MCQs with speed metrics.
               </p>
             </div>
 
-            {/* Footer */}
-            <div className="relative z-10 flex items-center justify-between pt-5 mt-4 border-t border-slate-100 dark:border-slate-800">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                <Zap className="w-3 h-3 text-purple-500" />
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <Zap className="w-3.5 h-3.5 text-purple-500" />
                 <span>Fast · Bilingual</span>
               </span>
               <div className="flex items-center gap-1 text-xs font-black text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform">
@@ -572,53 +549,43 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </div>
 
-          {/* ------------------------------------------------------------------- */}
-          {/* CARD 3: Time Focus Test (Green Accent, Stopwatch Watermark)         */}
-          {/* ------------------------------------------------------------------- */}
+          {/* CARD 3: Time Focus Test */}
           <div
             onClick={onLaunchFocusTest}
-            className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-400 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Subtle Decorative Background Watermark (Section 15) */}
-            <svg 
-              className="absolute -right-4 -bottom-4 w-44 h-44 text-emerald-500 opacity-[0.07] dark:opacity-[0.04] pointer-events-none select-none" 
-              viewBox="0 0 100 100" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              aria-hidden="true"
-            >
-              <circle cx="50" cy="55" r="36" />
-              <path d="M50 19v-6m-8 0h16" />
-              <path d="M50 55l14-14" />
-              <circle cx="50" cy="55" r="4" fill="currentColor" />
-            </svg>
+            {/* Soft Clock Dial Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-44 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-emerald-600 flex items-center justify-end pr-3">
+              <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="50" cy="50" r="38" />
+                <path d="M50 20v-8m-10 0h20" />
+                <path d="M50 50l16-16" />
+                <circle cx="50" cy="50" r="4" fill="currentColor" />
+              </svg>
+            </div>
 
             <div className="relative z-10">
-              {/* Header: Icon Container + Status Pill */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform shadow-2xs">
-                  <Clock className="w-6 h-6" />
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#EAFBF3] dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform shadow-2xs">
+                  <Clock className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 uppercase tracking-wide">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   Proctor Sim
                 </span>
               </div>
 
-              {/* Title & Description */}
-              <h3 className="text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
                 Time Focus Test
               </h3>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
                 Timed simulation with negative marking and focus integrity tracking.
               </p>
             </div>
 
-            {/* Footer */}
-            <div className="relative z-10 flex items-center justify-between pt-5 mt-4 border-t border-slate-100 dark:border-slate-800">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                <Shield className="w-3 h-3 text-emerald-500" />
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <Shield className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Strict Countdown</span>
               </span>
               <div className="flex items-center gap-1 text-xs font-black text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
@@ -628,58 +595,46 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </div>
           </div>
 
-          {/* ------------------------------------------------------------------- */}
-          {/* CARD 4: Progress & Mistake (Orange Accent, Chart Watermark)         */}
-          {/* ------------------------------------------------------------------- */}
+          {/* CARD 4: Progress & Mistake */}
           <div
             onClick={() => onNavigate('progress')}
-            className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-400 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
+            className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-amber-400 dark:hover:border-amber-500 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
           >
-            {/* Subtle Decorative Background Watermark (Section 15) */}
-            <svg 
-              className="absolute -right-4 -bottom-4 w-44 h-44 text-amber-500 opacity-[0.07] dark:opacity-[0.04] pointer-events-none select-none" 
-              viewBox="0 0 100 100" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              aria-hidden="true"
-            >
-              <path d="M15 85h70" />
-              <rect x="22" y="55" width="12" height="30" rx="2" />
-              <rect x="42" y="40" width="12" height="45" rx="2" />
-              <rect x="62" y="25" width="12" height="60" rx="2" />
-              <path d="M22 45l22-15 20 8 18-20" />
-              <path d="M74 18h8v8" />
-            </svg>
+            {/* Soft Growth Chart Watermark */}
+            <div className="absolute right-0 top-0 bottom-0 w-48 pointer-events-none opacity-[0.06] dark:opacity-[0.04] select-none text-amber-600 flex items-center justify-end pr-3">
+              <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M15 85h70" />
+                <rect x="22" y="55" width="12" height="30" rx="2" />
+                <rect x="42" y="40" width="12" height="45" rx="2" />
+                <rect x="62" y="25" width="12" height="60" rx="2" />
+                <path d="M25 45l20-15 20 5 18-18" strokeWidth="2" strokeDasharray="3 3" />
+              </svg>
+            </div>
 
             <div className="relative z-10">
-              {/* Header: Icon Container + Status Pill */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform shadow-2xs">
-                  <TrendingUp className="w-6 h-6" />
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#FFF6E9] dark:bg-amber-950/60 border border-amber-100 dark:border-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform shadow-2xs">
+                  <TrendingUp className="w-5 h-5" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800 uppercase tracking-wide">
-                  <span className="text-amber-500">✦</span>
-                  Analytics
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200/70 text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-wide">
+                  <span className="font-extrabold">+</span> Analytics
                 </span>
               </div>
 
-              {/* Title & Description */}
-              <h3 className="text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+              <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
                 Progress & Mistake
               </h3>
-              <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-dark-muted font-medium mt-1 leading-relaxed">
                 Accuracy, speed, consistency metrics, and error notebook drills.
               </p>
             </div>
 
-            {/* Footer */}
-            <div className="relative z-10 flex items-center justify-between pt-5 mt-4 border-t border-slate-100 dark:border-slate-800">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                <TrendingUp className="w-3 h-3 text-amber-500" />
-                <span>Track · Improve · Excel</span>
+            <div className="relative z-10 flex items-center justify-between pt-4 mt-3 border-t border-slate-100 dark:border-slate-800">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+                <span>Track • Improve • Excel</span>
               </span>
-              <div className="flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform">
+              <div className="flex items-center gap-1 text-xs font-black text-amber-600 dark:text-amber-500 group-hover:translate-x-1 transition-transform">
                 <span>Review</span>
                 <ArrowRight className="w-4 h-4" />
               </div>
