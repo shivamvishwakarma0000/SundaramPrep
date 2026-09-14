@@ -35,10 +35,24 @@ def create_app(config_class=config):
     app.register_blueprint(student_bp)
     app.register_blueprint(news_bp)
 
-    # Automatically ensure questions are seeded on startup
+    # Automatically ensure questions and news schemas are migrated and seeded on startup
     with app.app_context():
         try:
             db.create_all()
+            # Safe auto-migration for newly added columns across postgres/sqlite
+            with db.engine.connect() as conn:
+                try:
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS image_url VARCHAR(500);"))
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;"))
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS bookmarks_count INTEGER DEFAULT 0;"))
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS simple_explanation TEXT;"))
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS hindi_explanation TEXT;"))
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS hinglish_explanation TEXT;"))
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS prelims_notes TEXT;"))
+                    conn.execute(db.text("ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS mains_notes TEXT;"))
+                    conn.commit()
+                except Exception:
+                    pass
             from seed_data import seed_normalized_database
             seed_normalized_database()
         except Exception as e:
