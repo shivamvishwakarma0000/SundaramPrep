@@ -272,11 +272,17 @@ class NewsService:
 
         query = NewsArticle.query.filter(NewsArticle.is_published == True)
 
-        if category and category != "All":
-            query = query.filter(NewsArticle.category == category)
+        if category and category.strip().lower() not in ["all", "all updates", "all category", ""]:
+            cat_clean = category.strip().lower()
+            query = query.filter(
+                db.or_(
+                    NewsArticle.category.ilike(f"%{cat_clean}%"),
+                    NewsArticle.category == category
+                )
+            )
 
-        if gs_paper and gs_paper != "All":
-            query = query.filter(NewsArticle.gs_paper == gs_paper)
+        if gs_paper and gs_paper.strip().lower() not in ["all", ""]:
+            query = query.filter(NewsArticle.gs_paper.ilike(f"%{gs_paper.strip()}%"))
 
         if date_filter:
             try:
