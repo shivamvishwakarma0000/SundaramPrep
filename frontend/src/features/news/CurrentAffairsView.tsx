@@ -50,6 +50,20 @@ const SOURCES = [
   { id: 'LiveMint', label: '📈 LiveMint' },
 ];
 
+const formatISTTime = (dateInput?: Date | string): string => {
+  try {
+    const d = dateInput ? new Date(dateInput) : new Date();
+    return d.toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }) + ' IST';
+  } catch {
+    return new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
+  }
+};
+
 export const CurrentAffairsView: React.FC = () => {
   // Navigation subtabs: 'feed' | 'digest' | 'saved'
   const [activeSubTab, setActiveSubTab] = useState<'feed' | 'digest' | 'saved'>('feed');
@@ -70,9 +84,7 @@ export const CurrentAffairsView: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
-  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>(() => {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  });
+  const [lastUpdatedTime, setLastUpdatedTime] = useState<string>(() => formatISTTime());
 
   // Modals
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
@@ -100,10 +112,7 @@ export const CurrentAffairsView: React.FC = () => {
         setHasMore(Boolean(res.has_more));
         setTotalCount(res.total || 0);
         if (res.last_updated) {
-          try {
-            const dateObj = new Date(res.last_updated);
-            setLastUpdatedTime(dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-          } catch {}
+          setLastUpdatedTime(formatISTTime(res.last_updated));
         }
       }
     } catch (err) {
@@ -169,7 +178,7 @@ export const CurrentAffairsView: React.FC = () => {
     try {
       const res = await api.refreshNews();
       setRefreshMessage(res.message || `Fetched ${res.new_articles_count} new articles.`);
-      setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setLastUpdatedTime(formatISTTime(res.last_updated || new Date()));
       setPage(1);
       await fetchNews(1, selectedCategory, searchQuery, selectedSource, false);
       await fetchTodayDigest();
@@ -219,8 +228,9 @@ export const CurrentAffairsView: React.FC = () => {
     );
   });
 
-  // Today Date formatted
-  const todayFormatted = new Date().toLocaleDateString('en-GB', {
+  // Today Date formatted in IST
+  const todayFormatted = new Date().toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
     day: 'numeric',
     month: 'long',
     year: 'numeric',

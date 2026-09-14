@@ -378,46 +378,88 @@ def generate_ai_questions(doc_id):
 @pdf_bp.route("/documents/<doc_id>", methods=["DELETE"])
 def delete_document(doc_id):
     """Section 9: Delete PDF document and associated questions and drafts."""
-    doc = PDFDocument.query.get(doc_id)
-    if not doc:
-        return api_error("Document not found", status_code=404)
-        
-    user_id = get_optional_user_id()
-    from app.models.user import User
-    user = User.query.get(user_id) if user_id else None
-    
-    # Allow deletion if Admin OR Sundaram user OR if doc was uploaded by current user
-    is_admin = user and (user.role == "ADMIN" or getattr(user, 'phone', '') == "9794529611")
-    is_owner = user and doc.user_id == user.id
-    if not is_admin and not is_owner and user_id is not None:
-        return api_error("Access restricted: Only Sundaram (Admin) or the document uploader can delete test papers.", code="FORBIDDEN", status_code=403)
-        
-    # Remove file from disk if present
-    if doc.file_path and os.path.exists(doc.file_path):
-        try:
-            os.remove(doc.file_path)
-        except OSError:
-            pass
-            
-    # Clean up associated questions and drafts from database
     try:
-        from app.models.question import Question, QuestionOption
-        from app.models.pdf_document import PDFQuestionDraft, DocumentProcessingJob
+        doc = PDFDocument.query.get(doc_id)
+        if not doc:
+            return api_error("Document not found", status_code=404)
+            
+        user_id = get_optional_user_id()
+        from app.models.user import User
+        user = User.query.get(user_id) if user_id else None
         
-        # Delete question options first for any extracted questions
+        # Allow deletion if Admin OR Sundaram user OR if doc was uploaded by current user OR if doc user_id is null
+        is_admin = user and (user.role == "ADMIN" or getattr(user, 'phone', '') == "9794529611")
+        is_owner = user and doc.user_id == user.id
+        if not is_admin and not is_owner and user_id is not None and doc.user_id is not None:
+            return api_error("Access restricted: Only Sundaram (Admin) or the document uploader can delete test papers.", code="FORBIDDEN", status_code=403)
+            
+        # Remove file from disk if present
+        if doc.file_path and os.path.exists(doc.file_path):
+            try:
+                os.remove(doc.file_path)
+            except OSError:
+                pass
+                
+        # Clean up associated questions and drafts from database
+        from app.models.question import Question, QuestionOption, QuestionExam, QuestionSource, AnswerVerification
+        from app.models.pdf_document import PDFQuestionDraft, DocumentProcessingJob
+        from app.models.engagement import Report
+        from app.models.quiz_session import TestQuestion, TestAnswer, Mistake, Bookmark
+        
+        # 1. Find all extracted question IDs from this document
         extracted_q_ids = [q.id for q in Question.query.filter_by(source_document_id=doc.id).all()]
         if extracted_q_ids:
-            QuestionOption.query.filter(QuestionOption.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            try:
+                Report.query.filter(Report.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                Bookmark.query.filter(Bookmark.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                Mistake.query.filter(Mistake.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                TestAnswer.query.filter(TestAnswer.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                TestQuestion.query.filter(TestQuestion.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                QuestionExam.query.filter(QuestionExam.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                QuestionSource.query.filter(QuestionSource.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                AnswerVerification.query.filter(AnswerVerification.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
+            try:
+                QuestionOption.query.filter(QuestionOption.question_id.in_(extracted_q_ids)).delete(synchronize_session=False)
+            except Exception:
+                pass
             Question.query.filter_by(source_document_id=doc.id).delete(synchronize_session=False)
             
         PDFQuestionDraft.query.filter_by(document_id=doc.id).delete(synchronize_session=False)
         DocumentProcessingJob.query.filter_by(document_id=doc.id).delete(synchronize_session=False)
-    except Exception as e:
-        logger.warning(f"Associated questions cleanup warning for doc {doc.id}: {e}")
 
-    db.session.delete(doc)
-    db.session.commit()
-    return api_success({"message": "Document and all associated questions deleted successfully."})
+        db.session.delete(doc)
+        db.session.commit()
+        return api_success({"message": "Document and all associated questions deleted successfully."})
+    except Exception as e:
+        logger.error(f"Failed to delete document {doc_id}: {e}", exc_info=True)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return api_error(f"Failed to delete document: {str(e)}", status_code=500)
 
 @pdf_bp.route("/files/<filename>", methods=["GET"])
 def serve_pdf_file(filename):
