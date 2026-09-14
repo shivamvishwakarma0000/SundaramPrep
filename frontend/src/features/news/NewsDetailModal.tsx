@@ -251,6 +251,36 @@ export const NewsDetailModal: React.FC<NewsDetailModalProps> = ({
             </div>
           ) : article ? (
             <>
+              {/* Hero Image with GS Paper & Category Badges */}
+              <div className="relative w-full h-52 sm:h-64 rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-xs border border-slate-200/60 dark:border-slate-800">
+                <img
+                  src={article.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80'}
+                  alt={article.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+
+                <div className="absolute top-3.5 left-3.5 flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider bg-blue-600 text-white shadow-md border border-white/20 backdrop-blur-md">
+                    {article.gs_paper || 'GS-II'}
+                  </span>
+                  <span className="px-3 py-1 rounded-xl text-xs font-bold bg-black/60 text-white border border-white/10 backdrop-blur-md">
+                    {article.category || 'General Studies'}
+                  </span>
+                </div>
+
+                <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-white/95 font-medium">
+                  <span className="font-bold drop-shadow-xs">{article.source}</span>
+                  <span className="bg-black/50 px-2.5 py-1 rounded-lg backdrop-blur-xs text-[11px] font-bold">
+                    {article.read_time_minutes || 3} min read
+                  </span>
+                </div>
+              </div>
+
               {/* Article Headline & Metadata */}
               <div className="space-y-3">
                 <h1 className="text-xl sm:text-2xl font-black font-display tracking-tight text-slate-900 dark:text-white leading-tight">

@@ -27,6 +27,7 @@ export interface NewsArticleItem {
   original_url: string;
   source: string;
   source_logo?: string | null;
+  image_url?: string | null;
   published_at: string;
   category: string;
   gs_paper: string;

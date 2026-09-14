@@ -58,6 +58,7 @@ class NewsArticle(db.Model, TimestampMixin):
     # Categorization & UPSC Syllabus Tagging
     category = db.Column(db.String(100), nullable=False, default="Polity & Governance", index=True)
     gs_paper = db.Column(db.String(50), nullable=False, default="GS-II", index=True)  # GS-I, GS-II, GS-III, GS-IV, Essay
+    image_url = db.Column(db.String(1000), nullable=True)
     relevance_score = db.Column(db.Integer, default=85, index=True)  # 0 to 100
     is_featured = db.Column(db.Boolean, default=False, index=True)
     is_published = db.Column(db.Boolean, default=True, index=True)
@@ -106,6 +107,7 @@ class NewsArticle(db.Model, TimestampMixin):
             "original_url": self.original_url,
             "source": self.source,
             "source_logo": self.source_logo,
+            "image_url": self.image_url,
             "published_at": self.published_at.isoformat() if self.published_at else None,
             "category": self.category,
             "gs_paper": self.gs_paper,

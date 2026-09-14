@@ -31,6 +31,33 @@ UPSC_CATEGORIES = [
     "Other Important News"
 ]
 
+def get_category_default_image(category: str = "", gs_paper: str = "GS-II") -> str:
+    """Returns high-resolution, contextual real news cover photography for UPSC subjects."""
+    cat_lower = (category or "").lower()
+    paper = (gs_paper or "").upper()
+    
+    if "polity" in cat_lower or "governance" in cat_lower or "constitution" in cat_lower or paper == "GS-II":
+        return "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80"
+    elif "economy" in cat_lower or "finance" in cat_lower or "banking" in cat_lower or "trade" in cat_lower:
+        return "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80"
+    elif "environment" in cat_lower or "ecology" in cat_lower or "wetland" in cat_lower or "climate" in cat_lower:
+        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80"
+    elif "science" in cat_lower or "space" in cat_lower or "isro" in cat_lower or "tech" in cat_lower:
+        return "https://images.unsplash.com/photo-1517976487588-4c91cb10f011?auto=format&fit=crop&w=800&q=80"
+    elif "international" in cat_lower or "diplomacy" in cat_lower or "treaty" in cat_lower or "g20" in cat_lower:
+        return "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80"
+    elif "defence" in cat_lower or "security" in cat_lower or "military" in cat_lower:
+        return "https://images.unsplash.com/photo-1579965342575-16428a7c8881?auto=format&fit=crop&w=800&q=80"
+    elif "geography" in cat_lower or "agriculture" in cat_lower or "farming" in cat_lower:
+        return "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=800&q=80"
+    elif "history" in cat_lower or "culture" in cat_lower or "heritage" in cat_lower or paper == "GS-I":
+        return "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80"
+    elif "energy" in cat_lower or "hydrogen" in cat_lower or "solar" in cat_lower:
+        return "https://images.unsplash.com/photo-1497440001374-f26997328c1b?auto=format&fit=crop&w=800&q=80"
+    
+    return "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80"
+
+
 class NormalizedArticle:
     """Standardized news article format across all sources."""
     def __init__(
@@ -41,7 +68,8 @@ class NormalizedArticle:
         summary: str,
         published_at: datetime,
         category: str = "General Studies",
-        source_logo: Optional[str] = None
+        source_logo: Optional[str] = None,
+        image_url: Optional[str] = None
     ):
         self.title = title.strip()
         self.original_url = original_url.strip()
@@ -50,6 +78,7 @@ class NormalizedArticle:
         self.published_at = published_at
         self.category = category
         self.source_logo = source_logo
+        self.image_url = image_url or get_category_default_image(category)
 
     @property
     def hash_id(self) -> str:
@@ -86,7 +115,6 @@ class PIBProvider(NewsProvider):
                             title_el = item.find("title")
                             link_el = item.find("link")
                             desc_el = item.find("description")
-                            pub_el = item.find("pubDate")
                             
                             title = title_el.text if title_el is not None and title_el.text else ""
                             link = link_el.text if link_el is not None and link_el.text else "https://pib.gov.in"
@@ -94,6 +122,10 @@ class PIBProvider(NewsProvider):
                             
                             # Clean HTML tags if present in description
                             clean_desc = re.sub(r'<[^>]+>', '', desc).strip()
+
+                            # Extract media image enclosure if available
+                            enclosure = item.find("enclosure")
+                            img_url = enclosure.attrib.get("url") if enclosure is not None else None
                             
                             if title and len(title) > 10:
                                 articles.append(NormalizedArticle(
@@ -103,7 +135,8 @@ class PIBProvider(NewsProvider):
                                     summary=clean_desc[:400],
                                     published_at=datetime.utcnow(),
                                     category="Government Schemes",
-                                    source_logo="/assets/pib_logo.png"
+                                    source_logo="/assets/pib_logo.png",
+                                    image_url=img_url or get_category_default_image("Government Schemes")
                                 ))
             except Exception as e:
                 logger.warning(f"PIB feed fetch notice: {e}")
@@ -135,6 +168,15 @@ class NationalNewsRSSProvider(NewsProvider):
                         link = item.findtext("link", "").strip()
                         desc = item.findtext("description", "").strip()
                         clean_desc = re.sub(r'<[^>]+>', '', desc).strip()
+
+                        # Extract media image tag if present
+                        enclosure = item.find("enclosure")
+                        img_url = enclosure.attrib.get("url") if enclosure is not None else None
+                        if not img_url:
+                            # Try finding image in html description
+                            img_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', desc)
+                            if img_match:
+                                img_url = img_match.group(1)
                         
                         if title and len(title) > 15:
                             articles.append(NormalizedArticle(
@@ -143,7 +185,8 @@ class NationalNewsRSSProvider(NewsProvider):
                                 source=source_name,
                                 summary=clean_desc[:350] or title,
                                 published_at=datetime.utcnow(),
-                                category=default_cat
+                                category=default_cat,
+                                image_url=img_url or get_category_default_image(default_cat)
                             ))
             except Exception as e:
                 logger.warning(f"RSS feed fetch notice for {source_name}: {e}")
@@ -215,6 +258,18 @@ class NewsService:
         """
         self._ensure_seed_articles_exist()
         
+        # Auto-backfill missing image_urls on existing records
+        try:
+            null_images = NewsArticle.query.filter(
+                db.or_(NewsArticle.image_url == None, NewsArticle.image_url == '')
+            ).all()
+            if null_images:
+                for art in null_images:
+                    art.image_url = get_category_default_image(art.category, art.gs_paper)
+                db.session.commit()
+        except Exception as e:
+            logger.debug(f"Image backfill note: {e}")
+
         query = NewsArticle.query.filter(NewsArticle.is_published == True)
 
         if category and category != "All":
@@ -269,6 +324,10 @@ class NewsService:
         if not article:
             return None
             
+        # Backfill image if missing
+        if not article.image_url:
+            article.image_url = get_category_default_image(article.category, article.gs_paper)
+
         # Increment views count
         article.views_count = (article.views_count or 0) + 1
         db.session.commit()
@@ -352,14 +411,17 @@ class NewsService:
             if not exists:
                 processed = self._process_article_with_gemini(item)
                 if processed and processed.get("relevance_score", 0) >= 60:
+                    cat = processed.get("category", item.category)
+                    paper = processed.get("gs_paper", "GS-II")
                     article_obj = NewsArticle(
                         title=processed.get("title", item.title),
                         original_url=item.original_url,
                         source=item.source,
                         source_logo=item.source_logo,
+                        image_url=item.image_url or get_category_default_image(cat, paper),
                         published_at=item.published_at,
-                        category=processed.get("category", item.category),
-                        gs_paper=processed.get("gs_paper", "GS-II"),
+                        category=cat,
+                        gs_paper=paper,
                         relevance_score=int(processed.get("relevance_score", 85)),
                         is_featured=processed.get("is_featured", False),
                         read_time_minutes=int(processed.get("read_time_minutes", 3)),
@@ -570,6 +632,7 @@ class NewsService:
                     "source": "PIB / Supreme Court Landmark Cases",
                     "category": "Polity & Governance",
                     "gs_paper": "GS-II",
+                    "image_url": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80",
                     "relevance_score": 98,
                     "is_featured": True,
                     "read_time_minutes": 4,
@@ -617,6 +680,7 @@ class NewsService:
                     "source": "Reserve Bank of India / Ministry of Finance",
                     "category": "Economy & Development",
                     "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=800&q=80",
                     "relevance_score": 94,
                     "is_featured": True,
                     "read_time_minutes": 3,
@@ -664,6 +728,7 @@ class NewsService:
                     "source": "Ministry of Environment, Forest and Climate Change (MoEFCC)",
                     "category": "Environment & Ecology",
                     "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
                     "relevance_score": 92,
                     "is_featured": False,
                     "read_time_minutes": 3,
@@ -711,6 +776,7 @@ class NewsService:
                     "source": "ISRO / Department of Space",
                     "category": "Science & Technology",
                     "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1517976487588-4c91cb10f011?auto=format&fit=crop&w=800&q=80",
                     "relevance_score": 90,
                     "is_featured": False,
                     "read_time_minutes": 3,
@@ -751,6 +817,54 @@ class NewsService:
                             "explanation": "Option A is correct. Cryogenic rocket engines use Liquid Hydrogen (LH2) at -253°C as fuel and Liquid Oxygen (LOX) at -183°C as oxidizer."
                         }
                     ]
+                },
+                {
+                    "title": "National Green Hydrogen Mission: SIGHT Program Allocates Electrolyser Manufacturing Incentives",
+                    "original_url": "https://pib.gov.in",
+                    "source": "Ministry of New and Renewable Energy (MNRE)",
+                    "category": "Science & Technology",
+                    "gs_paper": "GS-III",
+                    "image_url": "https://images.unsplash.com/photo-1497440001374-f26997328c1b?auto=format&fit=crop&w=800&q=80",
+                    "relevance_score": 93,
+                    "is_featured": True,
+                    "read_time_minutes": 3,
+                    "short_summary": "Under the Strategic Interventions for Green Hydrogen Transition (SIGHT) scheme, financial tranches were awarded to scale domestic electrolyser manufacturing capacity to 1,500 MW per annum.",
+                    "detailed_summary": "The initiative aims to build India as a global exporter of Green Hydrogen and Green Ammonia, decarbonizing heavy industries including steel, fertilizers, and refineries in alignment with Panchamrit COP26 net-zero 2070 targets.",
+                    "why_in_news": "Notification of financial bid winners by Solar Energy Corporation of India (SECI).",
+                    "what_happened": "SECI issued Letters of Award for 1.5 GW domestic electrolyser manufacturing capacity under Component I of SIGHT.",
+                    "background": "The National Green Hydrogen Mission was approved in 2023 with an outlay of Rs 19,744 crore to produce 5 MMT of green hydrogen annually by 2030.",
+                    "upsc_relevance": "Key topic in UPSC GS-III (Renewable Energy, Industrial Policy, Climate Mitigation) and Prelims.",
+                    "key_facts": [
+                        "Target: 5 MMT Green Hydrogen per annum by 2030 with 125 GW associated renewable capacity.",
+                        "SIGHT Program: Component I (Electrolysers) and Component II (Green Hydrogen production).",
+                        "Nodal Agency: Solar Energy Corporation of India (SECI)."
+                    ],
+                    "prelims_facts": [
+                        "Green Hydrogen is produced through water electrolysis powered entirely by renewable energy (zero carbon emissions).",
+                        "India aims for net-zero carbon emissions by 2070 (Panchamrit pledge)."
+                    ],
+                    "mains_perspective": {
+                        "dimensions": ["Energy Security & Import Substitution", "Decarbonization of Hard-to-Abate Sectors", "Export Competitiveness"],
+                        "challenges": ["High capital expenditure of electrolysers", "Water intensity in arid regions"],
+                        "way_forward": "Incentivize captive renewable energy wheeling and promote desalination-based green hydrogen hubs along coastlines."
+                    },
+                    "important_terms": ["Electrolyser", "SIGHT Scheme", "Green Ammonia", "Net-Zero 2070", "Hard-to-Abate Sectors"],
+                    "possible_mains_questions": [
+                        "Explain how the National Green Hydrogen Mission can catalyze India's transition towards energy independence while meeting its COP26 climate commitments. (150 words / 10 Marks)"
+                    ],
+                    "practice_mcqs": [
+                        {
+                            "question": "Under India's National Green Hydrogen Mission, what is the targeted annual green hydrogen production capacity by 2030?",
+                            "options": [
+                                {"id": "A", "text": "5 Million Metric Tonnes (MMT)"},
+                                {"id": "B", "text": "1 Million Metric Tonne (MMT)"},
+                                {"id": "C", "text": "10 Million Metric Tonnes (MMT)"},
+                                {"id": "D", "text": "25 Million Metric Tonnes (MMT)"}
+                            ],
+                            "correct_answer": "A",
+                            "explanation": "Option A is correct. The National Green Hydrogen Mission targets producing at least 5 MMT of green hydrogen per annum by 2030."
+                        }
+                    ]
                 }
             ]
 
@@ -762,6 +876,7 @@ class NewsService:
                     published_at=today,
                     category=s["category"],
                     gs_paper=s["gs_paper"],
+                    image_url=s.get("image_url") or get_category_default_image(s["category"], s["gs_paper"]),
                     relevance_score=s["relevance_score"],
                     is_featured=s["is_featured"],
                     read_time_minutes=s["read_time_minutes"],

@@ -428,24 +428,41 @@ export const CurrentAffairsView: React.FC = () => {
                 <div
                   key={item.id}
                   onClick={() => setSelectedArticleId(item.id)}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all cursor-pointer group flex flex-col justify-between"
+                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all cursor-pointer group flex flex-col justify-between"
                 >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
-                        #{idx + 1} {item.gs_paper || 'GS-II'}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {item.category}
+                  <div className="flex gap-3 items-start">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-800 relative">
+                      <img
+                        src={item.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80'}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80';
+                        }}
+                      />
+                      <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] font-black px-1.5 py-0.5 rounded backdrop-blur-xs">
+                        #{idx + 1}
                       </span>
                     </div>
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2">
-                      {item.title}
-                    </h4>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60">
+                          {item.gs_paper || 'GS-II'}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
+                          {item.category}
+                        </span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
+                        {item.title}
+                      </h4>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-black text-blue-600 dark:text-sky-400 mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
-                    <span>Read Analysis</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <div className="flex items-center justify-between text-[11px] font-black text-blue-600 dark:text-sky-400 mt-2.5 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                    <span className="text-slate-400 font-medium text-[10px]">{item.source}</span>
+                    <span className="flex items-center gap-1">Read Analysis <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></span>
                   </div>
                 </div>
               ))}
@@ -499,32 +516,54 @@ export const CurrentAffairsView: React.FC = () => {
               <div
                 key={art.id}
                 onClick={() => setSelectedArticleId(art.id)}
-                className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-3xl p-5 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                className="bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between overflow-hidden"
               >
                 <div>
-                  {/* Top Metadata Badges */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
+                  {/* Top Real News Cover Image */}
+                  <div className="relative w-full h-44 rounded-2xl overflow-hidden mb-3.5 bg-slate-100 dark:bg-slate-800">
+                    <img
+                      src={art.image_url || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80'}
+                      alt={art.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80';
+                      }}
+                    />
+                    {/* Subtle bottom gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+
+                    {/* GS Paper Badge on top-left of image */}
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white shadow-xs border border-white/20 backdrop-blur-md">
                         {art.gs_paper || 'GS-II'}
                       </span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                      <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-black/60 text-white border border-white/10 backdrop-blur-md">
                         {art.category || 'Polity'}
                       </span>
                     </div>
 
+                    {/* Bookmark Toggle on top-right of image */}
                     <button
                       type="button"
                       onClick={(e) => handleToggleBookmark(e, art.id)}
                       title={isBookmarked ? 'Remove Bookmark' : 'Save Article'}
-                      className={`p-1.5 rounded-xl transition-colors ${
+                      className={`absolute top-2.5 right-2.5 p-2 rounded-xl backdrop-blur-md transition-all cursor-pointer ${
                         isBookmarked
-                          ? 'text-purple-600 bg-purple-50 dark:bg-purple-950/60'
-                          : 'text-slate-400 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          ? 'bg-purple-600 text-white shadow-md'
+                          : 'bg-black/50 text-white hover:bg-black/80 hover:scale-105'
                       }`}
                     >
-                      {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-purple-600" /> : <Bookmark className="w-4 h-4" />}
+                      {isBookmarked ? <BookmarkCheck className="w-4 h-4 fill-white" /> : <Bookmark className="w-4 h-4" />}
                     </button>
+
+                    {/* Bottom strip of the image */}
+                    <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[11px] text-white/95 font-medium">
+                      <span className="truncate max-w-[170px] font-bold drop-shadow-xs">{art.source}</span>
+                      <span className="bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs text-[10px] font-bold">
+                        {art.read_time_minutes ? `${art.read_time_minutes} min read` : '3 min read'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Headline */}
@@ -533,13 +572,13 @@ export const CurrentAffairsView: React.FC = () => {
                   </h3>
 
                   {/* Short Summary */}
-                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-2 leading-relaxed line-clamp-3">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-2 leading-relaxed line-clamp-2">
                     {art.short_summary || art.detailed_summary || 'Click to view structured UPSC analysis, prelims facts and mains perspective.'}
                   </p>
 
                   {/* UPSC Relevance Pill */}
                   {art.upsc_relevance && (
-                    <div className="mt-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <div className="mt-2.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       <span className="truncate">{art.upsc_relevance}</span>
                     </div>
@@ -547,12 +586,10 @@ export const CurrentAffairsView: React.FC = () => {
                 </div>
 
                 {/* Bottom Card Footer */}
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
-                    <span>{art.source || 'PIB'}</span>
-                    <span>•</span>
-                    <span>{art.read_time_minutes ? `${art.read_time_minutes} min read` : '3 min read'}</span>
-                  </div>
+                <div className="mt-3.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    {new Date(art.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </span>
 
                   <div className="flex items-center gap-1 text-xs font-black text-blue-600 dark:text-sky-400 group-hover:translate-x-0.5 transition-transform">
                     <span>Full Analysis</span>

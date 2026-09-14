@@ -445,8 +445,8 @@ export function AppContent() {
         />
       )}
 
-      {/* Floating 3D AI Assistant Trigger Button (Suppressed in Focus Mode or when AI panel is open) */}
-      {!isFocusTest && (
+      {/* Floating 3D AI Assistant Trigger Button (Suppressed in Focus Mode, on News view, or when AI panel is open) */}
+      {!isFocusTest && activeTab !== 'news' && (
         <AIFloatingTrigger
           isOpen={isAIOpen}
           onClick={() => setIsAIOpen(true)}
