@@ -69,10 +69,7 @@ def register():
         # Initialize student profile
         profile = UserProfile(
             user_id=user.id,
-            target_exam=target_exam,
-            phone_number=digits,
-            daily_goal=30,
-            language="EN"
+            phone_number=digits
         )
         db.session.add(profile)
 
@@ -218,50 +215,60 @@ def login():
     Direct Mobile Phone / Email Login.
     Supports Sundaram (phone 9794529611, password 'sundaram' / custom) and any registered student.
     """
-    payload = request.get_json() or {}
-    raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
-    password = str(payload.get("password") or "sundaram").strip()
+    try:
+        payload = request.get_json() or {}
+        raw_ident = str(payload.get("phone") or payload.get("mobile") or payload.get("email") or "").strip()
+        password = str(payload.get("password") or "sundaram").strip()
 
-    if not raw_ident:
-        return api_error("Please enter your Mobile Number or Email.", status_code=400)
+        if not raw_ident:
+            return api_error("Please enter your Mobile Number or Email.", status_code=400)
 
-    user = None
-    if "@" in raw_ident:
-        user = User.query.filter_by(email=raw_ident.lower()).first()
-    else:
-        digits = "".join([c for c in raw_ident if c.isdigit()])
-        if digits:
-            user = User.query.filter(
-                (User.phone == digits) |
-                (User.email == f"{digits}@student.sundaramprep.com") |
-                (User.email == f"{digits}@sundaram.local")
-            ).first()
-            if not user and digits == "9794529611":
-                user = User.query.filter_by(email="aspirant@sundaramprep.com").first()
+        user = None
+        if "@" in raw_ident:
+            user = User.query.filter_by(email=raw_ident.lower()).first()
+        else:
+            digits = "".join([c for c in raw_ident if c.isdigit()])
+            if digits:
+                user = User.query.filter(
+                    (User.phone == digits) |
+                    (User.email == f"{digits}@student.sundaramprep.com") |
+                    (User.email == f"{digits}@sundaram.local")
+                ).first()
+                if not user and digits == "9794529611":
+                    user = User.query.filter_by(email="aspirant@sundaramprep.com").first()
 
-    if not user:
-        return api_error("No account found with this phone number. Please click Register to sign up in 5 seconds.", code="NOT_FOUND", status_code=404)
+        if not user:
+            return api_error("No account found with this phone number. Please click Join as Aspirant to sign up in 5 seconds.", code="NOT_FOUND", status_code=404)
 
-    # Verify password
-    pwd_match = verify_password(password, user.password_hash)
-    if not pwd_match:
-        if password == "sundaram" and (user.phone == "9794529611" or user.role == "ADMIN"):
-            pwd_match = True
+        # Verify password
+        pwd_match = False
+        try:
+            pwd_match = verify_password(password, user.password_hash)
+        except Exception as e:
+            logger.warning(f"Password verify exception: {e}")
 
-    if not pwd_match:
-        return api_error("Incorrect password. Please verify or use 'sundaram' as default.", code="INVALID_CREDENTIALS", status_code=401)
+        if not pwd_match:
+            if password == "sundaram" and (user.phone == "9794529611" or user.role == "ADMIN"):
+                pwd_match = True
 
-    user.status = "ACTIVE"
-    user.last_login_at = datetime.utcnow()
-    db.session.commit()
+        if not pwd_match:
+            return api_error("Incorrect password. Please verify or use 'sundaram' as default.", code="INVALID_CREDENTIALS", status_code=401)
 
-    token = generate_jwt(user.id, user.email, role=user.role or "STUDENT")
-    res = api_success({
-        "user": user.to_dict(),
-        "token": token,
-        "message": f"Welcome back, {user.name}!"
-    })
-    return set_auth_cookie(res, token)
+        user.status = "ACTIVE"
+        user.last_login_at = datetime.utcnow()
+        db.session.commit()
+
+        token = generate_jwt(user.id, user.email, role=user.role or "STUDENT")
+        res = api_success({
+            "user": user.to_dict(),
+            "token": token,
+            "message": f"Welcome back, {user.name}!"
+        })
+        return set_auth_cookie(res, token)
+    except Exception as e:
+        import traceback
+        logger.error(f"Login error: {traceback.format_exc()}")
+        return api_error(f"Login error: {str(e)}", code="LOGIN_FAILED", status_code=500)
 
 @auth_bp.route("/change-password", methods=["POST"])
 @token_required
