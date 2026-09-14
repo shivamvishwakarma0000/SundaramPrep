@@ -135,35 +135,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
         <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-blue-100/50 dark:bg-sky-950/20 rounded-full blur-3xl" />
       </div>
 
-      {/* 1. Header Navigation Bar (No Home/Features/About/Contact per user instructions) */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#071426]/85 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
+      {/* 1. Header Navigation Bar */}
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-[#071426]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          {/* Logo Section */}
+          {/* Official Logo Section */}
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#0B2545] to-[#1E3A8A] text-white flex items-center justify-center font-display font-black text-xl shadow-md shadow-brand-900/20 shrink-0">
-              <BookOpen className="w-6 h-6 text-sky-400" />
-            </div>
-            <div>
+            <img
+              src="/sundaram-logo.png"
+              alt="Sundaram Prep Official Logo"
+              className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-2xl shadow-sm shrink-0 transition-transform hover:scale-105"
+            />
+            <div className="flex flex-col justify-center">
               <div className="flex items-center gap-2">
-                <span className="font-display font-black text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
+                <span className="font-display font-black text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white leading-none">
                   SUNDARAM PREP
                 </span>
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 leading-none">
                   PRO
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide mt-1.5 leading-none">
                 Practice. Focus. Improve.
               </p>
             </div>
           </div>
 
           {/* Right Controls: Theme Toggle, Sign In, Join as Aspirant */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Theme Switcher Button */}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-2 sm:p-2.5 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition-colors cursor-pointer"
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
@@ -172,7 +174,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             {/* Sign In Header Button */}
             <button
               onClick={() => scrollToForm('SIGN_IN')}
-              className="hidden sm:inline-flex px-4 sm:px-5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
+              className="px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
             >
               Sign In
             </button>
@@ -180,7 +182,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             {/* Join as Aspirant Header Button */}
             <button
               onClick={() => scrollToForm('REGISTER')}
-              className="flex items-center gap-1.5 px-3.5 sm:px-5 py-2 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
+              className="flex items-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
             >
               <UserIcon className="w-3.5 h-3.5" />
               <span>Join as Aspirant</span>
@@ -269,25 +271,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2">
-              <button
-                onClick={() => scrollToForm('REGISTER')}
-                className="flex items-center gap-2 px-5 py-2.5 sm:py-3 bg-[#1D63FF] hover:bg-blue-600 text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-              >
-                <span>Join as Aspirant</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => scrollToForm('SIGN_IN')}
-                className="px-5 py-2.5 sm:py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 shadow-2xs transition-all cursor-pointer"
-              >
-                Sign In
-              </button>
-            </div>
-
             {/* Social Proof */}
-            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 pt-2">
               <ShieldCheck className="w-4 h-4 text-[#1D63FF] shrink-0" />
               <span>Trusted by 10,000+ aspirants across India</span>
             </div>
