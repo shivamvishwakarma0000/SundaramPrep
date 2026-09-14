@@ -7,10 +7,11 @@ import {
   TrendingUp, 
   Sparkles, 
   ArrowRight, 
-  CheckCircle2, 
   AlertCircle,
   Zap,
-  Shield
+  Shield,
+  Camera,
+  RotateCcw
 } from 'lucide-react';
 import { api } from '../../api/client';
 import type { StudentHomeSummary, PortalTab, ExamType } from '../../types';
@@ -83,7 +84,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   // Hidden File Input for instant upload capability
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadDuration, setUploadDuration] = useState<number | null>(null);
-  const [uploadStats, setUploadStats] = useState<{
+  const [_uploadStats, setUploadStats] = useState<{
     fileName: string;
     questionCount: number;
     timeTaken: string;
@@ -92,6 +93,43 @@ export const HomeView: React.FC<HomeViewProps> = ({
   } | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Custom motivation card image (persisted in localStorage)
+  const [customMotivationImage, setCustomMotivationImage] = useState<string>(() => {
+    try {
+      return localStorage.getItem('sundaram_custom_motivation_card_image') || '/assets/mountain_ias_hiker.jpg';
+    } catch {
+      return '/assets/mountain_ias_hiker.jpg';
+    }
+  });
+  const motivationImageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMotivationImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      if (dataUrl) {
+        setCustomMotivationImage(dataUrl);
+        try {
+          localStorage.setItem('sundaram_custom_motivation_card_image', dataUrl);
+        } catch (err) {
+          console.warn('Image size too large for localStorage cache:', err);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleResetMotivationImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCustomMotivationImage('/assets/mountain_ias_hiker.jpg');
+    try {
+      localStorage.removeItem('sundaram_custom_motivation_card_image');
+    } catch {}
+  };
 
   const loadHome = async () => {
     try {
@@ -196,7 +234,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
 
         {/* Study Desk Visual: Crisp on the right side, smoothly dissolving toward center */}
-        <div className="absolute top-0 right-0 bottom-0 w-full sm:w-[52%] lg:w-[46%] h-full pointer-events-none overflow-hidden select-none z-0">
+        <div className="absolute top-0 right-0 bottom-0 w-full sm:w-[60%] lg:w-[65%] h-full pointer-events-none overflow-hidden select-none z-0">
           <img
             src="/assets/hero_upsc_study.jpg"
             alt="UPSC Preparation Study Desk"
@@ -251,81 +289,74 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </span>
             </div>
 
-            {/* Action Button */}
-            <div className="pt-1">
+            {/* CTA Button Row */}
+            <div className="pt-2">
               <button
                 onClick={() => onNavigate('practice')}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs px-4 py-2 rounded-full shadow-md shadow-blue-500/25 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md hover:shadow-blue-500/25 transition-all cursor-pointer hover:scale-[1.02]"
               >
-                <Target className="w-3.5 h-3.5 text-white" />
+                <Target className="w-4 h-4" />
                 <span>Start Practicing</span>
-                <ArrowRight className="w-3.5 h-3.5 text-white" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {/* Right Column: Dynamic Cards + High-End Integrated Stats */}
-          <div className="lg:col-span-5 flex flex-col items-center lg:items-end gap-3">
-            {/* Top Floating Dynamic Cards */}
-            <div className="flex flex-wrap items-center justify-end gap-2.5 w-full">
-              {/* Dynamic Active Streak Card */}
-              <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md rounded-xl p-2.5 sm:p-3 shadow-lg border border-white/25 dark:border-slate-800 flex items-center gap-2.5 text-slate-900 dark:text-white shrink-0">
-                <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800 flex items-center justify-center text-amber-500">
-                  <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
+          {/* Right Column: Dynamic Target & Streak Dashboard Widgets */}
+          <div className="lg:col-span-5 flex flex-col items-end justify-center gap-2.5">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full justify-end">
+              {/* Active Streak Card */}
+              <div className="flex items-center gap-2.5 bg-white/95 text-slate-900 px-4 py-2.5 rounded-2xl shadow-lg border border-white/40 flex-1 sm:flex-initial min-w-[130px]">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
+                  <Flame className="w-5 h-5 fill-amber-500" />
                 </div>
                 <div>
-                  <div className="text-sm font-black leading-tight text-slate-900 dark:text-white">
-                    {summary.streak} Days
+                  <div className="text-sm sm:text-base font-black font-display leading-tight">
+                    {summary.streak || 1} Days
                   </div>
-                  <div className="text-[9px] text-amber-700 dark:text-amber-400 font-extrabold uppercase tracking-wider">
-                    Active Streak
+                  <div className="text-[9px] font-extrabold text-amber-700 uppercase tracking-wider">
+                    ACTIVE STREAK
                   </div>
                 </div>
               </div>
 
-              {/* Dynamic Today's Target Card */}
-              <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md rounded-xl p-2.5 sm:p-3 shadow-lg border border-white/25 dark:border-slate-800 min-w-[145px] text-slate-900 dark:text-white shrink-0">
-                <div className="flex items-center justify-between text-[11px] mb-1.5 gap-2">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Today's Target</span>
-                  <span className="font-black text-blue-600 dark:text-sky-400">{solvedQ}/{targetQ} Qs</span>
+              {/* Today's Target Widget */}
+              <div className="bg-white/95 text-slate-900 px-4 py-2.5 rounded-2xl shadow-lg border border-white/40 flex-1 sm:flex-initial min-w-[140px]">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1">
+                  <span>Today's Target</span>
+                  <span className="font-extrabold text-blue-700">{solvedQ}/{targetQ} Qs</span>
                 </div>
-                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-700"
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-500"
                     style={{ width: `${targetProgress}%` }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Seamless Educational Caption floating cleanly over the background */}
-            <div className="inline-flex items-center justify-between gap-2.5 text-[10px] text-white/90 font-bold backdrop-blur-md px-3 py-1.5 rounded-xl bg-black/40 border border-white/15 shadow-sm">
-              <span>Civil Services Examination</span>
-              <span className="text-amber-300">Dream · Prepare · Achieve</span>
+            {/* Motivational Tagline Pill */}
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3.5 py-1.5 rounded-xl text-[11px] font-semibold text-slate-200 hidden sm:flex items-center gap-2 shadow-2xs">
+              <span className="text-sky-300 font-bold">Civil Services Examination</span>
+              <span className="text-white/30">•</span>
+              <span className="text-amber-300 font-bold">Dream · Prepare · Achieve</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Upload Notification Strip (if upload action was performed) */}
-      {uploadStats && (
-        <div className="bg-white dark:bg-dark-card border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in">
-          <div className="flex items-center gap-2.5 text-emerald-700 dark:text-emerald-400 font-bold">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>
-              Processed <strong className="text-slate-900 dark:text-white">{uploadStats.fileName}</strong>: {uploadStats.questionCount} MCQs extracted in {uploadStats.timeTaken} at {uploadStats.timestamp}
-            </span>
+      {/* Direct PDF Upload Status Banner (appears when uploading) */}
+      {uploading && (
+        <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-blue-800 dark:text-blue-300 text-xs font-bold p-3.5 rounded-2xl flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
+            <span>Processing your exam PDF... extracting bilingual MCQs ({uploadDuration}s)</span>
           </div>
-          <button
-            onClick={() => onNavigate('upload')}
-            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
-          >
-            <span>Solve Extracted MCQs</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded font-black">AI Engine Active</span>
         </div>
       )}
 
+      {/* Direct Upload Error Feedback */}
       {uploadError && (
         <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-xs font-bold p-3 rounded-2xl flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
@@ -334,40 +365,73 @@ export const HomeView: React.FC<HomeViewProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 2. MAIN CONTENT LAYOUT: Motivational Card (Left) + 4 Feature Cards (Right) */}
+      {/* 2. MAIN CONTENT LAYOUT: Motivational Card (65% Width) + 4 Feature Cards (35%) */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* LEFT COLUMN: Motivational Side Card (Section 13) */}
-        <div className="lg:col-span-4 flex flex-col">
-          <div className="relative rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow min-h-[440px] h-full flex flex-col justify-between p-6 sm:p-7 text-white border border-slate-200/80 dark:border-slate-800 group">
-            {/* Background Hiker Mountain Landscape Visual */}
+        {/* LEFT COLUMN: Motivational Side Card (Expanded to 65% width on desktop/tablet) */}
+        <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
+          <div className="relative rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow min-h-[420px] sm:min-h-[460px] h-full flex flex-col justify-between p-6 sm:p-8 text-white border border-slate-200/80 dark:border-slate-800 group">
+            {/* Background Visual (Responsive fit for any uploaded dimension) */}
             <img
-              src="/assets/mountain_ias_hiker.jpg"
-              alt="Hiker standing on mountain summit looking at sunrise"
+              src={customMotivationImage}
+              alt="Inspirational UPSC study background"
               className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 pointer-events-none"
             />
-            {/* Dark contrast gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/70" />
+            {/* High-contrast gradient overlay ensuring text legibility on any image */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-slate-950/40" />
+
+            {/* Top Bar: Quote mark + Custom Image Upload Action */}
+            <div className="relative z-10 flex items-center justify-between gap-3">
+              <span className="text-4xl sm:text-5xl font-serif text-white/70 block leading-none select-none">“</span>
+              
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => motivationImageInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/70 backdrop-blur-md border border-white/25 text-white text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-105"
+                  title="Upload any image or study poster"
+                >
+                  <Camera className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Upload Poster</span>
+                </button>
+                {customMotivationImage !== '/assets/mountain_ias_hiker.jpg' && (
+                  <button
+                    type="button"
+                    onClick={handleResetMotivationImage}
+                    className="p-1.5 rounded-full bg-black/45 hover:bg-rose-900/70 backdrop-blur-md border border-white/25 text-white/80 hover:text-white transition-all cursor-pointer"
+                    title="Reset to default image"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <input
+                  type="file"
+                  ref={motivationImageInputRef}
+                  accept="image/*"
+                  onChange={handleMotivationImageUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
 
             {/* Motivational Content */}
-            <div className="relative z-10 flex flex-col justify-between h-full space-y-8">
+            <div className="relative z-10 flex flex-col justify-between h-full space-y-6 pt-4">
               <div>
-                <span className="text-4xl sm:text-5xl font-serif text-white/70 block leading-none select-none">“</span>
-                <h3 className="text-xl sm:text-2xl font-black font-display leading-tight tracking-tight mt-1 text-white drop-shadow-sm">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black font-display leading-tight tracking-tight text-white drop-shadow-sm max-w-xl">
                   Small steps<br />
                   every day lead to<br />
                   big results.
                 </h3>
-                <p className="text-xs sm:text-sm font-semibold text-slate-200 mt-3 drop-shadow-sm">
+                <p className="text-xs sm:text-sm font-semibold text-slate-200 mt-3 drop-shadow-sm max-w-md">
                   Keep going, future IAS is waiting for you!
                 </p>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-6 border-t border-white/10">
                 <span className="inline-block bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-bold text-white border border-white/25 mb-2.5 shadow-xs">
                   {currentExamLabel}
                 </span>
-                <p className="text-xs text-slate-300 font-medium italic drop-shadow-sm leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 font-medium italic drop-shadow-sm leading-relaxed max-w-lg">
                   "The journey of a thousand miles begins with a single step."
                 </p>
               </div>
@@ -375,8 +439,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: 4 Feature Cards (2x2 Grid, Section 14, 15, 16) */}
-        <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4.5">
+        {/* RIGHT COLUMN: 4 Feature Cards (Arranged cleanly in responsive grid) */}
+        <div className="lg:col-span-5 xl:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4.5">
           {/* ------------------------------------------------------------------- */}
           {/* CARD 1: Start Practice Arena (Blue Accent, Bullseye Watermark)       */}
           {/* ------------------------------------------------------------------- */}

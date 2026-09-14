@@ -9,7 +9,6 @@ import {
   Bell, 
   Moon, 
   Sun,
-  Lock, 
   Save
 } from 'lucide-react';
 import { api } from '../../api/client';
@@ -34,6 +33,53 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [remindersEnabled, setRemindersEnabled] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('sundaram_reminders_enabled') === 'true' || 
+        (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted');
+    } catch {
+      return true;
+    }
+  });
+
+  const handleToggleReminders = async () => {
+    if (!remindersEnabled) {
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') {
+            setRemindersEnabled(true);
+            localStorage.setItem('sundaram_reminders_enabled', 'true');
+            api.updateProfile({ reminders_enabled: true } as any).catch(console.error);
+            new Notification('Sundaram Prep Daily Briefing', {
+              body: '🎯 Daily reminders active: Morning UPSC briefing & streak alert enabled!',
+              icon: '/icons/icon-192.png'
+            });
+            return;
+          }
+        } catch (e) {
+          console.warn('Notification permission error:', e);
+        }
+      }
+      setRemindersEnabled(true);
+      localStorage.setItem('sundaram_reminders_enabled', 'true');
+    } else {
+      setRemindersEnabled(false);
+      localStorage.setItem('sundaram_reminders_enabled', 'false');
+      api.updateProfile({ reminders_enabled: false } as any).catch(console.error);
+    }
+  };
+
+  const handleTestNotification = () => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification('Sundaram Prep Daily Briefing', {
+        body: '📰 Today\'s Briefing: Supreme Court bench upholds key privacy judgment. Complete your 35 daily questions!',
+        icon: '/icons/icon-192.png'
+      });
+    } else {
+      alert('Alert enabled! You will receive daily morning exam briefings and streak notifications.');
+    }
+  };
 
   useEffect(() => {
     async function loadProfile() {
@@ -291,30 +337,46 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </div>
             </div>
 
-            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Bell className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
-                <div>
+            {/* Daily Reminders with Real Notification API toggle */}
+            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Bell className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
+                <div className="min-w-0">
                   <div className="font-bold text-slate-900 dark:text-white">Daily Reminders</div>
-                  <div className="text-slate-500 dark:text-dark-muted text-[11px]">Morning briefing & streak alert</div>
+                  <div className="text-slate-500 dark:text-dark-muted text-[11px] truncate">
+                    Morning briefing & streak alert
+                  </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/50">
-                Enabled
-              </span>
-            </div>
-
-            <div className="p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Lock className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
-                <div>
-                  <div className="font-bold text-slate-900 dark:text-white">Account Security</div>
-                  <div className="text-slate-500 dark:text-dark-muted text-[11px]">HTTP-Only Cookies & Resend OTP</div>
-                </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {remindersEnabled && (
+                  <button
+                    type="button"
+                    onClick={handleTestNotification}
+                    className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 px-2 py-1 rounded-lg border border-sky-200 dark:border-sky-800 transition-colors cursor-pointer"
+                    title="Send a sample notification to your device"
+                  >
+                    Test Alert
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleToggleReminders}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    remindersEnabled ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
+                  }`}
+                  role="switch"
+                  aria-checked={remindersEnabled}
+                  title={remindersEnabled ? 'Click to disable reminders' : 'Click to enable daily reminders'}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      remindersEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/50">
-                Active
-              </span>
             </div>
           </div>
 
