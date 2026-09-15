@@ -313,11 +313,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
         {/* ======================================================================= */}
         {/* LEFT COLUMN: Subject Performance Index (7 cols on Desktop)              */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-7 bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden flex flex-col justify-between group">
-          {/* Expanded Rich Background Watermark: Analytics Bars */}
-          <div className="absolute right-3 bottom-2 w-48 h-48 pointer-events-none opacity-20 dark:opacity-25 select-none text-blue-500 dark:text-sky-400 transition-transform group-hover:scale-105 duration-300">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 19h16v2H4zm1-4h3v3H5zm5-6h3v9h-3zm5-5h3v14h-3z" />
+        <div className="lg:col-span-7 bg-gradient-to-br from-blue-500/[0.10] via-sky-500/[0.03] to-white dark:from-blue-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-blue-200/90 dark:border-blue-800/60 hover:border-blue-400 dark:hover:border-sky-400 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden flex flex-col justify-between transition-all group">
+          {/* Expanded Rich Background Watermark: Analytics Bars & Trendline */}
+          <div className="absolute -right-3 -bottom-4 w-52 h-52 pointer-events-none opacity-25 dark:opacity-30 select-none text-blue-600 dark:text-sky-400 transition-transform group-hover:scale-110 duration-500">
+            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+              <path d="M10 90h80" strokeWidth="3" strokeLinecap="round" />
+              <rect x="18" y="55" width="12" height="35" rx="2" fill="currentColor" fillOpacity="0.2" strokeWidth="2" />
+              <rect x="36" y="38" width="12" height="52" rx="2" fill="currentColor" fillOpacity="0.3" strokeWidth="2" />
+              <rect x="54" y="22" width="12" height="68" rx="2" fill="currentColor" fillOpacity="0.4" strokeWidth="2" />
+              <rect x="72" y="10" width="12" height="80" rx="2" fill="currentColor" fillOpacity="0.55" strokeWidth="2" />
+              <path d="M24 50l18-16 18-12 18-12" strokeWidth="3" strokeLinecap="round" />
+              <circle cx="24" cy="50" r="3.5" fill="currentColor" />
+              <circle cx="42" cy="34" r="3.5" fill="currentColor" />
+              <circle cx="60" cy="22" r="3.5" fill="currentColor" />
+              <circle cx="78" cy="10" r="4.5" fill="#38bdf8" stroke="#fff" strokeWidth="1.5" />
             </svg>
           </div>
 
@@ -325,14 +334,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
             {/* Card Header */}
             <div className="flex items-center justify-between gap-2">
               <div>
-                <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
                   Subject Performance Index
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                   Section-wise accuracy across syllabus subjects.
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-900/40 text-[10px] font-mono font-bold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100/90 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/80 text-[10px] font-mono font-bold shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Data
               </span>
@@ -370,7 +379,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
                     <XAxis 
                       dataKey="name" 
                       tick={{ fontSize: 11, fill: '#64748B' }} 
-                      stroke="#CBD5E1"
+                      stroke="#CBD5E1" 
                       interval={0}
                       angle={-10}
                       textAnchor="end"
@@ -430,9 +439,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
         {/* ======================================================================= */}
         {/* RIGHT COLUMN: Topic Mastery (5 cols on Desktop)                         */}
         {/* ======================================================================= */}
-        <div className="lg:col-span-5 bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden flex flex-col justify-between">
-          {/* Subtle Decorative Background Watermark: Target / Mastery */}
-          <div className="absolute right-3 bottom-2 w-36 h-36 pointer-events-none opacity-[0.035] dark:opacity-[0.025] select-none text-slate-900 dark:text-white">
+        <div className="lg:col-span-5 bg-gradient-to-br from-violet-500/[0.10] via-purple-500/[0.03] to-white dark:from-violet-950/45 dark:via-dark-card dark:to-slate-900 border-2 border-violet-200/90 dark:border-violet-800/60 hover:border-violet-400 dark:hover:border-violet-400 rounded-3xl p-5 sm:p-6 shadow-sm relative overflow-hidden flex flex-col justify-between transition-all group">
+          {/* Expanded Rich Background Watermark: Target / Mastery */}
+          <div className="absolute -right-3 -bottom-4 w-44 h-44 pointer-events-none opacity-25 dark:opacity-30 select-none text-violet-600 dark:text-purple-400 transition-transform group-hover:scale-110 duration-500">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" />
             </svg>
@@ -442,10 +451,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ onOpenAIWithPrompt
             {/* Card Header & Filter Tabs */}
             <div className="space-y-3">
               <div>
-                <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-purple-400 transition-colors">
                   Topic Mastery
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                   Detailed accuracy by syllabus topic.
                 </p>
               </div>

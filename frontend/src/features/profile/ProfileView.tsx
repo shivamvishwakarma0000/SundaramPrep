@@ -16,7 +16,8 @@ import {
   Zap,
   BookOpen,
   Lock,
-  LogOut
+  LogOut,
+  Mail
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useTheme } from '../../context/ThemeContext';
@@ -394,20 +395,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </div>
 
       {/* 3. Account & Practice Preferences Card with Sliders Watermark */}
-      <div className="relative overflow-hidden bg-white dark:bg-dark-card border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5 text-slate-900 dark:text-white transition-colors group">
-        <Sliders className="absolute -right-6 -bottom-6 w-40 h-40 text-slate-400/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-105 duration-300" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/[0.08] via-slate-500/[0.02] to-white dark:from-blue-950/40 dark:via-dark-card dark:to-slate-900 border-2 border-blue-200/90 dark:border-blue-800/60 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5 text-slate-900 dark:text-white transition-all group">
+        <Sliders className="absolute -right-6 -bottom-6 w-44 h-44 text-blue-600/15 dark:text-sky-400/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-500" />
         <div className="relative z-10 flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
+          <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
             Account & Practice Preferences
           </h3>
           {saveSuccess && (
-            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 animate-in fade-in">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 animate-in fade-in bg-emerald-100/90 dark:bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-300">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Saved successfully!
             </span>
           )}
           {saveError && (
-            <span className="text-xs font-bold text-rose-600 dark:text-rose-400 animate-in fade-in">
+            <span className="text-xs font-bold text-rose-600 dark:text-rose-400 animate-in fade-in bg-rose-100 dark:bg-rose-950/80 px-3 py-1 rounded-full border border-rose-300">
               {saveError}
             </span>
           )}
@@ -415,18 +416,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         <div className="space-y-3.5 text-xs">
           {/* Target Exam Switcher */}
-          <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border group">
-            <BookOpen className="absolute -right-3 -bottom-3 w-20 h-20 text-slate-500/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
+          <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 bg-gradient-to-br from-blue-500/[0.12] via-sky-500/[0.04] to-white dark:from-blue-950/50 dark:via-dark-surface dark:to-slate-900 rounded-2xl border-2 border-blue-200/90 dark:border-blue-800/60 hover:border-blue-400 dark:hover:border-sky-400 transition-all group/sub">
+            <BookOpen className="absolute -right-3 -bottom-3 w-28 h-28 text-blue-600/20 dark:text-sky-400/20 pointer-events-none select-none transition-transform group-hover/sub:scale-110 duration-500" />
             <div className="relative z-10">
-              <div className="font-bold text-slate-900 dark:text-white">Primary Exam Target</div>
-              <div className="text-slate-500 dark:text-dark-muted mt-0.5">
+              <div className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">Primary Exam Target</div>
+              <div className="text-slate-600 dark:text-slate-300 mt-0.5 font-medium">
                 Calibrates syllabus, question difficulty, and AI reasoning depth.
               </div>
             </div>
             <select
               value={currentExam}
               onChange={(e) => onExamChange(e.target.value as ExamType)}
-              className="relative z-10 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white font-bold text-xs py-2 px-3 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none min-h-[42px] cursor-pointer"
+              className="relative z-10 bg-white dark:bg-dark-card border-2 border-blue-200 dark:border-dark-border text-slate-900 dark:text-white font-bold text-xs py-2 px-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none min-h-[42px] cursor-pointer shadow-2xs"
             >
               <option value="UPSC_CSE">UPSC Civil Services (CSE)</option>
               <option value="SSC_CGL">SSC Combined Graduate Level</option>
@@ -437,11 +438,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           {/* Daily Goal Target */}
-          <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border group">
-            <Zap className="absolute -right-3 -bottom-3 w-20 h-20 text-amber-500/15 dark:text-amber-400/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
+          <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 bg-gradient-to-br from-amber-500/[0.12] via-orange-500/[0.04] to-white dark:from-amber-950/50 dark:via-dark-surface dark:to-slate-900 rounded-2xl border-2 border-amber-200/90 dark:border-amber-800/60 hover:border-amber-400 dark:hover:border-amber-400 transition-all group/sub">
+            <Zap className="absolute -right-3 -bottom-3 w-28 h-28 text-amber-500/25 dark:text-amber-400/20 pointer-events-none select-none transition-transform group-hover/sub:scale-110 duration-500" />
             <div className="relative z-10">
-              <div className="font-bold text-slate-900 dark:text-white">Daily Goal (Questions / Day)</div>
-              <div className="text-slate-500 dark:text-dark-muted mt-0.5">
+              <div className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">Daily Goal (Questions / Day)</div>
+              <div className="text-slate-600 dark:text-slate-300 mt-0.5 font-medium">
                 Sets your target for daily consistency and streak completion.
               </div>
             </div>
@@ -452,7 +453,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 max="150"
                 value={editingGoal}
                 onChange={(e) => setEditingGoal(parseInt(e.target.value) || 30)}
-                className="w-20 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white font-bold text-center py-2 px-2 rounded-xl min-h-[42px]"
+                className="w-20 bg-white dark:bg-dark-card border-2 border-amber-300 dark:border-dark-border text-slate-900 dark:text-white font-bold text-center py-2 px-2 rounded-xl min-h-[42px] shadow-2xs"
               />
               <button
                 onClick={handleSaveGoal}
@@ -467,39 +468,43 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
           {/* Linguistic & Theme Settings */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between group">
-              <Globe className="absolute -right-2 -bottom-2 w-18 h-18 text-slate-500/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
-              <div className="relative z-10 flex items-center gap-2.5">
-                <Globe className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
+            <div className="relative overflow-hidden p-4 sm:p-5 border-2 border-indigo-200/90 dark:border-indigo-800/60 bg-gradient-to-br from-indigo-500/[0.10] to-white dark:from-indigo-950/50 dark:to-dark-surface rounded-2xl flex items-center justify-between group/sub transition-all hover:border-indigo-400">
+              <Globe className="absolute -right-2 -bottom-2 w-24 h-24 text-indigo-500/20 dark:text-indigo-400/20 pointer-events-none select-none transition-transform group-hover/sub:scale-110 duration-500" />
+              <div className="relative z-10 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950 border border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-sky-300 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                  <Globe className="w-4 h-4" />
+                </div>
                 <div>
-                  <div className="font-bold text-slate-900 dark:text-white">Language Mode</div>
-                  <div className="text-slate-500 dark:text-dark-muted text-[11px]">
+                  <div className="font-black text-slate-900 dark:text-white">Language Mode</div>
+                  <div className="text-slate-600 dark:text-slate-300 text-[11px] font-medium">
                     {settings?.language === 'EN' ? 'English (Bilingual support)' : 'English & Hindi'}
                   </div>
                 </div>
               </div>
-              <span className="relative z-10 text-xs font-bold text-brand-700 dark:text-sky-400 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-900/50">
+              <span className="relative z-10 text-xs font-black text-indigo-800 dark:text-sky-300 bg-indigo-100/90 dark:bg-indigo-950/70 px-2.5 py-0.5 rounded-full border border-indigo-300 dark:border-indigo-800 shadow-2xs">
                 Active
               </span>
             </div>
 
             {/* Interactive Theme Switcher */}
-            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between group">
-              <Moon className="absolute -right-2 -bottom-2 w-18 h-18 text-slate-500/15 dark:text-slate-200/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
-              <div className="relative z-10 flex items-center gap-2.5">
-                <Moon className="w-4 h-4 text-slate-500 dark:text-dark-muted" />
+            <div className="relative overflow-hidden p-4 sm:p-5 border-2 border-purple-200/90 dark:border-purple-800/60 bg-gradient-to-br from-purple-500/[0.10] to-white dark:from-purple-950/50 dark:to-dark-surface rounded-2xl flex items-center justify-between group/sub transition-all hover:border-purple-400">
+              <Moon className="absolute -right-2 -bottom-2 w-24 h-24 text-purple-500/20 dark:text-purple-400/20 pointer-events-none select-none transition-transform group-hover/sub:scale-110 duration-500" />
+              <div className="relative z-10 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950 border border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                  <Moon className="w-4 h-4" />
+                </div>
                 <div>
-                  <div className="font-bold text-slate-900 dark:text-white">Appearance Theme</div>
-                  <div className="text-slate-500 dark:text-dark-muted text-[11px] capitalize">{theme} Mode Active</div>
+                  <div className="font-black text-slate-900 dark:text-white">Appearance Theme</div>
+                  <div className="text-slate-600 dark:text-slate-300 text-[11px] font-medium capitalize">{theme} Mode Active</div>
                 </div>
               </div>
-              <div className="relative z-10 flex items-center gap-1 bg-white dark:bg-dark-card p-1 rounded-xl border border-slate-200 dark:border-dark-border">
+              <div className="relative z-10 flex items-center gap-1 bg-white dark:bg-dark-card p-1 rounded-xl border border-purple-200 dark:border-dark-border shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setTheme('light')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black cursor-pointer transition-all ${
                     theme === 'light'
-                      ? 'bg-amber-50 text-amber-800 border border-amber-200 shadow-xs'
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-xs'
                       : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                   }`}
                   title="Light mode"
@@ -510,9 +515,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setTheme('dark')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black cursor-pointer transition-all ${
                     theme === 'dark'
-                      ? 'bg-brand-950/60 text-sky-300 border border-brand-800 shadow-xs'
+                      ? 'bg-brand-950/80 text-sky-300 border border-brand-800 shadow-xs'
                       : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
                   }`}
                   title="Dark mode"
@@ -524,13 +529,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             {/* Daily Reminders with Real Notification API toggle */}
-            <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3 group">
-              <Bell className="absolute -right-2 -bottom-2 w-18 h-18 text-emerald-500/15 dark:text-emerald-400/15 pointer-events-none select-none transition-transform group-hover:scale-110 duration-300" />
-              <div className="relative z-10 flex items-center gap-2.5 min-w-0">
-                <Bell className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
+            <div className="relative overflow-hidden p-4 sm:p-5 border-2 border-emerald-200/90 dark:border-emerald-800/60 bg-gradient-to-br from-emerald-500/[0.10] to-white dark:from-emerald-950/50 dark:to-dark-surface rounded-2xl flex items-center justify-between gap-3 group/sub transition-all hover:border-emerald-400">
+              <Bell className="absolute -right-2 -bottom-2 w-24 h-24 text-emerald-500/20 dark:text-emerald-400/20 pointer-events-none select-none transition-transform group-hover/sub:scale-110 duration-500" />
+              <div className="relative z-10 flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                  <Bell className="w-4 h-4" />
+                </div>
                 <div className="min-w-0">
-                  <div className="font-bold text-slate-900 dark:text-white">Daily Reminders</div>
-                  <div className="text-slate-500 dark:text-dark-muted text-[11px] truncate">
+                  <div className="font-black text-slate-900 dark:text-white">Daily Reminders</div>
+                  <div className="text-slate-600 dark:text-slate-300 text-[11px] font-medium truncate">
                     Morning briefing & streak alert
                   </div>
                 </div>
@@ -540,7 +547,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   <button
                     type="button"
                     onClick={handleTestNotification}
-                    className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 px-2 py-1 rounded-lg border border-sky-200 dark:border-sky-800 transition-colors cursor-pointer"
+                    className="text-[10px] font-black text-emerald-800 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/70 hover:bg-emerald-200 px-2 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800 transition-colors cursor-pointer shadow-2xs"
                     title="Send a sample notification to your device"
                   >
                     Test Alert
@@ -568,18 +575,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             {/* Custom Motivation Card Poster Upload - Admin only */}
             {(user as any).role === 'ADMIN' && (
-              <div className="relative overflow-hidden p-4 border border-slate-200/80 dark:border-dark-border bg-slate-50 dark:bg-dark-surface rounded-2xl flex items-center justify-between gap-3 group">
-                <Camera className="absolute -right-2 -bottom-2 w-14 h-14 text-indigo-500/5 dark:text-indigo-400/5 pointer-events-none select-none transition-transform group-hover:scale-110" />
-                <div className="relative z-10 flex items-center gap-2.5 min-w-0">
-                  <Camera className="w-4 h-4 text-slate-500 dark:text-dark-muted shrink-0" />
+              <div className="relative overflow-hidden p-4 sm:p-5 border-2 border-rose-200/90 dark:border-rose-800/60 bg-gradient-to-br from-rose-500/[0.10] to-white dark:from-rose-950/50 dark:to-dark-surface rounded-2xl flex items-center justify-between gap-3 group/sub transition-all hover:border-rose-400">
+                <Camera className="absolute -right-2 -bottom-2 w-24 h-24 text-rose-500/20 dark:text-rose-400/20 pointer-events-none select-none transition-transform group-hover/sub:scale-110 duration-500" />
+                <div className="relative z-10 flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 flex items-center justify-center font-bold shadow-2xs shrink-0">
+                    <Camera className="w-4 h-4" />
+                  </div>
                   <div className="min-w-0">
-                    <div className="font-bold text-slate-900 dark:text-white">Home Poster Image</div>
-                    <div className="text-slate-500 dark:text-dark-muted text-[11px] truncate">
+                    <div className="font-black text-slate-900 dark:text-white">Home Poster Image</div>
+                    <div className="text-slate-600 dark:text-slate-300 text-[11px] font-medium truncate">
                       {customPoster ? 'Custom IAS wallpaper active' : 'Upload custom motivation poster'}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="relative z-10 flex items-center gap-2 shrink-0">
                   <input
                     type="file"
                     ref={posterInputRef}
@@ -591,7 +600,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     <button
                       type="button"
                       onClick={handleResetPoster}
-                      className="text-[10px] font-bold text-slate-500 hover:text-red-600 bg-white dark:bg-dark-card px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-dark-border transition-colors cursor-pointer"
+                      className="text-[10px] font-black text-rose-700 dark:text-rose-300 hover:text-red-700 bg-white dark:bg-dark-card px-2.5 py-1.5 rounded-lg border border-rose-200 dark:border-dark-border transition-colors cursor-pointer shadow-2xs"
                       title="Reset to default poster"
                     >
                       Reset
@@ -600,7 +609,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   <button
                     type="button"
                     onClick={() => posterInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer"
                   >
                     <Camera className="w-3.5 h-3.5 text-amber-300" />
                     <span>{customPoster ? 'Change' : 'Upload Image'}</span>
@@ -611,30 +620,33 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           {/* Account Security & Change Password Section */}
-          <div className="pt-4 border-t border-slate-100 dark:border-dark-border">
+          <div className="pt-4 border-t border-slate-200/70 dark:border-dark-border">
             <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
               ACCOUNT SECURITY & PASSWORD
             </h4>
-            <form onSubmit={handleUpdatePassword} className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-dark-border bg-slate-50/60 dark:bg-dark-surface space-y-4">
-              <div className="flex items-center justify-between">
+            <form onSubmit={handleUpdatePassword} className="relative overflow-hidden p-5 rounded-2xl border-2 border-slate-300/90 dark:border-dark-border bg-gradient-to-br from-slate-100/90 via-blue-50/40 to-white dark:from-slate-900 dark:via-dark-card dark:to-blue-950/40 space-y-4 shadow-sm group/sec">
+              <Lock className="absolute -right-3 -bottom-3 w-32 h-32 text-blue-600/15 dark:text-sky-400/15 pointer-events-none select-none transition-transform group-hover/sec:scale-110 duration-500" />
+              <div className="relative z-10 flex items-center justify-between">
                 <div>
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Change Portal Password</div>
-                  <div className="text-[11px] text-slate-500 dark:text-dark-muted">
+                  <div className="text-xs font-black text-slate-900 dark:text-white">Change Portal Password</div>
+                  <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">
                     {(user as any).role === 'ADMIN' ? 'Sundaram can update the default password "sundaram" anytime here.' : 'Update your personal access password.'}
                   </div>
                 </div>
-                <Lock className="w-4 h-4 text-slate-400" />
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-700 dark:text-sky-300 shadow-2xs">
+                  <Lock className="w-4 h-4" />
+                </div>
               </div>
 
               {passwordFeedback && (
-                <div className={`p-3 rounded-xl text-xs font-bold border ${passwordFeedback.success ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' : 'bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800'}`}>
+                <div className={`relative z-10 p-3 rounded-xl text-xs font-bold border ${passwordFeedback.success ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' : 'bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800'}`}>
                   {passwordFeedback.text}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Current Password
                   </label>
                   <input
@@ -642,11 +654,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     placeholder="Enter current password (default: sundaram)"
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 shadow-2xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     New Password
                   </label>
                   <input
@@ -655,19 +667,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     placeholder="Enter new password (min 4 chars)"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2 rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-dark-card border-2 border-slate-200 dark:border-dark-border text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 shadow-2xs"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <div className="text-[10px] text-slate-400 dark:text-dark-muted">
+              <div className="relative z-10 flex items-center justify-between pt-1">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                   Minimum 4 characters required
                 </div>
                 <button
                   type="submit"
                   disabled={passwordLoading || !newPassword}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#0B2545] hover:bg-[#133A6B] disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#0B2545] hover:bg-[#133A6B] disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-xs transition-all cursor-pointer"
                 >
                   <Lock className="w-3.5 h-3.5" />
                   <span>{passwordLoading ? 'Updating...' : 'Update Password'}</span>
@@ -677,36 +689,37 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           {/* Email Change Section */}
-          <div className="pt-4 border-t border-slate-100 dark:border-dark-border">
+          <div className="pt-4 border-t border-slate-200/70 dark:border-dark-border">
             <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
               PRIMARY EMAIL ADDRESS
             </h4>
-            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-dark-border bg-slate-50/60 dark:bg-dark-surface space-y-2">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="relative overflow-hidden p-5 rounded-2xl border-2 border-emerald-200/90 dark:border-emerald-800/60 bg-gradient-to-br from-emerald-500/[0.08] via-teal-500/[0.02] to-white dark:from-emerald-950/40 dark:via-dark-card dark:to-slate-900 space-y-2 shadow-sm group/em">
+              <Mail className="absolute -right-3 -bottom-3 w-28 h-28 text-emerald-600/15 dark:text-emerald-400/15 pointer-events-none select-none transition-transform group-hover/em:scale-110 duration-500" />
+              <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
                 <div>
-                  <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Current Active Email</div>
-                  <div className="text-xs text-slate-500 dark:text-dark-muted mt-0.5">{user.email}</div>
+                  <div className="text-xs font-black text-slate-900 dark:text-white">Current Active Email</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">{user.email}</div>
                 </div>
-                <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
                   Trusted & Active
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-dark-muted leading-relaxed">
+              <p className="relative z-10 text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                 To update your email, enter a new address. A 6-digit OTP will be sent to the new address. Your current email remains trusted until the new address is verified.
               </p>
             </div>
           </div>
 
           {/* Sign Out Section */}
-          <div className="pt-4 border-t border-slate-100 dark:border-dark-border flex items-center justify-between flex-wrap gap-3">
+          <div className="pt-4 border-t border-slate-200/70 dark:border-dark-border flex items-center justify-between flex-wrap gap-3">
             <div>
-              <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Session Management</div>
-              <div className="text-[11px] text-slate-400 dark:text-dark-muted">Sign out of your account on this device</div>
+              <div className="text-xs font-black text-slate-900 dark:text-white">Session Management</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Sign out of your account on this device</div>
             </div>
             <button
               type="button"
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-200 dark:border-red-900/40 shadow-2xs transition-all cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 text-xs font-black rounded-xl border border-red-300 dark:border-red-900/60 shadow-2xs transition-all cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
